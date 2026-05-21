@@ -227,6 +227,7 @@ function TeamsTab({ tournament, teams, onChange }: { tournament: Tournament; tea
   const [email, setEmail] = useState("");
   const [tempPw, setTempPw] = useState("");
   const [busy, setBusy] = useState(false);
+  const [creds, setCreds] = useState<{ email: string; password: string; teamId: string; teamName: string } | null>(null);
 
   const addTeam = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -244,8 +245,9 @@ function TeamsTab({ tournament, teams, onChange }: { tournament: Tournament; tea
   const inviteOwner = async (team: Team) => {
     if (!team.owner_email) return toast.error("Add owner email first (re-create team)");
     if (!tempPw || tempPw.length < 8) return toast.error("Set a temp password (8+ chars) in the field above");
+    const password = tempPw;
     const { data, error } = await supabase.auth.signUp({
-      email: team.owner_email, password: tempPw,
+      email: team.owner_email, password,
       options: { emailRedirectTo: `${window.location.origin}/dashboard` }
     });
     if (error) return toast.error(error.message);
@@ -254,7 +256,8 @@ function TeamsTab({ tournament, teams, onChange }: { tournament: Tournament; tea
       await supabase.from("teams").update({ owner_user_id: newId }).eq("id", team.id);
       await supabase.from("user_roles").insert({ user_id: newId, role: "team_owner" });
     }
-    toast.success(`Owner created. Share email + password.`);
+    toast.success(`Owner created. Share credentials below.`);
+    setCreds({ email: team.owner_email, password, teamId: team.id, teamName: team.name });
     onChange();
   };
 
@@ -264,6 +267,13 @@ function TeamsTab({ tournament, teams, onChange }: { tournament: Tournament; tea
     if (error) return toast.error(error.message);
     onChange();
   };
+
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const loginLink = creds ? `${origin}/auth?team=${creds.teamId}` : "";
+  const message = creds
+    ? `🏏 You're invited as owner of *${creds.teamName}* in ${tournament.name}!\n\n🔗 Login: ${loginLink}\n📧 Email: ${creds.email}\n🔑 Password: ${creds.password}\n\nAfter signing in, your team room opens automatically. See you at the auction!`
+    : "";
+  const waUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
 
   return (
     <div className="grid md:grid-cols-3 gap-6">
@@ -287,6 +297,11 @@ function TeamsTab({ tournament, teams, onChange }: { tournament: Tournament; tea
               <div className="text-xs text-neon mt-1">Purse {formatINR(tm.purse_remaining)}</div>
             </div>
             <div className="flex gap-2">
+              {tm.owner_user_id && tm.owner_email && (
+                <Button size="sm" variant="outline" onClick={() => setCreds({ email: tm.owner_email!, password: tempPw || "(set temp password above to re-share)", teamId: tm.id, teamName: tm.name })}>
+                  <Share2 className="h-3 w-3 mr-1" />Share
+                </Button>
+              )}
               {!tm.owner_user_id && tm.owner_email && (
                 <Button size="sm" variant="outline" onClick={() => inviteOwner(tm)}><UserPlus className="h-3 w-3 mr-1" />Create login</Button>
               )}
@@ -296,6 +311,35 @@ function TeamsTab({ tournament, teams, onChange }: { tournament: Tournament; tea
         ))}
         {teams.length === 0 && <p className="text-sm text-muted-foreground">No teams yet.</p>}
       </div>
+
+      <Dialog open={!!creds} onOpenChange={(o) => !o && setCreds(null)}>
+        <DialogContent className="bg-card border-border">
+          <DialogHeader><DialogTitle>Share owner credentials</DialogTitle></DialogHeader>
+          {creds && (
+            <div className="space-y-4">
+              <div className="bg-glass border border-neon/40 rounded-lg p-4 space-y-2 text-sm">
+                <div><span className="text-muted-foreground">Team:</span> <span className="font-bold">{creds.teamName}</span></div>
+                <div><span className="text-muted-foreground">Email:</span> <span className="font-mono">{creds.email}</span></div>
+                <div><span className="text-muted-foreground">Password:</span> <span className="font-mono">{creds.password}</span></div>
+                <div className="pt-2 border-t border-border">
+                  <div className="text-xs text-muted-foreground mb-1">Login link</div>
+                  <div className="font-mono text-xs break-all text-neon">{loginLink}</div>
+                </div>
+              </div>
+              <DialogFooter className="flex flex-col sm:flex-row gap-2">
+                <Button variant="outline" className="flex-1" onClick={() => { navigator.clipboard.writeText(message); toast.success("Message copied"); }}>
+                  <Copy className="h-4 w-4 mr-1" />Copy message
+                </Button>
+                <Button asChild className="flex-1 gradient-neon text-primary-foreground shadow-neon">
+                  <a href={waUrl} target="_blank" rel="noopener noreferrer">
+                    <Share2 className="h-4 w-4 mr-1" />Share via WhatsApp
+                  </a>
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
