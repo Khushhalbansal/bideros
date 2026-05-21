@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import { formatINR } from "@/lib/format";
-import { Gavel, ChevronRight, Wallet } from "lucide-react";
+import { Gavel, ChevronRight, Wallet, Hand } from "lucide-react";
 
 export const Route = createFileRoute("/team/$id")({ component: TeamRoom });
 
