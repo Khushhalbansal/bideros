@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import { formatINR } from "@/lib/format";
-import { Gavel, ChevronRight, Wallet } from "lucide-react";
+import { Gavel, ChevronRight, Wallet, Hand } from "lucide-react";
 
 export const Route = createFileRoute("/team/$id")({ component: TeamRoom });
 
@@ -122,10 +122,10 @@ function TeamRoom() {
                   <Button
                     onClick={() => placeBid(minNext)}
                     disabled={!canBid || bidding}
-                    className="w-full h-16 text-xl font-bold gradient-hot shadow-hot"
+                    className="w-full h-24 text-2xl font-bold gradient-hot shadow-hot animate-pulse-neon"
                   >
-                    <Gavel className="h-5 w-5 mr-2" />
-                    {bidding ? "Placing..." : `BID ${formatINR(minNext)}`}
+                    <Hand className="h-7 w-7 mr-2" />
+                    {bidding ? "Raising..." : `✋ RAISE HAND — ${formatINR(minNext)}`}
                   </Button>
                   {minNext > team.purse_remaining && (
                     <p className="text-center text-xs text-destructive">Insufficient purse for next bid.</p>
