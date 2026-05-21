@@ -9,10 +9,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import { formatINR, parseINR } from "@/lib/format";
-import { Play, Gavel, ChevronRight, Eye, Copy, Trash2, UserPlus } from "lucide-react";
+import { Play, Gavel, ChevronRight, Eye, Copy, Trash2, UserPlus, Share2 } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/admin/$id")({ component: AdminPanel });
 
