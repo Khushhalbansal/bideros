@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatINR } from "@/lib/format";
@@ -67,7 +67,11 @@ function Spectator() {
           <h1 className="font-display font-bold text-xl">{t.name}</h1>
           <span className="text-xs uppercase tracking-widest text-muted-foreground">Live auction</span>
         </div>
-        <div className="text-xs text-muted-foreground">Spectator view</div>
+        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <span className="hidden sm:inline">Spectator view</span>
+          <Link to="/" className="px-3 py-1.5 rounded-md border border-border hover:text-neon hover:border-neon transition">← Home</Link>
+          <Link to="/dashboard" className="px-3 py-1.5 rounded-md border border-border hover:text-neon hover:border-neon transition">Dashboard</Link>
+        </div>
       </header>
 
       <main className="flex-1 grid lg:grid-cols-[1fr_360px] gap-6 p-6">
