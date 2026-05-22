@@ -8,22 +8,21 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { formatINR } from "@/lib/format";
 
-export const Route = createFileRoute("/")({
-  component: Landing,
-});
+export const Route = createFileRoute("/")({ component: Landing });
 
 interface PublicTournament {
-  id: string; name: string; status: string; purse_amount: number;
-  squad_size: number; spectator_slug: string; created_at: string;
+  id: string; name: string; status: string; purse_per_team: number;
+  max_players_per_team: number; created_at: string; starts_at: string | null;
 }
 
-function Landing() {
+export function Landing() {
   const { user } = useAuth();
   const [tournaments, setTournaments] = useState<PublicTournament[]>([]);
   const [q, setQ] = useState("");
 
   useEffect(() => {
-    supabase.from("tournaments").select("id,name,status,purse_amount,squad_size,spectator_slug,created_at")
+    supabase.from("tournaments")
+      .select("id,name,status,purse_per_team,max_players_per_team,created_at,starts_at")
       .order("created_at", { ascending: false })
       .then(({ data }) => setTournaments((data as PublicTournament[]) || []));
   }, []);
@@ -33,9 +32,9 @@ function Landing() {
     return s ? tournaments.filter(t => t.name.toLowerCase().includes(s)) : tournaments;
   }, [q, tournaments]);
 
-  const ongoing = filtered.filter(t => t.status === "live" || t.status === "paused");
-  const upcoming = filtered.filter(t => t.status === "setup");
-  const past = filtered.filter(t => t.status === "ended");
+  const ongoing = filtered.filter(t => t.status === "live");
+  const upcoming = filtered.filter(t => t.status === "upcoming" || t.status === "draft");
+  const past = filtered.filter(t => t.status === "completed");
 
   return (
     <div className="min-h-screen">
@@ -80,7 +79,6 @@ function Landing() {
           </div>
         </section>
 
-        {/* Public tournament browser */}
         <section id="browse" className="mt-20 max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
             <div>
@@ -123,7 +121,7 @@ function Landing() {
   );
 }
 
-function TournamentGroup({ title, items, emptyText, accent }: { title: string; items: PublicTournament[]; emptyText: string; accent: "neon" | "hot" | "muted" }) {
+export function TournamentGroup({ title, items, emptyText, accent }: { title: string; items: PublicTournament[]; emptyText: string; accent: "neon" | "hot" | "muted" }) {
   const border = accent === "hot" ? "hover:border-hot/60" : accent === "neon" ? "hover:border-neon/60" : "hover:border-border";
   return (
     <div className="mb-10">
@@ -133,12 +131,12 @@ function TournamentGroup({ title, items, emptyText, accent }: { title: string; i
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {items.map(t => (
-            <Link key={t.id} to="/watch/$slug" params={{ slug: t.spectator_slug }} className={`bg-glass border border-border rounded-xl p-4 transition ${border} block`}>
+            <Link key={t.id} to="/watch/$slug" params={{ slug: t.id }} className={`bg-glass border border-border rounded-xl p-4 transition ${border} block`}>
               <div className="flex items-start justify-between gap-2 mb-2">
                 <h4 className="font-bold">{t.name}</h4>
                 <span className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full ${accent === "hot" ? "bg-destructive/20 text-hot" : accent === "neon" ? "bg-primary/15 text-neon" : "bg-muted text-muted-foreground"}`}>{t.status}</span>
               </div>
-              <div className="text-xs text-muted-foreground mb-3">Purse {formatINR(t.purse_amount)} • Squad {t.squad_size}</div>
+              <div className="text-xs text-muted-foreground mb-3">Purse {formatINR(t.purse_per_team)} • Squad {t.max_players_per_team}</div>
               <div className="flex items-center text-xs text-neon"><Eye className="h-3 w-3 mr-1" />Watch live</div>
             </Link>
           ))}

@@ -10,10 +10,10 @@ import { Gavel, ChevronRight, Wallet, Hand } from "lucide-react";
 
 export const Route = createFileRoute("/team/$id")({ component: TeamRoom });
 
-interface Team { id:string; name:string; tournament_id:string; owner_user_id:string|null; purse_remaining:number; }
-interface Tournament { id:string; name:string; bid_increment:number; spectator_slug:string; }
-interface Player { id:string; name:string; role:string|null; base_price:number; category:string; status:string; sold_to_team_id:string|null; sold_price:number|null; }
-interface AuctionState { current_player_id:string|null; current_bid:number|null; leading_team_id:string|null; phase:string; }
+interface Team { id:string; name:string; tournament_id:string; owner_id:string|null; remaining_purse:number; }
+interface Tournament { id:string; name:string; min_bid_increment:number; status:string; bid_timer_seconds:number; }
+interface Player { id:string; name:string; role:string|null; base_price:number; status:string; sold_to_team_id:string|null; sold_price:number|null; }
+interface AuctionState { current_player_id:string|null; current_highest_bid:number|null; current_highest_team_id:string|null; timer_ends_at:string|null; }
 interface Bid { id:string; team_id:string; amount:number; created_at:string; }
 
 function TeamRoom() {
@@ -27,7 +27,9 @@ function TeamRoom() {
   const [state, setState] = useState<AuctionState | null>(null);
   const [bids, setBids] = useState<Bid[]>([]);
   const [bidding, setBidding] = useState(false);
+  const [now, setNow] = useState(Date.now());
 
+  useEffect(() => { const i = setInterval(() => setNow(Date.now()), 500); return () => clearInterval(i); }, []);
   useEffect(() => { if (!loading && !user) navigate({ to: "/auth" }); }, [user, loading, navigate]);
 
   const load = useCallback(async () => {
@@ -61,20 +63,25 @@ function TeamRoom() {
   }, [team, id, load]);
 
   if (loading || !team || !tournament) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
-  if (user && team.owner_user_id !== user.id) return <div className="min-h-screen flex items-center justify-center text-muted-foreground p-8 text-center">This team isn't linked to your account. Ask your tournament admin.</div>;
+  if (user && team.owner_id !== user.id) return <div className="min-h-screen flex items-center justify-center text-muted-foreground p-8 text-center">This team isn't linked to your account. Ask your tournament admin.</div>;
 
   const currentPlayer = players.find(p => p.id === state?.current_player_id) || null;
-  const leadingTeam = allTeams.find(t => t.id === state?.leading_team_id);
-  const minNext = state?.current_bid == null
+  const leadingTeam = allTeams.find(t => t.id === state?.current_highest_team_id);
+  const minNext = !state?.current_highest_bid
     ? (currentPlayer?.base_price ?? 0)
-    : state.current_bid + tournament.bid_increment;
-  const isLeading = state?.leading_team_id === team.id;
-  const canBid = state?.phase === "live" && currentPlayer && !isLeading && minNext <= team.purse_remaining;
+    : Number(state.current_highest_bid) + Number(tournament.min_bid_increment);
+  const isLeading = state?.current_highest_team_id === team.id;
+  const timeLeft = state?.timer_ends_at ? Math.max(0, Math.ceil((new Date(state.timer_ends_at).getTime() - now) / 1000)) : 0;
+  const isLive = currentPlayer && tournament.status === "live" && timeLeft > 0;
+  const canBid = isLive && !isLeading && minNext <= team.remaining_purse;
   const squad = players.filter(p => p.sold_to_team_id === team.id);
 
   const placeBid = async (amount: number) => {
+    if (!currentPlayer) return;
     setBidding(true);
-    const { data, error } = await supabase.rpc("place_bid", { p_tournament: team.tournament_id, p_team: team.id, p_amount: amount });
+    const { data, error } = await supabase.rpc("place_bid", {
+      p_tournament: team.tournament_id, p_player: currentPlayer.id, p_team: team.id, p_amount: amount,
+    });
     setBidding(false);
     if (error) return toast.error(error.message);
     const r = data as { ok:boolean; error?:string };
@@ -95,22 +102,21 @@ function TeamRoom() {
         </div>
         <div className="flex items-center gap-2 bg-glass border border-neon/40 rounded-full px-4 py-2 shadow-neon">
           <Wallet className="h-4 w-4 text-neon" />
-          <span className="font-bold text-neon">{formatINR(team.purse_remaining)}</span>
+          <span className="font-bold text-neon">{formatINR(team.remaining_purse)}</span>
         </div>
       </header>
 
       <main className="container mx-auto px-4 pb-16 grid lg:grid-cols-3 gap-6">
-        {/* Live bidding panel */}
         <section className="lg:col-span-2 bg-glass border border-border rounded-xl p-6">
-          {currentPlayer && state?.phase === "live" ? (
+          {isLive && currentPlayer ? (
             <div className="space-y-6 animate-slide-up">
               <div className="rounded-xl gradient-neon p-6 text-primary-foreground">
-                <div className="text-xs uppercase tracking-widest opacity-80">On the block</div>
+                <div className="text-xs uppercase tracking-widest opacity-80">On the block • ⏱ {timeLeft}s</div>
                 <div className="text-4xl font-bold mt-1">{currentPlayer.name}</div>
                 <div className="text-sm opacity-80">{currentPlayer.role} • Base {formatINR(currentPlayer.base_price)}</div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <Stat label="Current bid" value={state.current_bid ? formatINR(state.current_bid) : "—"} accent="neon" />
+                <Stat label="Current bid" value={state?.current_highest_bid ? formatINR(state.current_highest_bid) : "—"} accent="neon" />
                 <Stat label="Leading" value={leadingTeam?.name || "—"} accent={isLeading ? "neon" : "hot"} highlight={isLeading} />
               </div>
               {isLeading ? (
@@ -127,22 +133,9 @@ function TeamRoom() {
                     <Hand className="h-7 w-7 mr-2" />
                     {bidding ? "Raising..." : `✋ RAISE HAND — ${formatINR(minNext)}`}
                   </Button>
-                  {minNext > team.purse_remaining && (
+                  {minNext > team.remaining_purse && (
                     <p className="text-center text-xs text-destructive">Insufficient purse for next bid.</p>
                   )}
-                  <div className="grid grid-cols-3 gap-2">
-                    {[2,5,10].map(mult => {
-                      const amt = state.current_bid == null
-                        ? currentPlayer.base_price + (mult-1) * tournament.bid_increment
-                        : state.current_bid + mult * tournament.bid_increment;
-                      const ok = amt <= team.purse_remaining;
-                      return (
-                        <Button key={mult} variant="outline" disabled={!ok || bidding} onClick={() => placeBid(amt)} className="border-neon/40">
-                          +{mult}x → {formatINR(amt)}
-                        </Button>
-                      );
-                    })}
-                  </div>
                 </div>
               )}
             </div>
@@ -150,12 +143,11 @@ function TeamRoom() {
             <div className="text-center py-20 text-muted-foreground">
               <Gavel className="h-12 w-12 mx-auto mb-4 opacity-40" />
               <p>Waiting for the admin to put a player on the block…</p>
-              <Button asChild variant="ghost" size="sm" className="mt-4"><Link to="/watch/$slug" params={{ slug: tournament.spectator_slug }}>Open spectator view</Link></Button>
+              <Button asChild variant="ghost" size="sm" className="mt-4"><Link to="/watch/$slug" params={{ slug: tournament.id }}>Open spectator view</Link></Button>
             </div>
           )}
         </section>
 
-        {/* Sidebar */}
         <aside className="space-y-6">
           <div className="bg-glass border border-border rounded-xl p-5">
             <h3 className="font-bold mb-3">My squad ({squad.length})</h3>
