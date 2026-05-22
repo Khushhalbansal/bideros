@@ -9,13 +9,20 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WatchSlugRouteImport } from './routes/watch.$slug'
 import { Route as TeamIdRouteImport } from './routes/team.$id'
+import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as AdminIdRouteImport } from './routes/admin.$id'
 
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -41,6 +48,11 @@ const TeamIdRoute = TeamIdRouteImport.update({
   path: '/team/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InviteTokenRoute = InviteTokenRouteImport.update({
+  id: '/invite/$token',
+  path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminIdRoute = AdminIdRouteImport.update({
   id: '/admin/$id',
   path: '/admin/$id',
@@ -51,7 +63,9 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/admin/$id': typeof AdminIdRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/team/$id': typeof TeamIdRoute
   '/watch/$slug': typeof WatchSlugRoute
 }
@@ -59,7 +73,9 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/admin/$id': typeof AdminIdRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/team/$id': typeof TeamIdRoute
   '/watch/$slug': typeof WatchSlugRoute
 }
@@ -68,7 +84,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/admin/$id': typeof AdminIdRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/team/$id': typeof TeamIdRoute
   '/watch/$slug': typeof WatchSlugRoute
 }
@@ -78,17 +96,29 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/dashboard'
+    | '/reset-password'
     | '/admin/$id'
+    | '/invite/$token'
     | '/team/$id'
     | '/watch/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/dashboard' | '/admin/$id' | '/team/$id' | '/watch/$slug'
+  to:
+    | '/'
+    | '/auth'
+    | '/dashboard'
+    | '/reset-password'
+    | '/admin/$id'
+    | '/invite/$token'
+    | '/team/$id'
+    | '/watch/$slug'
   id:
     | '__root__'
     | '/'
     | '/auth'
     | '/dashboard'
+    | '/reset-password'
     | '/admin/$id'
+    | '/invite/$token'
     | '/team/$id'
     | '/watch/$slug'
   fileRoutesById: FileRoutesById
@@ -97,13 +127,22 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   DashboardRoute: typeof DashboardRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   AdminIdRoute: typeof AdminIdRoute
+  InviteTokenRoute: typeof InviteTokenRoute
   TeamIdRoute: typeof TeamIdRoute
   WatchSlugRoute: typeof WatchSlugRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -139,6 +178,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeamIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/invite/$token': {
+      id: '/invite/$token'
+      path: '/invite/$token'
+      fullPath: '/invite/$token'
+      preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/$id': {
       id: '/admin/$id'
       path: '/admin/$id'
@@ -153,7 +199,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   DashboardRoute: DashboardRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   AdminIdRoute: AdminIdRoute,
+  InviteTokenRoute: InviteTokenRoute,
   TeamIdRoute: TeamIdRoute,
   WatchSlugRoute: WatchSlugRoute,
 }
