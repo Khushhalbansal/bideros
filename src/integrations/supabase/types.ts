@@ -14,44 +14,71 @@ export type Database = {
   }
   public: {
     Tables: {
-      auction_state: {
+      admin_allowlist: {
         Row: {
-          current_bid: number | null
-          current_player_id: string | null
-          leading_team_id: string | null
-          phase: Database["public"]["Enums"]["auction_phase"]
-          tournament_id: string
-          updated_at: string
+          created_at: string | null
+          email: string
+          id: string
+          invited_by: string | null
         }
         Insert: {
-          current_bid?: number | null
-          current_player_id?: string | null
-          leading_team_id?: string | null
-          phase?: Database["public"]["Enums"]["auction_phase"]
-          tournament_id: string
-          updated_at?: string
+          created_at?: string | null
+          email: string
+          id?: string
+          invited_by?: string | null
         }
         Update: {
-          current_bid?: number | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          invited_by?: string | null
+        }
+        Relationships: []
+      }
+      auction_state: {
+        Row: {
+          current_highest_bid: number | null
+          current_highest_team_id: string | null
+          current_player_id: string | null
+          id: string
+          lot_number: number | null
+          timer_ends_at: string | null
+          tournament_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          current_highest_bid?: number | null
+          current_highest_team_id?: string | null
           current_player_id?: string | null
-          leading_team_id?: string | null
-          phase?: Database["public"]["Enums"]["auction_phase"]
+          id?: string
+          lot_number?: number | null
+          timer_ends_at?: string | null
+          tournament_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          current_highest_bid?: number | null
+          current_highest_team_id?: string | null
+          current_player_id?: string | null
+          id?: string
+          lot_number?: number | null
+          timer_ends_at?: string | null
           tournament_id?: string
-          updated_at?: string
+          updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "auction_state_current_highest_team_id_fkey"
+            columns: ["current_highest_team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "auction_state_current_player_id_fkey"
             columns: ["current_player_id"]
             isOneToOne: false
             referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "auction_state_leading_team_id_fkey"
-            columns: ["leading_team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
           {
@@ -63,31 +90,87 @@ export type Database = {
           },
         ]
       }
+      audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string | null
+          id: string
+          payload: Json | null
+          tournament_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string | null
+          id?: string
+          payload?: Json | null
+          tournament_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string | null
+          id?: string
+          payload?: Json | null
+          tournament_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_log_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bid_rate_limit: {
+        Row: {
+          count: number
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          user_id: string
+          window_start: string
+        }
+        Update: {
+          count?: number
+          user_id?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       bids: {
         Row: {
           amount: number
-          bidder_user_id: string | null
-          created_at: string
+          created_at: string | null
           id: string
+          is_winning: boolean | null
           player_id: string
+          sequence_number: number
           team_id: string
           tournament_id: string
         }
         Insert: {
           amount: number
-          bidder_user_id?: string | null
-          created_at?: string
+          created_at?: string | null
           id?: string
+          is_winning?: boolean | null
           player_id: string
+          sequence_number?: number
           team_id: string
           tournament_id: string
         }
         Update: {
           amount?: number
-          bidder_user_id?: string | null
-          created_at?: string
+          created_at?: string | null
           id?: string
+          is_winning?: boolean | null
           player_id?: string
+          sequence_number?: number
           team_id?: string
           tournament_id?: string
         }
@@ -115,11 +198,62 @@ export type Database = {
           },
         ]
       }
+      invite_tokens: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          expires_at: string | null
+          id: string
+          team_id: string
+          token: string
+          tournament_id: string
+          used: boolean | null
+          used_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          expires_at?: string | null
+          id?: string
+          team_id: string
+          token?: string
+          tournament_id: string
+          used?: boolean | null
+          used_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          expires_at?: string | null
+          id?: string
+          team_id?: string
+          token?: string
+          tournament_id?: string
+          used?: boolean | null
+          used_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invite_tokens_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invite_tokens_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       players: {
         Row: {
+          auction_order: number | null
           base_price: number
-          category: Database["public"]["Enums"]["player_category"]
-          created_at: string
+          created_at: string | null
           id: string
           name: string
           photo_url: string | null
@@ -127,13 +261,13 @@ export type Database = {
           sold_price: number | null
           sold_to_team_id: string | null
           stats: Json | null
-          status: Database["public"]["Enums"]["player_status"]
+          status: string
           tournament_id: string
         }
         Insert: {
+          auction_order?: number | null
           base_price?: number
-          category?: Database["public"]["Enums"]["player_category"]
-          created_at?: string
+          created_at?: string | null
           id?: string
           name: string
           photo_url?: string | null
@@ -141,13 +275,13 @@ export type Database = {
           sold_price?: number | null
           sold_to_team_id?: string | null
           stats?: Json | null
-          status?: Database["public"]["Enums"]["player_status"]
+          status?: string
           tournament_id: string
         }
         Update: {
+          auction_order?: number | null
           base_price?: number
-          category?: Database["public"]["Enums"]["player_category"]
-          created_at?: string
+          created_at?: string | null
           id?: string
           name?: string
           photo_url?: string | null
@@ -155,7 +289,7 @@ export type Database = {
           sold_price?: number | null
           sold_to_team_id?: string | null
           stats?: Json | null
-          status?: Database["public"]["Enums"]["player_status"]
+          status?: string
           tournament_id?: string
         }
         Relationships: [
@@ -198,33 +332,39 @@ export type Database = {
       }
       teams: {
         Row: {
-          created_at: string
+          color: string | null
+          created_at: string | null
           id: string
           logo_url: string | null
           name: string
           owner_email: string | null
-          owner_user_id: string | null
-          purse_remaining: number
+          owner_id: string | null
+          owner_name: string | null
+          remaining_purse: number
           tournament_id: string
         }
         Insert: {
-          created_at?: string
+          color?: string | null
+          created_at?: string | null
           id?: string
           logo_url?: string | null
           name: string
           owner_email?: string | null
-          owner_user_id?: string | null
-          purse_remaining: number
+          owner_id?: string | null
+          owner_name?: string | null
+          remaining_purse: number
           tournament_id: string
         }
         Update: {
-          created_at?: string
+          color?: string | null
+          created_at?: string | null
           id?: string
           logo_url?: string | null
           name?: string
           owner_email?: string | null
-          owner_user_id?: string | null
-          purse_remaining?: number
+          owner_id?: string | null
+          owner_name?: string | null
+          remaining_purse?: number
           tournament_id?: string
         }
         Relationships: [
@@ -240,36 +380,42 @@ export type Database = {
       tournaments: {
         Row: {
           admin_id: string
-          bid_increment: number
-          created_at: string
+          bid_timer_seconds: number
+          created_at: string | null
           id: string
+          is_demo: boolean | null
+          max_players_per_team: number
+          min_bid_increment: number
           name: string
-          purse_amount: number
-          spectator_slug: string
-          squad_size: number
-          status: Database["public"]["Enums"]["tournament_status"]
+          purse_per_team: number
+          starts_at: string | null
+          status: string
         }
         Insert: {
           admin_id: string
-          bid_increment?: number
-          created_at?: string
+          bid_timer_seconds?: number
+          created_at?: string | null
           id?: string
+          is_demo?: boolean | null
+          max_players_per_team?: number
+          min_bid_increment?: number
           name: string
-          purse_amount?: number
-          spectator_slug?: string
-          squad_size?: number
-          status?: Database["public"]["Enums"]["tournament_status"]
+          purse_per_team?: number
+          starts_at?: string | null
+          status?: string
         }
         Update: {
           admin_id?: string
-          bid_increment?: number
-          created_at?: string
+          bid_timer_seconds?: number
+          created_at?: string | null
           id?: string
+          is_demo?: boolean | null
+          max_players_per_team?: number
+          min_bid_increment?: number
           name?: string
-          purse_amount?: number
-          spectator_slug?: string
-          squad_size?: number
-          status?: Database["public"]["Enums"]["tournament_status"]
+          purse_per_team?: number
+          starts_at?: string | null
+          status?: string
         }
         Relationships: []
       }
@@ -296,6 +442,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_invite: { Args: { p_token: string }; Returns: Json }
+      close_expired_lots: { Args: never; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -303,18 +451,25 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_team_owner: { Args: { _team: string }; Returns: boolean }
+      is_tournament_admin: { Args: { _tid: string }; Returns: boolean }
+      is_tournament_public: { Args: { _tid: string }; Returns: boolean }
       place_bid: {
-        Args: { p_amount: number; p_team: string; p_tournament: string }
+        Args: {
+          p_amount: number
+          p_player: string
+          p_team: string
+          p_tournament: string
+        }
         Returns: Json
       }
-      sell_current_player: { Args: { p_tournament: string }; Returns: Json }
+      start_lot: {
+        Args: { p_player: string; p_tournament: string }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "super_admin" | "tournament_admin" | "team_owner"
-      auction_phase: "idle" | "live" | "sold_animation"
-      player_category: "iconic" | "normal"
-      player_status: "available" | "sold" | "unsold"
-      tournament_status: "setup" | "live" | "paused" | "ended"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -443,10 +598,6 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["super_admin", "tournament_admin", "team_owner"],
-      auction_phase: ["idle", "live", "sold_animation"],
-      player_category: ["iconic", "normal"],
-      player_status: ["available", "sold", "unsold"],
-      tournament_status: ["setup", "live", "paused", "ended"],
     },
   },
 } as const

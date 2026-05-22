@@ -9,18 +9,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import { formatINR, parseINR } from "@/lib/format";
-import { Play, Gavel, ChevronRight, Eye, Copy, Trash2, UserPlus, Share2 } from "lucide-react";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
+import { Play, Gavel, ChevronRight, Eye, Copy, Trash2, Share2, Link as LinkIcon, Save } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/admin/$id")({ component: AdminPanel });
 
-interface Tournament { id:string; name:string; status:string; purse_amount:number; squad_size:number; bid_increment:number; spectator_slug:string; admin_id:string; }
-interface Team { id:string; name:string; owner_user_id:string|null; owner_email:string|null; purse_remaining:number; logo_url:string|null; }
-interface Player { id:string; name:string; role:string|null; base_price:number; category:string; status:string; sold_to_team_id:string|null; sold_price:number|null; }
-interface AuctionState { tournament_id:string; current_player_id:string|null; current_bid:number|null; leading_team_id:string|null; phase:string; }
+interface Tournament { id:string; name:string; status:string; purse_per_team:number; max_players_per_team:number; min_bid_increment:number; bid_timer_seconds:number; admin_id:string; starts_at:string|null; }
+interface Team { id:string; name:string; owner_id:string|null; owner_email:string|null; owner_name:string|null; remaining_purse:number; logo_url:string|null; }
+interface Player { id:string; name:string; role:string|null; base_price:number; status:string; sold_to_team_id:string|null; sold_price:number|null; auction_order:number|null; }
+interface AuctionState { tournament_id:string; current_player_id:string|null; current_highest_bid:number|null; current_highest_team_id:string|null; timer_ends_at:string|null; }
 
 function AdminPanel() {
   const { id } = Route.useParams();
@@ -37,7 +35,7 @@ function AdminPanel() {
     const [{ data: tt }, { data: tm }, { data: pl }, { data: st }] = await Promise.all([
       supabase.from("tournaments").select("*").eq("id", id).single(),
       supabase.from("teams").select("*").eq("tournament_id", id).order("created_at"),
-      supabase.from("players").select("*").eq("tournament_id", id).order("created_at"),
+      supabase.from("players").select("*").eq("tournament_id", id).order("auction_order", { nullsFirst: false }).order("created_at"),
       supabase.from("auction_state").select("*").eq("tournament_id", id).maybeSingle(),
     ]);
     setT(tt as Tournament); setTeams((tm as Team[]) || []); setPlayers((pl as Player[]) || []);
@@ -46,7 +44,6 @@ function AdminPanel() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Realtime
   useEffect(() => {
     const ch = supabase.channel(`admin:${id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "auction_state", filter: `tournament_id=eq.${id}` }, () => load())
@@ -60,8 +57,6 @@ function AdminPanel() {
   if (loading || !t) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
   if (user && t.admin_id !== user.id) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Not authorized.</div>;
 
-  const spectatorUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/watch/${t.spectator_slug}`;
-
   return (
     <div className="min-h-screen">
       <header className="container mx-auto flex items-center justify-between py-6 px-4">
@@ -69,9 +64,10 @@ function AdminPanel() {
           <Logo />
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
           <h1 className="font-display font-bold text-lg">{t.name}</h1>
+          <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/15 text-neon">{t.status}</span>
         </div>
         <div className="flex gap-2">
-          <Button asChild variant="outline" size="sm"><Link to="/watch/$slug" params={{ slug: t.spectator_slug }}><Eye className="h-3 w-3 mr-1" />Spectator</Link></Button>
+          <Button asChild variant="outline" size="sm"><Link to="/watch/$slug" params={{ slug: t.id }}><Eye className="h-3 w-3 mr-1" />Spectator</Link></Button>
           <Button asChild variant="ghost" size="sm"><Link to="/dashboard">← Dashboard</Link></Button>
         </div>
       </header>
@@ -86,28 +82,16 @@ function AdminPanel() {
           </TabsList>
 
           <TabsContent value="auction" className="mt-6">
-            <AuctionControl tournament={t} players={players} teams={teams} state={state} onChange={load} />
+            <AuctionControl tournament={t} players={players} teams={teams} state={state} />
           </TabsContent>
-
           <TabsContent value="teams" className="mt-6">
-            <TeamsTab tournament={t} teams={teams} onChange={load} />
+            <TeamsTab tournament={t} teams={teams} players={players} onChange={load} />
           </TabsContent>
-
           <TabsContent value="players" className="mt-6">
             <PlayersTab tournament={t} players={players} teams={teams} onChange={load} />
           </TabsContent>
-
           <TabsContent value="settings" className="mt-6">
-            <div className="bg-glass border border-border rounded-xl p-6 space-y-3 max-w-2xl">
-              <h3 className="font-bold">Spectator link</h3>
-              <div className="flex gap-2">
-                <Input value={spectatorUrl} readOnly className="font-mono text-xs" />
-                <Button variant="outline" onClick={() => { navigator.clipboard.writeText(spectatorUrl); toast.success("Copied"); }}>
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">Anyone with this link can watch your auction live.</p>
-            </div>
+            <SettingsTab tournament={t} onChange={load} />
           </TabsContent>
         </Tabs>
       </main>
@@ -116,35 +100,25 @@ function AdminPanel() {
 }
 
 // === AUCTION CONTROL ===
-function AuctionControl({ tournament, players, teams, state, onChange }:{
-  tournament: Tournament; players: Player[]; teams: Team[]; state: AuctionState | null; onChange: () => void;
+function AuctionControl({ tournament, players, teams, state }:{
+  tournament: Tournament; players: Player[]; teams: Team[]; state: AuctionState | null;
 }) {
-  const available = players.filter(p => p.status === "available");
+  const pending = players.filter(p => p.status === "pending");
   const currentPlayer = players.find(p => p.id === state?.current_player_id) || null;
-  const leadingTeam = teams.find(tm => tm.id === state?.leading_team_id) || null;
+  const leadingTeam = teams.find(tm => tm.id === state?.current_highest_team_id) || null;
   const [selectedId, setSelectedId] = useState<string>("");
 
-  const startAuction = async () => {
+  const startLot = async () => {
     if (!selectedId) return toast.error("Pick a player");
-    const { error } = await supabase.from("auction_state").update({
-      current_player_id: selectedId, current_bid: null, leading_team_id: null, phase: "live", updated_at: new Date().toISOString(),
-    }).eq("tournament_id", tournament.id);
+    if (tournament.status !== "live") {
+      await supabase.from("tournaments").update({ status: "live" }).eq("id", tournament.id);
+    }
+    const { data, error } = await supabase.rpc("start_lot", { p_tournament: tournament.id, p_player: selectedId });
     if (error) return toast.error(error.message);
-    setSelectedId("");
-  };
-
-  const sell = async () => {
-    const { data, error } = await supabase.rpc("sell_current_player", { p_tournament: tournament.id });
-    if (error) return toast.error(error.message);
-    const r = data as { ok: boolean; error?: string };
+    const r = data as { ok:boolean; error?:string };
     if (!r.ok) return toast.error(r.error || "Failed");
-    toast.success(leadingTeam ? `SOLD to ${leadingTeam.name}` : "Marked unsold");
-  };
-
-  const resetIdle = async () => {
-    await supabase.from("auction_state").update({
-      current_player_id: null, current_bid: null, leading_team_id: null, phase: "idle", updated_at: new Date().toISOString(),
-    }).eq("tournament_id", tournament.id);
+    toast.success("Lot started");
+    setSelectedId("");
   };
 
   return (
@@ -152,7 +126,7 @@ function AuctionControl({ tournament, players, teams, state, onChange }:{
       <div className="lg:col-span-2 bg-glass border border-border rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold text-lg">Auction control</h3>
-          <span className="text-xs uppercase tracking-wider text-neon">{state?.phase || "idle"}</span>
+          <span className="text-xs uppercase tracking-wider text-neon">{tournament.status}</span>
         </div>
 
         {currentPlayer ? (
@@ -160,40 +134,33 @@ function AuctionControl({ tournament, players, teams, state, onChange }:{
             <div className="rounded-xl gradient-neon p-6 text-primary-foreground">
               <div className="text-xs uppercase tracking-widest opacity-80">Now on the block</div>
               <div className="text-3xl font-bold mt-1">{currentPlayer.name}</div>
-              <div className="text-sm mt-1 opacity-80">{currentPlayer.role} • Base {formatINR(currentPlayer.base_price)} • {currentPlayer.category}</div>
+              <div className="text-sm mt-1 opacity-80">{currentPlayer.role} • Base {formatINR(currentPlayer.base_price)}</div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-card/60 rounded-lg p-4 border border-border">
                 <div className="text-xs text-muted-foreground">Current bid</div>
-                <div className="text-2xl font-bold text-neon">{state?.current_bid ? formatINR(state.current_bid) : "—"}</div>
+                <div className="text-2xl font-bold text-neon">{state?.current_highest_bid ? formatINR(state.current_highest_bid) : "—"}</div>
               </div>
               <div className="bg-card/60 rounded-lg p-4 border border-border">
                 <div className="text-xs text-muted-foreground">Leading team</div>
                 <div className="text-2xl font-bold text-hot">{leadingTeam?.name || "—"}</div>
               </div>
             </div>
-            <div className="flex gap-2">
-              {state?.phase === "live" && (
-                <Button onClick={sell} className="flex-1 gradient-hot shadow-hot font-bold">
-                  <Gavel className="h-4 w-4 mr-1" /> {leadingTeam ? "SOLD!" : "Mark Unsold"}
-                </Button>
-              )}
-              <Button variant="outline" onClick={resetIdle}>Clear</Button>
-            </div>
+            <p className="text-xs text-muted-foreground text-center">Lot closes automatically when the timer expires (every {tournament.bid_timer_seconds}s).</p>
           </div>
         ) : (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">Pick a player to put up for auction.</p>
             <div className="flex gap-2">
               <Select value={selectedId} onValueChange={setSelectedId}>
-                <SelectTrigger className="flex-1"><SelectValue placeholder={`${available.length} players available`} /></SelectTrigger>
+                <SelectTrigger className="flex-1"><SelectValue placeholder={`${pending.length} players pending`} /></SelectTrigger>
                 <SelectContent>
-                  {available.map(p => (
-                    <SelectItem key={p.id} value={p.id}>{p.name} — {formatINR(p.base_price)} {p.category === "iconic" ? "⭐" : ""}</SelectItem>
+                  {pending.map(p => (
+                    <SelectItem key={p.id} value={p.id}>{p.name} — {formatINR(p.base_price)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <Button onClick={startAuction} disabled={!selectedId || teams.length === 0} className="gradient-neon text-primary-foreground shadow-neon">
+              <Button onClick={startLot} disabled={!selectedId || teams.length === 0} className="gradient-neon text-primary-foreground shadow-neon">
                 <Play className="h-4 w-4 mr-1" />Start
               </Button>
             </div>
@@ -211,7 +178,7 @@ function AuctionControl({ tournament, players, teams, state, onChange }:{
                 <div className="font-semibold text-sm">{tm.name}</div>
                 <div className="text-[10px] text-muted-foreground">{tm.owner_email || "no owner"}</div>
               </div>
-              <div className="text-sm text-neon font-bold">{formatINR(tm.purse_remaining)}</div>
+              <div className="text-sm text-neon font-bold">{formatINR(tm.remaining_purse)}</div>
             </div>
           ))}
           {teams.length === 0 && <p className="text-xs text-muted-foreground">No teams yet.</p>}
@@ -222,43 +189,36 @@ function AuctionControl({ tournament, players, teams, state, onChange }:{
 }
 
 // === TEAMS TAB ===
-function TeamsTab({ tournament, teams, onChange }: { tournament: Tournament; teams: Team[]; onChange: () => void; }) {
+function TeamsTab({ tournament, teams, players, onChange }: { tournament: Tournament; teams: Team[]; players: Player[]; onChange: () => void; }) {
   const [name, setName] = useState("");
+  const [ownerName, setOwnerName] = useState("");
   const [email, setEmail] = useState("");
-  const [tempPw, setTempPw] = useState("");
   const [busy, setBusy] = useState(false);
-  const [creds, setCreds] = useState<{ email: string; password: string; teamId: string; teamName: string } | null>(null);
+  const [invite, setInvite] = useState<{ teamId: string; teamName: string; url: string; email: string | null } | null>(null);
 
   const addTeam = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
     const { error } = await supabase.from("teams").insert({
-      tournament_id: tournament.id, name, owner_email: email || null, purse_remaining: tournament.purse_amount,
+      tournament_id: tournament.id, name,
+      owner_name: ownerName || null,
+      owner_email: email || null,
+      remaining_purse: tournament.purse_per_team,
     });
     setBusy(false);
     if (error) return toast.error(error.message);
     toast.success("Team added");
-    setName(""); setEmail("");
+    setName(""); setOwnerName(""); setEmail("");
     onChange();
   };
 
-  const inviteOwner = async (team: Team) => {
-    if (!team.owner_email) return toast.error("Add owner email first (re-create team)");
-    if (!tempPw || tempPw.length < 8) return toast.error("Set a temp password (8+ chars) in the field above");
-    const password = tempPw;
-    const { data, error } = await supabase.auth.signUp({
-      email: team.owner_email, password,
-      options: { emailRedirectTo: `${window.location.origin}/dashboard` }
-    });
+  const generateInvite = async (team: Team) => {
+    const { data, error } = await supabase.from("invite_tokens").insert({
+      tournament_id: tournament.id, team_id: team.id, email: team.owner_email,
+    }).select().single();
     if (error) return toast.error(error.message);
-    const newId = data.user?.id;
-    if (newId) {
-      await supabase.from("teams").update({ owner_user_id: newId }).eq("id", team.id);
-      await supabase.from("user_roles").insert({ user_id: newId, role: "team_owner" });
-    }
-    toast.success(`Owner created. Share credentials below.`);
-    setCreds({ email: team.owner_email, password, teamId: team.id, teamName: team.name });
-    onChange();
+    const url = `${window.location.origin}/invite/${data.token}`;
+    setInvite({ teamId: team.id, teamName: team.name, url, email: team.owner_email });
   };
 
   const remove = async (id: string) => {
@@ -268,67 +228,70 @@ function TeamsTab({ tournament, teams, onChange }: { tournament: Tournament; tea
     onChange();
   };
 
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const loginLink = creds ? `${origin}/auth?team=${creds.teamId}` : "";
-  const message = creds
-    ? `🏏 You're invited as owner of *${creds.teamName}* in ${tournament.name}!\n\n🔗 Login: ${loginLink}\n📧 Email: ${creds.email}\n🔑 Password: ${creds.password}\n\nAfter signing in, your team room opens automatically. See you at the auction!`
+  const waMessage = invite
+    ? `🏏 You're invited as owner of *${invite.teamName}* in ${tournament.name}!\n\n🔗 Click to join: ${invite.url}\n\nNo password needed — just sign up with your email and you'll go straight to your auction room.`
     : "";
-  const waUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+  const waUrl = `https://wa.me/?text=${encodeURIComponent(waMessage)}`;
 
   return (
     <div className="grid md:grid-cols-3 gap-6">
-      <form onSubmit={addTeam} className="bg-glass border border-border rounded-xl p-5 space-y-3">
+      <form onSubmit={addTeam} className="bg-glass border border-border rounded-xl p-5 space-y-3 h-fit">
         <h3 className="font-bold">Add team</h3>
         <div><Label>Team name</Label><Input value={name} onChange={e=>setName(e.target.value)} required /></div>
+        <div><Label>Owner name</Label><Input value={ownerName} onChange={e=>setOwnerName(e.target.value)} placeholder="Jane Doe" /></div>
         <div><Label>Owner email</Label><Input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="owner@team.com" /></div>
-        <div>
-          <Label>Temp password (for invites)</Label>
-          <Input type="text" value={tempPw} onChange={e=>setTempPw(e.target.value)} placeholder="Auction2026!" />
-          <p className="text-[10px] text-muted-foreground mt-1">Used when you click "Create login" on a team below.</p>
-        </div>
         <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon">Add team</Button>
+        <p className="text-[10px] text-muted-foreground">After adding, click <strong>Copy invite link</strong> on the team card to send them a one-click join link.</p>
       </form>
-      <div className="md:col-span-2 space-y-2">
-        {teams.map(tm => (
-          <div key={tm.id} className="bg-glass border border-border rounded-xl p-4 flex items-center justify-between">
-            <div>
-              <div className="font-bold">{tm.name}</div>
-              <div className="text-xs text-muted-foreground">{tm.owner_email || "no owner email"} {tm.owner_user_id ? "• ✓ linked" : ""}</div>
-              <div className="text-xs text-neon mt-1">Purse {formatINR(tm.purse_remaining)}</div>
-            </div>
-            <div className="flex gap-2">
-              {tm.owner_user_id && tm.owner_email && (
-                <Button size="sm" variant="outline" onClick={() => setCreds({ email: tm.owner_email!, password: tempPw || "(set temp password above to re-share)", teamId: tm.id, teamName: tm.name })}>
-                  <Share2 className="h-3 w-3 mr-1" />Share
-                </Button>
+      <div className="md:col-span-2 space-y-3">
+        {teams.map(tm => {
+          const squad = players.filter(p => p.sold_to_team_id === tm.id);
+          return (
+            <div key={tm.id} className="bg-glass border border-border rounded-xl p-4 space-y-3">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="font-bold">{tm.name}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {tm.owner_name || "—"} • {tm.owner_email || "no email"} {tm.owner_id && <span className="text-neon">• ✓ linked</span>}
+                  </div>
+                  <div className="text-xs text-neon mt-1">Purse {formatINR(tm.remaining_purse)} • {squad.length} player{squad.length === 1 ? "" : "s"}</div>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <Button size="sm" variant="outline" onClick={() => generateInvite(tm)}><LinkIcon className="h-3 w-3 mr-1" />Copy invite link</Button>
+                  <Button size="sm" variant="ghost" onClick={() => remove(tm.id)}><Trash2 className="h-3 w-3" /></Button>
+                </div>
+              </div>
+              {squad.length > 0 && (
+                <div className="border-t border-border pt-2 space-y-1">
+                  {squad.map(p => (
+                    <div key={p.id} className="flex justify-between text-xs">
+                      <span>{p.name} <span className="text-muted-foreground">({p.role})</span></span>
+                      <span className="text-neon font-semibold">{formatINR(p.sold_price)}</span>
+                    </div>
+                  ))}
+                </div>
               )}
-              {!tm.owner_user_id && tm.owner_email && (
-                <Button size="sm" variant="outline" onClick={() => inviteOwner(tm)}><UserPlus className="h-3 w-3 mr-1" />Create login</Button>
-              )}
-              <Button size="sm" variant="ghost" onClick={() => remove(tm.id)}><Trash2 className="h-3 w-3" /></Button>
             </div>
-          </div>
-        ))}
+          );
+        })}
         {teams.length === 0 && <p className="text-sm text-muted-foreground">No teams yet.</p>}
       </div>
 
-      <Dialog open={!!creds} onOpenChange={(o) => !o && setCreds(null)}>
+      <Dialog open={!!invite} onOpenChange={(o) => !o && setInvite(null)}>
         <DialogContent className="bg-card border-border">
-          <DialogHeader><DialogTitle>Share owner credentials</DialogTitle></DialogHeader>
-          {creds && (
+          <DialogHeader><DialogTitle>Invite link for {invite?.teamName}</DialogTitle></DialogHeader>
+          {invite && (
             <div className="space-y-4">
               <div className="bg-glass border border-neon/40 rounded-lg p-4 space-y-2 text-sm">
-                <div><span className="text-muted-foreground">Team:</span> <span className="font-bold">{creds.teamName}</span></div>
-                <div><span className="text-muted-foreground">Email:</span> <span className="font-mono">{creds.email}</span></div>
-                <div><span className="text-muted-foreground">Password:</span> <span className="font-mono">{creds.password}</span></div>
-                <div className="pt-2 border-t border-border">
-                  <div className="text-xs text-muted-foreground mb-1">Login link</div>
-                  <div className="font-mono text-xs break-all text-neon">{loginLink}</div>
-                </div>
+                <div className="text-xs text-muted-foreground">One-click invite link (valid 7 days)</div>
+                <div className="font-mono text-xs break-all text-neon">{invite.url}</div>
+                <p className="text-xs text-muted-foreground pt-2 border-t border-border">
+                  The owner signs up with their email — no password needs to be shared. After they confirm, they land directly in their team auction room.
+                </p>
               </div>
               <DialogFooter className="flex flex-col sm:flex-row gap-2">
-                <Button variant="outline" className="flex-1" onClick={() => { navigator.clipboard.writeText(message); toast.success("Message copied"); }}>
-                  <Copy className="h-4 w-4 mr-1" />Copy message
+                <Button variant="outline" className="flex-1" onClick={() => { navigator.clipboard.writeText(invite.url); toast.success("Link copied"); }}>
+                  <Copy className="h-4 w-4 mr-1" />Copy link
                 </Button>
                 <Button asChild className="flex-1 gradient-neon text-primary-foreground shadow-neon">
                   <a href={waUrl} target="_blank" rel="noopener noreferrer">
@@ -345,37 +308,45 @@ function TeamsTab({ tournament, teams, onChange }: { tournament: Tournament; tea
 }
 
 // === PLAYERS TAB ===
-function PlayersTab({ tournament, players, teams, onChange }: { tournament: Tournament; players: Player[]; teams: Team[]; onChange: () => void; }) {
+function PlayersTab({ tournament, players, teams, onChange }:{ tournament: Tournament; players: Player[]; teams: Team[]; onChange: () => void; }) {
   const [name, setName] = useState("");
-  const [role, setRole] = useState("Batter");
-  const [base, setBase] = useState("20 L");
-  const [category, setCategory] = useState<"normal"|"iconic">("normal");
+  const [role, setRole] = useState<string>("Batter");
+  const [base, setBase] = useState("1 L");
   const [busy, setBusy] = useState(false);
 
   const add = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
+    const maxOrder = Math.max(0, ...players.map(p => p.auction_order ?? 0));
     const { error } = await supabase.from("players").insert({
-      tournament_id: tournament.id, name, role, base_price: parseINR(base), category,
+      tournament_id: tournament.id, name, role, base_price: parseINR(base),
+      auction_order: maxOrder + 1,
     });
     setBusy(false);
     if (error) return toast.error(error.message);
-    setName("");
+    setName(""); setBase("1 L");
     onChange();
   };
 
   const remove = async (id: string) => {
-    const { error } = await supabase.from("players").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (!confirm("Delete player?")) return;
+    await supabase.from("players").delete().eq("id", id);
     onChange();
+  };
+
+  const updateField = async (id: string, patch: Partial<Player>) => {
+    const { error } = await supabase.from("players").update(patch).eq("id", id);
+    if (error) toast.error(error.message);
+    else onChange();
   };
 
   return (
     <div className="grid md:grid-cols-3 gap-6">
-      <form onSubmit={add} className="bg-glass border border-border rounded-xl p-5 space-y-3">
+      <form onSubmit={add} className="bg-glass border border-border rounded-xl p-5 space-y-3 h-fit">
         <h3 className="font-bold">Add player</h3>
         <div><Label>Name</Label><Input value={name} onChange={e=>setName(e.target.value)} required /></div>
-        <div><Label>Role</Label>
+        <div>
+          <Label>Role</Label>
           <Select value={role} onValueChange={setRole}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -383,36 +354,127 @@ function PlayersTab({ tournament, players, teams, onChange }: { tournament: Tour
             </SelectContent>
           </Select>
         </div>
-        <div><Label>Base price</Label><Input value={base} onChange={e=>setBase(e.target.value)} /></div>
-        <div><Label>Category</Label>
-          <Select value={category} onValueChange={v=>setCategory(v as "normal"|"iconic")}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="normal">Normal</SelectItem>
-              <SelectItem value="iconic">Iconic ⭐</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon">Add player</Button>
+        <div><Label>Base price</Label><Input value={base} onChange={e=>setBase(e.target.value)} placeholder="1 L" /></div>
+        <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon">Add</Button>
       </form>
-      <div className="md:col-span-2 space-y-2 max-h-[600px] overflow-auto">
+      <div className="md:col-span-2 space-y-2">
         {players.map(p => {
           const team = teams.find(t => t.id === p.sold_to_team_id);
           return (
-            <div key={p.id} className="bg-glass border border-border rounded-xl p-3 flex items-center justify-between">
-              <div className="flex-1">
-                <div className="font-semibold">{p.name} {p.category === "iconic" && "⭐"}</div>
-                <div className="text-xs text-muted-foreground">{p.role} • Base {formatINR(p.base_price)}</div>
-              </div>
-              <div className="text-right mr-3">
-                <div className={`text-xs uppercase tracking-wider font-bold ${p.status === "sold" ? "text-neon" : p.status === "unsold" ? "text-hot" : "text-muted-foreground"}`}>{p.status}</div>
-                {p.status === "sold" && <div className="text-[10px] text-muted-foreground">{team?.name} • {formatINR(p.sold_price)}</div>}
+            <div key={p.id} className="bg-glass border border-border rounded-xl p-3 flex items-center justify-between gap-3">
+              <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-2 items-center">
+                <Input value={p.name} onChange={e => updateField(p.id, { name: e.target.value })} className="h-8 text-xs" />
+                <Select value={p.role ?? "Batter"} onValueChange={(v) => updateField(p.id, { role: v })}>
+                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {["Batter","Bowler","All-rounder","Wicket-keeper"].map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Input
+                  defaultValue={String(p.base_price)}
+                  onBlur={e => { const v = parseINR(e.target.value); if (v && v !== p.base_price) updateField(p.id, { base_price: v }); }}
+                  className="h-8 text-xs font-mono"
+                />
+                <div className="text-xs text-muted-foreground">
+                  <span className={`uppercase tracking-wider ${p.status === "sold" ? "text-neon" : p.status === "unsold" ? "text-hot" : ""}`}>{p.status}</span>
+                  {team && <div>{team.name} — {formatINR(p.sold_price)}</div>}
+                </div>
               </div>
               <Button size="sm" variant="ghost" onClick={() => remove(p.id)}><Trash2 className="h-3 w-3" /></Button>
             </div>
           );
         })}
         {players.length === 0 && <p className="text-sm text-muted-foreground">No players yet.</p>}
+      </div>
+    </div>
+  );
+}
+
+// === SETTINGS ===
+function SettingsTab({ tournament, onChange }: { tournament: Tournament; onChange: () => void; }) {
+  const [form, setForm] = useState({
+    name: tournament.name,
+    status: tournament.status,
+    purse: formatINR(tournament.purse_per_team),
+    increment: formatINR(tournament.min_bid_increment),
+    timer: String(tournament.bid_timer_seconds),
+    maxPlayers: String(tournament.max_players_per_team),
+    startsAt: tournament.starts_at ? tournament.starts_at.slice(0,16) : "",
+  });
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    setSaving(true);
+    const { error } = await supabase.from("tournaments").update({
+      name: form.name,
+      status: form.status,
+      purse_per_team: parseINR(form.purse),
+      min_bid_increment: parseINR(form.increment),
+      bid_timer_seconds: parseInt(form.timer) || 15,
+      max_players_per_team: parseInt(form.maxPlayers) || 15,
+      starts_at: form.startsAt ? new Date(form.startsAt).toISOString() : null,
+    }).eq("id", tournament.id);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Settings saved");
+    onChange();
+  };
+
+  const deleteTournament = async () => {
+    if (!confirm("Delete this tournament and all its data? This cannot be undone.")) return;
+    const { error } = await supabase.from("tournaments").delete().eq("id", tournament.id);
+    if (error) return toast.error(error.message);
+    window.location.href = "/dashboard";
+  };
+
+  const spectatorUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/watch/${tournament.id}`;
+
+  return (
+    <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
+      <div className="bg-glass border border-border rounded-xl p-6 space-y-4">
+        <h3 className="font-bold">Tournament settings</h3>
+        <div><Label>Name</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} /></div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label>Status</Label>
+            <Select value={form.status} onValueChange={v => setForm({...form, status: v})}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {["draft","upcoming","live","completed"].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div><Label>Starts at</Label><Input type="datetime-local" value={form.startsAt} onChange={e => setForm({...form, startsAt: e.target.value})} /></div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div><Label>Purse / team</Label><Input value={form.purse} onChange={e => setForm({...form, purse: e.target.value})} /></div>
+          <div><Label>Bid increment</Label><Input value={form.increment} onChange={e => setForm({...form, increment: e.target.value})} /></div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div><Label>Bid timer (sec)</Label><Input type="number" value={form.timer} onChange={e => setForm({...form, timer: e.target.value})} /></div>
+          <div><Label>Max players / team</Label><Input type="number" value={form.maxPlayers} onChange={e => setForm({...form, maxPlayers: e.target.value})} /></div>
+        </div>
+        <Button onClick={save} disabled={saving} className="w-full gradient-neon text-primary-foreground shadow-neon"><Save className="h-4 w-4 mr-1" />Save settings</Button>
+      </div>
+      <div className="space-y-4">
+        <div className="bg-glass border border-border rounded-xl p-6 space-y-3">
+          <h3 className="font-bold">Spectator link</h3>
+          <div className="flex gap-2">
+            <Input value={spectatorUrl} readOnly className="font-mono text-xs" />
+            <Button variant="outline" onClick={() => { navigator.clipboard.writeText(spectatorUrl); toast.success("Copied"); }}>
+              <Copy className="h-4 w-4" />
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">Anyone with this link can watch your auction live.</p>
+        </div>
+        <div className="bg-glass border border-destructive/30 rounded-xl p-6 space-y-3">
+          <h3 className="font-bold text-destructive">Danger zone</h3>
+          <p className="text-xs text-muted-foreground">Permanently delete this tournament and every team, player, and bid in it.</p>
+          <Button variant="outline" className="border-destructive/40 text-destructive hover:bg-destructive/10" onClick={deleteTournament}>
+            <Trash2 className="h-4 w-4 mr-1" />Delete tournament
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground">Completed tournaments are automatically deleted after 20 days.</p>
       </div>
     </div>
   );
