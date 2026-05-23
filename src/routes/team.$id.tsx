@@ -28,28 +28,37 @@ function TeamRoom() {
   const [bids, setBids] = useState<Bid[]>([]);
   const [bidding, setBidding] = useState(false);
   const [now, setNow] = useState(Date.now());
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => { const i = setInterval(() => setNow(Date.now()), 500); return () => clearInterval(i); }, []);
   useEffect(() => { if (!loading && !user) navigate({ to: "/auth" }); }, [user, loading, navigate]);
 
   const load = useCallback(async () => {
-    const { data: tm } = await supabase.from("teams").select("*").eq("id", id).single();
-    if (!tm) return;
+    if (!user) return;
+    const { data: tm, error: tmErr } = await supabase.from("teams").select("*").eq("id", id).maybeSingle();
+    if (tmErr) { setLoadError(tmErr.message); setLoaded(true); return; }
+    if (!tm) {
+      setLoadError("This team isn't visible to your account. Open the invite link with the signed-in email, or ask your admin for a fresh invite.");
+      setLoaded(true);
+      return;
+    }
     setTeam(tm as Team);
     const [{ data: tt }, { data: ats }, { data: pl }, { data: st }, { data: bd }] = await Promise.all([
-      supabase.from("tournaments").select("*").eq("id", tm.tournament_id).single(),
+      supabase.from("tournaments").select("*").eq("id", tm.tournament_id).maybeSingle(),
       supabase.from("teams").select("*").eq("tournament_id", tm.tournament_id),
       supabase.from("players").select("*").eq("tournament_id", tm.tournament_id),
       supabase.from("auction_state").select("*").eq("tournament_id", tm.tournament_id).maybeSingle(),
       supabase.from("bids").select("*").eq("tournament_id", tm.tournament_id).order("created_at", { ascending: false }).limit(20),
     ]);
-    setTournament(tt as Tournament);
+    setTournament(tt as Tournament | null);
     setAllTeams((ats as Team[]) || []);
     setPlayers((pl as Player[]) || []);
     setState(st as AuctionState | null);
     setBids((bd as Bid[]) || []);
-  }, [id]);
-  useEffect(() => { load(); }, [load]);
+    setLoaded(true);
+  }, [id, user]);
+  useEffect(() => { if (user) load(); }, [load, user]);
 
   useEffect(() => {
     if (!team) return;
@@ -62,8 +71,23 @@ function TeamRoom() {
     return () => { supabase.removeChannel(ch); };
   }, [team, id, load]);
 
-  if (loading || !team || !tournament) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
-  if (user && team.owner_id !== user.id) return <div className="min-h-screen flex items-center justify-center text-muted-foreground p-8 text-center">This team isn't linked to your account. Ask your tournament admin.</div>;
+  if (loading || (!loaded && !loadError)) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
+  if (loadError) return (
+    <div className="min-h-screen flex flex-col items-center justify-center text-muted-foreground p-8 text-center gap-4">
+      <p className="max-w-md">{loadError}</p>
+      <div className="flex gap-2">
+        <Button variant="outline" onClick={() => { setLoadError(null); setLoaded(false); load(); }}>Retry</Button>
+        <Button asChild variant="ghost"><Link to="/dashboard">Back to dashboard</Link></Button>
+      </div>
+    </div>
+  );
+  if (!team || !tournament) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
+  if (user && team.owner_id !== user.id) return (
+    <div className="min-h-screen flex flex-col items-center justify-center text-muted-foreground p-8 text-center gap-4">
+      <p>This team isn't linked to your account. Ask your admin for a fresh invite link.</p>
+      <Button asChild variant="ghost"><Link to="/dashboard">Back to dashboard</Link></Button>
+    </div>
+  );
 
   const currentPlayer = players.find(p => p.id === state?.current_player_id) || null;
   const leadingTeam = allTeams.find(t => t.id === state?.current_highest_team_id);
