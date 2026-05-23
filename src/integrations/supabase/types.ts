@@ -35,6 +35,42 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_invite_tokens: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          email: string
+          expires_at: string | null
+          id: string
+          token: string
+          used: boolean | null
+          used_at: string | null
+          used_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          email: string
+          expires_at?: string | null
+          id?: string
+          token?: string
+          used?: boolean | null
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          email?: string
+          expires_at?: string | null
+          id?: string
+          token?: string
+          used?: boolean | null
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Relationships: []
+      }
       auction_state: {
         Row: {
           current_highest_bid: number | null
@@ -444,6 +480,7 @@ export type Database = {
     Functions: {
       accept_invite: { Args: { p_token: string }; Returns: Json }
       close_expired_lots: { Args: never; Returns: number }
+      consume_admin_invite: { Args: { p_token: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -467,6 +504,7 @@ export type Database = {
         Args: { p_player: string; p_tournament: string }
         Returns: Json
       }
+      validate_admin_invite: { Args: { p_token: string }; Returns: Json }
     }
     Enums: {
       app_role: "super_admin" | "tournament_admin" | "team_owner"

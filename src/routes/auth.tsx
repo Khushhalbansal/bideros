@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
@@ -16,7 +15,6 @@ function AuthPage() {
   const { user, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [forgot, setForgot] = useState(false);
 
@@ -30,19 +28,6 @@ function AuthPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
     if (error) return toast.error(error.message);
-    navigate({ to: "/dashboard" });
-  };
-
-  const signUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setBusy(true);
-    const { error } = await supabase.auth.signUp({
-      email, password,
-      options: { data: { full_name: name }, emailRedirectTo: `${window.location.origin}/dashboard` },
-    });
-    setBusy(false);
-    if (error) return toast.error(error.message);
-    toast.success("Account created");
     navigate({ to: "/dashboard" });
   };
 
@@ -77,34 +62,18 @@ function AuthPage() {
             </>
           ) : (
             <>
-              <h1 className="text-2xl font-bold mb-1">Enter the arena</h1>
-              <p className="text-sm text-muted-foreground mb-6">Tournament admins sign up here. Team owners use the invite link from their admin.</p>
-              <Tabs defaultValue="signin">
-                <TabsList className="grid w-full grid-cols-2 mb-6">
-                  <TabsTrigger value="signin">Sign in</TabsTrigger>
-                  <TabsTrigger value="signup">Create account</TabsTrigger>
-                </TabsList>
-                <TabsContent value="signin">
-                  <form onSubmit={signIn} className="space-y-4">
-                    <div><Label>Email</Label><Input type="email" value={email} onChange={e=>setEmail(e.target.value)} required /></div>
-                    <div><Label>Password</Label><Input type="password" value={password} onChange={e=>setPassword(e.target.value)} required /></div>
-                    <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon">
-                      {busy ? "Signing in..." : "Sign in"}
-                    </Button>
-                    <button type="button" onClick={() => setForgot(true)} className="w-full text-xs text-muted-foreground hover:text-neon">Forgot password?</button>
-                  </form>
-                </TabsContent>
-                <TabsContent value="signup">
-                  <form onSubmit={signUp} className="space-y-4">
-                    <div><Label>Full name</Label><Input value={name} onChange={e=>setName(e.target.value)} required /></div>
-                    <div><Label>Email</Label><Input type="email" value={email} onChange={e=>setEmail(e.target.value)} required /></div>
-                    <div><Label>Password</Label><Input type="password" value={password} onChange={e=>setPassword(e.target.value)} required minLength={8} /></div>
-                    <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon">
-                      {busy ? "Creating..." : "Create account"}
-                    </Button>
-                  </form>
-                </TabsContent>
-              </Tabs>
+              <h1 className="text-2xl font-bold mb-1">Sign in</h1>
+              <p className="text-sm text-muted-foreground mb-6">
+                Admins join via invite link. Team owners use the invite link from their admin.
+              </p>
+              <form onSubmit={signIn} className="space-y-4">
+                <div><Label>Email</Label><Input type="email" value={email} onChange={e=>setEmail(e.target.value)} required /></div>
+                <div><Label>Password</Label><Input type="password" value={password} onChange={e=>setPassword(e.target.value)} required /></div>
+                <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon">
+                  {busy ? "Signing in..." : "Sign in"}
+                </Button>
+                <button type="button" onClick={() => setForgot(true)} className="w-full text-xs text-muted-foreground hover:text-neon">Forgot password?</button>
+              </form>
             </>
           )}
           <p className="text-xs text-muted-foreground text-center mt-6">
