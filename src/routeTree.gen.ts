@@ -16,6 +16,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as WatchSlugRouteImport } from './routes/watch.$slug'
 import { Route as TeamIdRouteImport } from './routes/team.$id'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
+import { Route as AdminRegisterRouteImport } from './routes/admin.register'
 import { Route as AdminIdRouteImport } from './routes/admin.$id'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -53,6 +54,11 @@ const InviteTokenRoute = InviteTokenRouteImport.update({
   path: '/invite/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRegisterRoute = AdminRegisterRouteImport.update({
+  id: '/admin/register',
+  path: '/admin/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminIdRoute = AdminIdRouteImport.update({
   id: '/admin/$id',
   path: '/admin/$id',
@@ -65,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin/$id': typeof AdminIdRoute
+  '/admin/register': typeof AdminRegisterRoute
   '/invite/$token': typeof InviteTokenRoute
   '/team/$id': typeof TeamIdRoute
   '/watch/$slug': typeof WatchSlugRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin/$id': typeof AdminIdRoute
+  '/admin/register': typeof AdminRegisterRoute
   '/invite/$token': typeof InviteTokenRoute
   '/team/$id': typeof TeamIdRoute
   '/watch/$slug': typeof WatchSlugRoute
@@ -86,6 +94,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin/$id': typeof AdminIdRoute
+  '/admin/register': typeof AdminRegisterRoute
   '/invite/$token': typeof InviteTokenRoute
   '/team/$id': typeof TeamIdRoute
   '/watch/$slug': typeof WatchSlugRoute
@@ -98,6 +107,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/reset-password'
     | '/admin/$id'
+    | '/admin/register'
     | '/invite/$token'
     | '/team/$id'
     | '/watch/$slug'
@@ -108,6 +118,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/reset-password'
     | '/admin/$id'
+    | '/admin/register'
     | '/invite/$token'
     | '/team/$id'
     | '/watch/$slug'
@@ -118,6 +129,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/reset-password'
     | '/admin/$id'
+    | '/admin/register'
     | '/invite/$token'
     | '/team/$id'
     | '/watch/$slug'
@@ -129,6 +141,7 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   AdminIdRoute: typeof AdminIdRoute
+  AdminRegisterRoute: typeof AdminRegisterRoute
   InviteTokenRoute: typeof InviteTokenRoute
   TeamIdRoute: typeof TeamIdRoute
   WatchSlugRoute: typeof WatchSlugRoute
@@ -185,6 +198,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InviteTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/register': {
+      id: '/admin/register'
+      path: '/admin/register'
+      fullPath: '/admin/register'
+      preLoaderRoute: typeof AdminRegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/$id': {
       id: '/admin/$id'
       path: '/admin/$id'
@@ -201,6 +221,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   AdminIdRoute: AdminIdRoute,
+  AdminRegisterRoute: AdminRegisterRoute,
   InviteTokenRoute: InviteTokenRoute,
   TeamIdRoute: TeamIdRoute,
   WatchSlugRoute: WatchSlugRoute,
