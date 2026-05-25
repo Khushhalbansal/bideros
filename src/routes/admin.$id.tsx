@@ -9,9 +9,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import { formatINR, parseINR } from "@/lib/format";
-import { Play, Gavel, ChevronRight, Eye, Copy, Trash2, Share2, Link as LinkIcon, Save } from "lucide-react";
+import { Play, Pause, SkipForward, Undo2, XCircle, Flag, Monitor, Gavel, ChevronRight, Eye, Copy, Trash2, Share2, Link as LinkIcon, Save, Upload } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 export const Route = createFileRoute("/admin/$id")({ component: AdminPanel });
 
@@ -67,6 +68,7 @@ function AdminPanel() {
           <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/15 text-neon">{t.status}</span>
         </div>
         <div className="flex gap-2">
+          <Button asChild variant="outline" size="sm"><Link to="/projector/$id" params={{ id: t.id }}><Monitor className="h-3 w-3 mr-1" />Projector</Link></Button>
           <Button asChild variant="outline" size="sm"><Link to="/watch/$slug" params={{ slug: t.id }}><Eye className="h-3 w-3 mr-1" />Spectator</Link></Button>
           <Button asChild variant="ghost" size="sm"><Link to="/dashboard">← Dashboard</Link></Button>
         </div>
@@ -121,6 +123,16 @@ function AuctionControl({ tournament, players, teams, state }:{
     setSelectedId("");
   };
 
+  const callRpc = async (fn: string, payload: Record<string, unknown> = {}, successMsg = "Done") => {
+    const { data, error } = await supabase.rpc(fn as never, { p_tournament: tournament.id, ...payload } as never);
+    if (error) return toast.error(error.message);
+    const r = data as { ok:boolean; error?:string };
+    if (!r.ok) return toast.error(r.error || "Failed");
+    toast.success(successMsg);
+  };
+
+  const isPaused = currentPlayer && !state?.timer_ends_at;
+
   return (
     <div className="grid lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2 bg-glass border border-border rounded-xl p-6">
@@ -132,7 +144,7 @@ function AuctionControl({ tournament, players, teams, state }:{
         {currentPlayer ? (
           <div className="space-y-4">
             <div className="rounded-xl gradient-neon p-6 text-primary-foreground">
-              <div className="text-xs uppercase tracking-widest opacity-80">Now on the block</div>
+              <div className="text-xs uppercase tracking-widest opacity-80">Now on the block {isPaused && "• PAUSED"}</div>
               <div className="text-3xl font-bold mt-1">{currentPlayer.name}</div>
               <div className="text-sm mt-1 opacity-80">{currentPlayer.role} • Base {formatINR(currentPlayer.base_price)}</div>
             </div>
@@ -145,6 +157,16 @@ function AuctionControl({ tournament, players, teams, state }:{
                 <div className="text-xs text-muted-foreground">Leading team</div>
                 <div className="text-2xl font-bold text-hot">{leadingTeam?.name || "—"}</div>
               </div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-2">
+              {isPaused ? (
+                <Button onClick={() => callRpc("resume_lot", {}, "Lot resumed")} className="gradient-neon text-primary-foreground"><Play className="h-3 w-3 mr-1" />Resume</Button>
+              ) : (
+                <Button onClick={() => callRpc("pause_lot", {}, "Lot paused")} variant="outline"><Pause className="h-3 w-3 mr-1" />Pause</Button>
+              )}
+              <Button onClick={() => callRpc("skip_lot", {}, "Lot skipped")} variant="outline"><SkipForward className="h-3 w-3 mr-1" />Skip</Button>
+              <Button onClick={() => callRpc("mark_unsold", {}, "Marked unsold")} variant="outline"><XCircle className="h-3 w-3 mr-1" />Unsold</Button>
+              <Button onClick={() => { if (confirm("Undo last sale?")) callRpc("undo_last_sale", {}, "Sale undone"); }} variant="outline"><Undo2 className="h-3 w-3 mr-1" />Undo sale</Button>
             </div>
             <p className="text-xs text-muted-foreground text-center">Lot closes automatically when the timer expires (every {tournament.bid_timer_seconds}s).</p>
           </div>
@@ -165,6 +187,11 @@ function AuctionControl({ tournament, players, teams, state }:{
               </Button>
             </div>
             {teams.length === 0 && <p className="text-xs text-destructive">Add teams before starting an auction.</p>}
+            <div className="pt-2 border-t border-border">
+              <Button onClick={() => { if (confirm("End the auction and mark tournament as completed?")) callRpc("end_auction", {}, "Auction ended"); }} variant="outline" size="sm" className="border-destructive/40 text-destructive hover:bg-destructive/10">
+                <Flag className="h-3 w-3 mr-1" />End auction
+              </Button>
+            </div>
           </div>
         )}
       </div>
@@ -340,23 +367,78 @@ function PlayersTab({ tournament, players, teams, onChange }:{ tournament: Tourn
     else onChange();
   };
 
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkText, setBulkText] = useState("");
+  const [bulkBusy, setBulkBusy] = useState(false);
+
+  const importBulk = async () => {
+    const lines = bulkText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    if (lines.length === 0) return toast.error("Paste at least one row");
+    setBulkBusy(true);
+    const startOrder = Math.max(0, ...players.map(p => p.auction_order ?? 0));
+    const rows = lines.map((line, i) => {
+      const parts = line.split(/[,\t]/).map(s => s.trim());
+      const [n, r, b] = parts;
+      return {
+        tournament_id: tournament.id,
+        name: n || `Player ${i+1}`,
+        role: r || "Batter",
+        base_price: parseINR(b || "1 L") || 100000,
+        auction_order: startOrder + i + 1,
+      };
+    });
+    const { error } = await supabase.from("players").insert(rows);
+    setBulkBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success(`Imported ${rows.length} players`);
+    setBulkText(""); setBulkOpen(false); onChange();
+  };
+
+  const onCsvFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => { setBulkText(String(reader.result || "")); setBulkOpen(true); };
+    reader.readAsText(file);
+  };
+
   return (
     <div className="grid md:grid-cols-3 gap-6">
-      <form onSubmit={add} className="bg-glass border border-border rounded-xl p-5 space-y-3 h-fit">
-        <h3 className="font-bold">Add player</h3>
-        <div><Label>Name</Label><Input value={name} onChange={e=>setName(e.target.value)} required /></div>
-        <div>
-          <Label>Role</Label>
-          <Select value={role} onValueChange={setRole}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {["Batter","Bowler","All-rounder","Wicket-keeper"].map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-            </SelectContent>
-          </Select>
+      <div className="space-y-3 h-fit">
+        <form onSubmit={add} className="bg-glass border border-border rounded-xl p-5 space-y-3">
+          <h3 className="font-bold">Add player</h3>
+          <div><Label>Name</Label><Input value={name} onChange={e=>setName(e.target.value)} required /></div>
+          <div>
+            <Label>Role</Label>
+            <Select value={role} onValueChange={setRole}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {["Batter","Bowler","All-rounder","Wicket-keeper"].map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div><Label>Base price</Label><Input value={base} onChange={e=>setBase(e.target.value)} placeholder="1 L" /></div>
+          <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon">Add</Button>
+        </form>
+        <div className="bg-glass border border-border rounded-xl p-5 space-y-2">
+          <h3 className="font-bold text-sm flex items-center gap-2"><Upload className="h-4 w-4" />Bulk import</h3>
+          <p className="text-xs text-muted-foreground">CSV format: <code>Name, Role, Base price</code> per line. Upload .csv or paste rows.</p>
+          <Button variant="outline" size="sm" className="w-full" onClick={() => setBulkOpen(true)}>Paste CSV / TSV</Button>
+          <label className="block">
+            <input type="file" accept=".csv,.tsv,.txt" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) onCsvFile(f); e.currentTarget.value = ""; }} />
+            <span className="cursor-pointer block w-full text-center text-xs py-2 rounded-md border border-dashed border-border hover:border-neon hover:text-neon">Or upload .csv file</span>
+          </label>
         </div>
-        <div><Label>Base price</Label><Input value={base} onChange={e=>setBase(e.target.value)} placeholder="1 L" /></div>
-        <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon">Add</Button>
-      </form>
+      </div>
+      <Dialog open={bulkOpen} onOpenChange={setBulkOpen}>
+        <DialogContent className="bg-card border-border max-w-2xl">
+          <DialogHeader><DialogTitle>Bulk import players</DialogTitle></DialogHeader>
+          <p className="text-xs text-muted-foreground">One player per line. Comma or tab separated. Example:<br/><code className="text-neon">Virat Kohli, Batter, 2 Cr</code></p>
+          <Textarea value={bulkText} onChange={e => setBulkText(e.target.value)} rows={12} className="font-mono text-xs" placeholder={"Virat Kohli, Batter, 2 Cr\nJasprit Bumrah, Bowler, 2 Cr\nHardik Pandya, All-rounder, 1.5 Cr"} />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setBulkOpen(false)}>Cancel</Button>
+            <Button disabled={bulkBusy} onClick={importBulk} className="gradient-neon text-primary-foreground shadow-neon">{bulkBusy ? "Importing…" : `Import ${bulkText.split(/\r?\n/).filter(l=>l.trim()).length} rows`}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <div className="md:col-span-2 space-y-2">
         {players.map(p => {
           const team = teams.find(t => t.id === p.sold_to_team_id);

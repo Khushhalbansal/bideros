@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WatchSlugRouteImport } from './routes/watch.$slug'
 import { Route as TeamIdRouteImport } from './routes/team.$id'
+import { Route as ProjectorIdRouteImport } from './routes/projector.$id'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as AdminRegisterRouteImport } from './routes/admin.register'
 import { Route as AdminIdRouteImport } from './routes/admin.$id'
@@ -49,6 +50,11 @@ const TeamIdRoute = TeamIdRouteImport.update({
   path: '/team/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProjectorIdRoute = ProjectorIdRouteImport.update({
+  id: '/projector/$id',
+  path: '/projector/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InviteTokenRoute = InviteTokenRouteImport.update({
   id: '/invite/$token',
   path: '/invite/$token',
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/admin/$id': typeof AdminIdRoute
   '/admin/register': typeof AdminRegisterRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/projector/$id': typeof ProjectorIdRoute
   '/team/$id': typeof TeamIdRoute
   '/watch/$slug': typeof WatchSlugRoute
 }
@@ -84,6 +91,7 @@ export interface FileRoutesByTo {
   '/admin/$id': typeof AdminIdRoute
   '/admin/register': typeof AdminRegisterRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/projector/$id': typeof ProjectorIdRoute
   '/team/$id': typeof TeamIdRoute
   '/watch/$slug': typeof WatchSlugRoute
 }
@@ -96,6 +104,7 @@ export interface FileRoutesById {
   '/admin/$id': typeof AdminIdRoute
   '/admin/register': typeof AdminRegisterRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/projector/$id': typeof ProjectorIdRoute
   '/team/$id': typeof TeamIdRoute
   '/watch/$slug': typeof WatchSlugRoute
 }
@@ -109,6 +118,7 @@ export interface FileRouteTypes {
     | '/admin/$id'
     | '/admin/register'
     | '/invite/$token'
+    | '/projector/$id'
     | '/team/$id'
     | '/watch/$slug'
   fileRoutesByTo: FileRoutesByTo
@@ -120,6 +130,7 @@ export interface FileRouteTypes {
     | '/admin/$id'
     | '/admin/register'
     | '/invite/$token'
+    | '/projector/$id'
     | '/team/$id'
     | '/watch/$slug'
   id:
@@ -131,6 +142,7 @@ export interface FileRouteTypes {
     | '/admin/$id'
     | '/admin/register'
     | '/invite/$token'
+    | '/projector/$id'
     | '/team/$id'
     | '/watch/$slug'
   fileRoutesById: FileRoutesById
@@ -143,6 +155,7 @@ export interface RootRouteChildren {
   AdminIdRoute: typeof AdminIdRoute
   AdminRegisterRoute: typeof AdminRegisterRoute
   InviteTokenRoute: typeof InviteTokenRoute
+  ProjectorIdRoute: typeof ProjectorIdRoute
   TeamIdRoute: typeof TeamIdRoute
   WatchSlugRoute: typeof WatchSlugRoute
 }
@@ -191,6 +204,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeamIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/projector/$id': {
+      id: '/projector/$id'
+      path: '/projector/$id'
+      fullPath: '/projector/$id'
+      preLoaderRoute: typeof ProjectorIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/invite/$token': {
       id: '/invite/$token'
       path: '/invite/$token'
@@ -223,6 +243,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminIdRoute: AdminIdRoute,
   AdminRegisterRoute: AdminRegisterRoute,
   InviteTokenRoute: InviteTokenRoute,
+  ProjectorIdRoute: ProjectorIdRoute,
   TeamIdRoute: TeamIdRoute,
   WatchSlugRoute: WatchSlugRoute,
 }
