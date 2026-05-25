@@ -68,6 +68,7 @@ function AdminPanel() {
           <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/15 text-neon">{t.status}</span>
         </div>
         <div className="flex gap-2">
+          <Button asChild variant="outline" size="sm"><Link to="/projector/$id" params={{ id: t.id }}><Monitor className="h-3 w-3 mr-1" />Projector</Link></Button>
           <Button asChild variant="outline" size="sm"><Link to="/watch/$slug" params={{ slug: t.id }}><Eye className="h-3 w-3 mr-1" />Spectator</Link></Button>
           <Button asChild variant="ghost" size="sm"><Link to="/dashboard">← Dashboard</Link></Button>
         </div>
