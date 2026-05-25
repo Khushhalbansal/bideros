@@ -479,8 +479,10 @@ export type Database = {
     }
     Functions: {
       accept_invite: { Args: { p_token: string }; Returns: Json }
+      cleanup_old_tournaments: { Args: never; Returns: number }
       close_expired_lots: { Args: never; Returns: number }
       consume_admin_invite: { Args: { p_token: string }; Returns: Json }
+      end_auction: { Args: { p_tournament: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -491,6 +493,8 @@ export type Database = {
       is_team_owner: { Args: { _team: string }; Returns: boolean }
       is_tournament_admin: { Args: { _tid: string }; Returns: boolean }
       is_tournament_public: { Args: { _tid: string }; Returns: boolean }
+      mark_unsold: { Args: { p_tournament: string }; Returns: Json }
+      pause_lot: { Args: { p_tournament: string }; Returns: Json }
       place_bid: {
         Args: {
           p_amount: number
@@ -500,10 +504,16 @@ export type Database = {
         }
         Returns: Json
       }
+      resume_lot: {
+        Args: { p_seconds?: number; p_tournament: string }
+        Returns: Json
+      }
+      skip_lot: { Args: { p_tournament: string }; Returns: Json }
       start_lot: {
         Args: { p_player: string; p_tournament: string }
         Returns: Json
       }
+      undo_last_sale: { Args: { p_tournament: string }; Returns: Json }
       validate_admin_invite: { Args: { p_token: string }; Returns: Json }
     }
     Enums: {
