@@ -123,6 +123,16 @@ function AuctionControl({ tournament, players, teams, state }:{
     setSelectedId("");
   };
 
+  const callRpc = async (fn: string, payload: Record<string, unknown> = {}, successMsg = "Done") => {
+    const { data, error } = await supabase.rpc(fn as never, { p_tournament: tournament.id, ...payload } as never);
+    if (error) return toast.error(error.message);
+    const r = data as { ok:boolean; error?:string };
+    if (!r.ok) return toast.error(r.error || "Failed");
+    toast.success(successMsg);
+  };
+
+  const isPaused = currentPlayer && !state?.timer_ends_at;
+
   return (
     <div className="grid lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2 bg-glass border border-border rounded-xl p-6">
@@ -134,7 +144,7 @@ function AuctionControl({ tournament, players, teams, state }:{
         {currentPlayer ? (
           <div className="space-y-4">
             <div className="rounded-xl gradient-neon p-6 text-primary-foreground">
-              <div className="text-xs uppercase tracking-widest opacity-80">Now on the block</div>
+              <div className="text-xs uppercase tracking-widest opacity-80">Now on the block {isPaused && "• PAUSED"}</div>
               <div className="text-3xl font-bold mt-1">{currentPlayer.name}</div>
               <div className="text-sm mt-1 opacity-80">{currentPlayer.role} • Base {formatINR(currentPlayer.base_price)}</div>
             </div>
@@ -147,6 +157,16 @@ function AuctionControl({ tournament, players, teams, state }:{
                 <div className="text-xs text-muted-foreground">Leading team</div>
                 <div className="text-2xl font-bold text-hot">{leadingTeam?.name || "—"}</div>
               </div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-2">
+              {isPaused ? (
+                <Button onClick={() => callRpc("resume_lot", {}, "Lot resumed")} className="gradient-neon text-primary-foreground"><Play className="h-3 w-3 mr-1" />Resume</Button>
+              ) : (
+                <Button onClick={() => callRpc("pause_lot", {}, "Lot paused")} variant="outline"><Pause className="h-3 w-3 mr-1" />Pause</Button>
+              )}
+              <Button onClick={() => callRpc("skip_lot", {}, "Lot skipped")} variant="outline"><SkipForward className="h-3 w-3 mr-1" />Skip</Button>
+              <Button onClick={() => callRpc("mark_unsold", {}, "Marked unsold")} variant="outline"><XCircle className="h-3 w-3 mr-1" />Unsold</Button>
+              <Button onClick={() => { if (confirm("Undo last sale?")) callRpc("undo_last_sale", {}, "Sale undone"); }} variant="outline"><Undo2 className="h-3 w-3 mr-1" />Undo sale</Button>
             </div>
             <p className="text-xs text-muted-foreground text-center">Lot closes automatically when the timer expires (every {tournament.bid_timer_seconds}s).</p>
           </div>
@@ -167,6 +187,11 @@ function AuctionControl({ tournament, players, teams, state }:{
               </Button>
             </div>
             {teams.length === 0 && <p className="text-xs text-destructive">Add teams before starting an auction.</p>}
+            <div className="pt-2 border-t border-border">
+              <Button onClick={() => { if (confirm("End the auction and mark tournament as completed?")) callRpc("end_auction", {}, "Auction ended"); }} variant="outline" size="sm" className="border-destructive/40 text-destructive hover:bg-destructive/10">
+                <Flag className="h-3 w-3 mr-1" />End auction
+              </Button>
+            </div>
           </div>
         )}
       </div>
