@@ -367,23 +367,78 @@ function PlayersTab({ tournament, players, teams, onChange }:{ tournament: Tourn
     else onChange();
   };
 
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkText, setBulkText] = useState("");
+  const [bulkBusy, setBulkBusy] = useState(false);
+
+  const importBulk = async () => {
+    const lines = bulkText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    if (lines.length === 0) return toast.error("Paste at least one row");
+    setBulkBusy(true);
+    const startOrder = Math.max(0, ...players.map(p => p.auction_order ?? 0));
+    const rows = lines.map((line, i) => {
+      const parts = line.split(/[,\t]/).map(s => s.trim());
+      const [n, r, b] = parts;
+      return {
+        tournament_id: tournament.id,
+        name: n || `Player ${i+1}`,
+        role: r || "Batter",
+        base_price: parseINR(b || "1 L") || 100000,
+        auction_order: startOrder + i + 1,
+      };
+    });
+    const { error } = await supabase.from("players").insert(rows);
+    setBulkBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success(`Imported ${rows.length} players`);
+    setBulkText(""); setBulkOpen(false); onChange();
+  };
+
+  const onCsvFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => { setBulkText(String(reader.result || "")); setBulkOpen(true); };
+    reader.readAsText(file);
+  };
+
   return (
     <div className="grid md:grid-cols-3 gap-6">
-      <form onSubmit={add} className="bg-glass border border-border rounded-xl p-5 space-y-3 h-fit">
-        <h3 className="font-bold">Add player</h3>
-        <div><Label>Name</Label><Input value={name} onChange={e=>setName(e.target.value)} required /></div>
-        <div>
-          <Label>Role</Label>
-          <Select value={role} onValueChange={setRole}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {["Batter","Bowler","All-rounder","Wicket-keeper"].map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-            </SelectContent>
-          </Select>
+      <div className="space-y-3 h-fit">
+        <form onSubmit={add} className="bg-glass border border-border rounded-xl p-5 space-y-3">
+          <h3 className="font-bold">Add player</h3>
+          <div><Label>Name</Label><Input value={name} onChange={e=>setName(e.target.value)} required /></div>
+          <div>
+            <Label>Role</Label>
+            <Select value={role} onValueChange={setRole}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {["Batter","Bowler","All-rounder","Wicket-keeper"].map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div><Label>Base price</Label><Input value={base} onChange={e=>setBase(e.target.value)} placeholder="1 L" /></div>
+          <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon">Add</Button>
+        </form>
+        <div className="bg-glass border border-border rounded-xl p-5 space-y-2">
+          <h3 className="font-bold text-sm flex items-center gap-2"><Upload className="h-4 w-4" />Bulk import</h3>
+          <p className="text-xs text-muted-foreground">CSV format: <code>Name, Role, Base price</code> per line. Upload .csv or paste rows.</p>
+          <Button variant="outline" size="sm" className="w-full" onClick={() => setBulkOpen(true)}>Paste CSV / TSV</Button>
+          <label className="block">
+            <input type="file" accept=".csv,.tsv,.txt" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) onCsvFile(f); e.currentTarget.value = ""; }} />
+            <span className="cursor-pointer block w-full text-center text-xs py-2 rounded-md border border-dashed border-border hover:border-neon hover:text-neon">Or upload .csv file</span>
+          </label>
         </div>
-        <div><Label>Base price</Label><Input value={base} onChange={e=>setBase(e.target.value)} placeholder="1 L" /></div>
-        <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon">Add</Button>
-      </form>
+      </div>
+      <Dialog open={bulkOpen} onOpenChange={setBulkOpen}>
+        <DialogContent className="bg-card border-border max-w-2xl">
+          <DialogHeader><DialogTitle>Bulk import players</DialogTitle></DialogHeader>
+          <p className="text-xs text-muted-foreground">One player per line. Comma or tab separated. Example:<br/><code className="text-neon">Virat Kohli, Batter, 2 Cr</code></p>
+          <Textarea value={bulkText} onChange={e => setBulkText(e.target.value)} rows={12} className="font-mono text-xs" placeholder={"Virat Kohli, Batter, 2 Cr\nJasprit Bumrah, Bowler, 2 Cr\nHardik Pandya, All-rounder, 1.5 Cr"} />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setBulkOpen(false)}>Cancel</Button>
+            <Button disabled={bulkBusy} onClick={importBulk} className="gradient-neon text-primary-foreground shadow-neon">{bulkBusy ? "Importing…" : `Import ${bulkText.split(/\r?\n/).filter(l=>l.trim()).length} rows`}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <div className="md:col-span-2 space-y-2">
         {players.map(p => {
           const team = teams.find(t => t.id === p.sold_to_team_id);
