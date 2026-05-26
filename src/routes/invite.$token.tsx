@@ -23,6 +23,7 @@ function InvitePage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const joiningRef = useRef(false);
 
   useEffect(() => {
     (async () => {
