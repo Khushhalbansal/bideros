@@ -49,7 +49,7 @@ function Projector() {
         if (np.status === "sold" && lastPlayerRef.current !== np.id) {
           lastPlayerRef.current = np.id;
           // Find team name asynchronously
-          supabase.from("teams").select("name").eq("id", np.sold_to_team_id!).maybeSingle().then(({ data }) => {
+          supabase.from("teams_public").select("name").eq("id", np.sold_to_team_id!).maybeSingle().then(({ data }) => {
             setSold({ player: np.name, team: (data as { name:string }|null)?.name || "—", price: Number(np.sold_price || 0) });
             setTimeout(() => setSold(null), 4500);
           });
