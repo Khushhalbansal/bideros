@@ -23,7 +23,19 @@ function InvitePage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const joiningRef = useRef(false);
+
+  const sendReset = async () => {
+    if (!email) return toast.error("Enter your email first");
+    setResetting(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setResetting(false);
+    if (error) return toast.error(error.message);
+    toast.success("Password reset link sent — check your email");
+  };
 
   useEffect(() => {
     (async () => {
@@ -127,6 +139,9 @@ function InvitePage() {
                 <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon">
                   {busy ? "Signing in..." : "Sign in & join"}
                 </Button>
+                <button type="button" onClick={sendReset} disabled={resetting} className="w-full text-xs text-muted-foreground hover:text-neon">
+                  {resetting ? "Sending..." : "Forgot password? Email me a reset link"}
+                </button>
               </form>
             </TabsContent>
           </Tabs>
