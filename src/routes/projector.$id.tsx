@@ -28,7 +28,7 @@ function Projector() {
   const load = useCallback(async () => {
     const [{ data: tt }, { data: tm }, { data: pl }, { data: st }] = await Promise.all([
       supabase.from("tournaments").select("*").eq("id", id).maybeSingle(),
-      supabase.from("teams").select("*").eq("tournament_id", id),
+      supabase.from("teams_public").select("*").eq("tournament_id", id),
       supabase.from("players").select("*").eq("tournament_id", id),
       supabase.from("auction_state").select("*").eq("tournament_id", id).maybeSingle(),
     ]);
