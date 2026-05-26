@@ -46,7 +46,7 @@ function TeamRoom() {
     setTeam(tm as Team);
     const [{ data: tt }, { data: ats }, { data: pl }, { data: st }, { data: bd }] = await Promise.all([
       supabase.from("tournaments").select("*").eq("id", tm.tournament_id).maybeSingle(),
-      supabase.from("teams").select("*").eq("tournament_id", tm.tournament_id),
+      supabase.from("teams_public").select("*").eq("tournament_id", tm.tournament_id),
       supabase.from("players").select("*").eq("tournament_id", tm.tournament_id),
       supabase.from("auction_state").select("*").eq("tournament_id", tm.tournament_id).maybeSingle(),
       supabase.from("bids").select("*").eq("tournament_id", tm.tournament_id).order("created_at", { ascending: false }).limit(20),

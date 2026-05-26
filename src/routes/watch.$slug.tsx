@@ -27,7 +27,7 @@ function Spectator() {
     if (!tt) return;
     setT(tt as Tournament);
     const [{ data: tm }, { data: pl }, { data: st }] = await Promise.all([
-      supabase.from("teams").select("*").eq("tournament_id", slug),
+      supabase.from("teams_public").select("*").eq("tournament_id", slug),
       supabase.from("players").select("*").eq("tournament_id", slug),
       supabase.from("auction_state").select("*").eq("tournament_id", slug).maybeSingle(),
     ]);

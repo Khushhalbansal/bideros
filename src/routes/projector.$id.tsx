@@ -28,7 +28,7 @@ function Projector() {
   const load = useCallback(async () => {
     const [{ data: tt }, { data: tm }, { data: pl }, { data: st }] = await Promise.all([
       supabase.from("tournaments").select("*").eq("id", id).maybeSingle(),
-      supabase.from("teams").select("*").eq("tournament_id", id),
+      supabase.from("teams_public").select("*").eq("tournament_id", id),
       supabase.from("players").select("*").eq("tournament_id", id),
       supabase.from("auction_state").select("*").eq("tournament_id", id).maybeSingle(),
     ]);
@@ -49,7 +49,7 @@ function Projector() {
         if (np.status === "sold" && lastPlayerRef.current !== np.id) {
           lastPlayerRef.current = np.id;
           // Find team name asynchronously
-          supabase.from("teams").select("name").eq("id", np.sold_to_team_id!).maybeSingle().then(({ data }) => {
+          supabase.from("teams_public").select("name").eq("id", np.sold_to_team_id!).maybeSingle().then(({ data }) => {
             setSold({ player: np.name, team: (data as { name:string }|null)?.name || "—", price: Number(np.sold_price || 0) });
             setTimeout(() => setSold(null), 4500);
           });
