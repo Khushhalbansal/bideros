@@ -106,9 +106,13 @@ function InvitePage() {
 
   if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
   if (!info) return <div className="min-h-screen flex items-center justify-center text-muted-foreground p-8 text-center">Invite not found.</div>;
-  if (info.used) return <div className="min-h-screen flex items-center justify-center text-muted-foreground p-8 text-center">This invite has already been used. <Link to="/auth" className="text-neon ml-2">Sign in</Link></div>;
+  if (info.used) {
+    if (info.team_id) { navigate({ to: "/team/$id", params: { id: info.team_id } }); return null; }
+    return <div className="min-h-screen flex items-center justify-center text-muted-foreground p-8 text-center">This invite has already been used. <Link to="/auth" className="text-neon ml-2">Sign in</Link></div>;
+  }
   if (info.expired) return <div className="min-h-screen flex items-center justify-center text-muted-foreground p-8 text-center">This invite has expired. Ask your admin for a new one.</div>;
-  if (user) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Joining your team…</div>;
+  return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Joining your team…</div>;
+}
 
   return (
     <div className="min-h-screen flex flex-col">
