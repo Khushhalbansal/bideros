@@ -240,12 +240,11 @@ function TeamsTab({ tournament, teams, players, onChange }: { tournament: Tourna
   };
 
   const generateInvite = async (team: Team) => {
-    const { data, error } = await supabase.from("invite_tokens").insert({
-      tournament_id: tournament.id, team_id: team.id, email: team.owner_email,
-    }).select().single();
+    const { data, error } = await supabase.rpc("admin_generate_invite", { p_team: team.id });
     if (error) return toast.error(error.message);
-    const url = `${window.location.origin}/invite/${data.token}`;
-    setInvite({ teamId: team.id, teamName: team.name, url, email: team.owner_email });
+    const r = data as { token: string; email: string | null };
+    const url = `${window.location.origin}/invite/${r.token}`;
+    setInvite({ teamId: team.id, teamName: team.name, url, email: r.email });
   };
 
   const remove = async (id: string) => {
