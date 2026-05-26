@@ -27,20 +27,19 @@ function InvitePage() {
 
   useEffect(() => {
     (async () => {
-      const { data: inv } = await supabase.from("invite_tokens")
-        .select("team_id,tournament_id,used,expires_at,email,teams(name),tournaments(name)")
-        .eq("token", token).maybeSingle();
+      const { data, error } = await supabase.rpc("get_invite_info", { p_token: token });
       setLoading(false);
-      if (!inv) return;
-      const i = inv as unknown as { team_id:string; tournament_id:string; used:boolean; expires_at:string; email:string|null; teams:{name:string}|null; tournaments:{name:string}|null };
+      if (error || !data) return;
+      const i = data as { found:boolean; team_id?:string; tournament_id?:string; team_name?:string; tournament_name?:string; used?:boolean; expired?:boolean; email?:string|null };
+      if (!i.found) return;
       setInfo({
-        team_id: i.team_id,
-        tournament_id: i.tournament_id,
-        team_name: i.teams?.name || "Team",
-        tournament_name: i.tournaments?.name || "Tournament",
-        used: i.used,
-        expired: new Date(i.expires_at) < new Date(),
-        email: i.email,
+        team_id: i.team_id!,
+        tournament_id: i.tournament_id!,
+        team_name: i.team_name || "Team",
+        tournament_name: i.tournament_name || "Tournament",
+        used: !!i.used,
+        expired: !!i.expired,
+        email: i.email ?? null,
       });
       if (i.email) setEmail(i.email);
     })();

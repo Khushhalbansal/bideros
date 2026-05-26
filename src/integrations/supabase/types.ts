@@ -479,10 +479,27 @@ export type Database = {
     }
     Functions: {
       accept_invite: { Args: { p_token: string }; Returns: Json }
+      admin_generate_invite: { Args: { p_team: string }; Returns: Json }
+      admin_list_teams: {
+        Args: { p_tournament: string }
+        Returns: {
+          color: string
+          created_at: string
+          id: string
+          logo_url: string
+          name: string
+          owner_email: string
+          owner_id: string
+          owner_name: string
+          remaining_purse: number
+          tournament_id: string
+        }[]
+      }
       cleanup_old_tournaments: { Args: never; Returns: number }
       close_expired_lots: { Args: never; Returns: number }
       consume_admin_invite: { Args: { p_token: string }; Returns: Json }
       end_auction: { Args: { p_tournament: string }; Returns: Json }
+      get_invite_info: { Args: { p_token: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -35,7 +35,7 @@ function AdminPanel() {
   const load = useCallback(async () => {
     const [{ data: tt }, { data: tm }, { data: pl }, { data: st }] = await Promise.all([
       supabase.from("tournaments").select("*").eq("id", id).single(),
-      supabase.from("teams").select("*").eq("tournament_id", id).order("created_at"),
+      supabase.rpc("admin_list_teams", { p_tournament: id }),
       supabase.from("players").select("*").eq("tournament_id", id).order("auction_order", { nullsFirst: false }).order("created_at"),
       supabase.from("auction_state").select("*").eq("tournament_id", id).maybeSingle(),
     ]);
@@ -240,12 +240,11 @@ function TeamsTab({ tournament, teams, players, onChange }: { tournament: Tourna
   };
 
   const generateInvite = async (team: Team) => {
-    const { data, error } = await supabase.from("invite_tokens").insert({
-      tournament_id: tournament.id, team_id: team.id, email: team.owner_email,
-    }).select().single();
+    const { data, error } = await supabase.rpc("admin_generate_invite", { p_team: team.id });
     if (error) return toast.error(error.message);
-    const url = `${window.location.origin}/invite/${data.token}`;
-    setInvite({ teamId: team.id, teamName: team.name, url, email: team.owner_email });
+    const r = data as { token: string; email: string | null };
+    const url = `${window.location.origin}/invite/${r.token}`;
+    setInvite({ teamId: team.id, teamName: team.name, url, email: r.email });
   };
 
   const remove = async (id: string) => {
