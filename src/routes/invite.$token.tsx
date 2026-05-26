@@ -2,11 +2,6 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/invite/$token")({ component: InvitePage });
@@ -19,23 +14,7 @@ function InvitePage() {
   const { user } = useAuth();
   const [info, setInfo] = useState<InviteInfo | null>(null);
   const [loading, setLoading] = useState(true);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [resetting, setResetting] = useState(false);
   const joiningRef = useRef(false);
-
-  const sendReset = async () => {
-    if (!email) return toast.error("Enter your email first");
-    setResetting(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    setResetting(false);
-    if (error) return toast.error(error.message);
-    toast.success("Password reset link sent — check your email");
-  };
 
   useEffect(() => {
     (async () => {
@@ -53,22 +32,22 @@ function InvitePage() {
         expired: !!i.expired,
         email: i.email ?? null,
       });
-      if (i.email) setEmail(i.email);
     })();
   }, [token]);
 
   const accept = async () => {
     if (joiningRef.current) return;
     joiningRef.current = true;
+    // No login required — sign in anonymously if needed so the link "just works".
+    if (!user) {
+      const { error: anonErr } = await supabase.auth.signInAnonymously();
+      if (anonErr) { joiningRef.current = false; return toast.error(anonErr.message); }
+    }
     const { data, error } = await supabase.rpc("accept_invite", { p_token: token });
     if (error) { joiningRef.current = false; return toast.error(error.message); }
     const r = data as { ok:boolean; error?:string; team_id?:string };
     if (!r.ok) {
-      // If already used by this same user, still send them to the team lobby
-      if (info?.team_id) {
-        navigate({ to: "/team/$id", params: { id: info.team_id } });
-        return;
-      }
+      if (info?.team_id) { navigate({ to: "/team/$id", params: { id: info.team_id } }); return; }
       joiningRef.current = false;
       return toast.error(r.error || "Failed");
     }
@@ -77,76 +56,18 @@ function InvitePage() {
   };
 
   useEffect(() => {
-    if (user && info && !info.expired) {
+    if (info && !info.expired && !info.used) {
       accept();
     }
      
   }, [user, info]);
 
-  const signIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setBusy(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setBusy(false);
-    if (error) return toast.error(error.message);
-  };
-
-  const signUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setBusy(true);
-    const { error } = await supabase.auth.signUp({
-      email, password,
-      options: { data: { full_name: name }, emailRedirectTo: `${window.location.origin}/invite/${token}` },
-    });
-    setBusy(false);
-    if (error) return toast.error(error.message);
-    toast.success("Account created");
-  };
-
   if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
   if (!info) return <div className="min-h-screen flex items-center justify-center text-muted-foreground p-8 text-center">Invite not found.</div>;
-  if (info.used) return <div className="min-h-screen flex items-center justify-center text-muted-foreground p-8 text-center">This invite has already been used. <Link to="/auth" className="text-neon ml-2">Sign in</Link></div>;
+  if (info.used) {
+    if (info.team_id) { navigate({ to: "/team/$id", params: { id: info.team_id } }); return null; }
+    return <div className="min-h-screen flex items-center justify-center text-muted-foreground p-8 text-center">This invite has already been used. <Link to="/auth" className="text-neon ml-2">Sign in</Link></div>;
+  }
   if (info.expired) return <div className="min-h-screen flex items-center justify-center text-muted-foreground p-8 text-center">This invite has expired. Ask your admin for a new one.</div>;
-  if (user) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Joining your team…</div>;
-
-  return (
-    <div className="min-h-screen flex flex-col">
-      <header className="container mx-auto py-6 px-4"><Logo /></header>
-      <main className="flex-1 flex items-center justify-center px-4">
-        <div className="w-full max-w-md bg-glass border border-border rounded-2xl p-8 shadow-neon animate-slide-up">
-          <div className="text-xs uppercase tracking-widest text-neon mb-2">You're invited</div>
-          <h1 className="text-2xl font-bold mb-1">{info.team_name}</h1>
-          <p className="text-sm text-muted-foreground mb-6">{info.tournament_name}</p>
-          <Tabs defaultValue="signup">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="signup">Create account</TabsTrigger>
-              <TabsTrigger value="signin">I have an account</TabsTrigger>
-            </TabsList>
-            <TabsContent value="signup">
-              <form onSubmit={signUp} className="space-y-4">
-                <div><Label>Full name</Label><Input value={name} onChange={e=>setName(e.target.value)} required /></div>
-                <div><Label>Email</Label><Input type="email" value={email} onChange={e=>setEmail(e.target.value)} required /></div>
-                <div><Label>Password</Label><Input type="password" value={password} onChange={e=>setPassword(e.target.value)} required minLength={8} /></div>
-                <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon">
-                  {busy ? "Creating..." : "Create account & join"}
-                </Button>
-              </form>
-            </TabsContent>
-            <TabsContent value="signin">
-              <form onSubmit={signIn} className="space-y-4">
-                <div><Label>Email</Label><Input type="email" value={email} onChange={e=>setEmail(e.target.value)} required /></div>
-                <div><Label>Password</Label><Input type="password" value={password} onChange={e=>setPassword(e.target.value)} required /></div>
-                <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon">
-                  {busy ? "Signing in..." : "Sign in & join"}
-                </Button>
-                <button type="button" onClick={sendReset} disabled={resetting} className="w-full text-xs text-muted-foreground hover:text-neon">
-                  {resetting ? "Sending..." : "Forgot password? Email me a reset link"}
-                </button>
-              </form>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </main>
-    </div>
-  );
+  return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Joining your team…</div>;
 }
