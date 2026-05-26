@@ -47,18 +47,29 @@ function InvitePage() {
   }, [token]);
 
   const accept = async () => {
+    if (joiningRef.current) return;
+    joiningRef.current = true;
     const { data, error } = await supabase.rpc("accept_invite", { p_token: token });
-    if (error) return toast.error(error.message);
+    if (error) { joiningRef.current = false; return toast.error(error.message); }
     const r = data as { ok:boolean; error?:string; team_id?:string };
-    if (!r.ok) return toast.error(r.error || "Failed");
+    if (!r.ok) {
+      // If already used by this same user, still send them to the team lobby
+      if (info?.team_id) {
+        navigate({ to: "/team/$id", params: { id: info.team_id } });
+        return;
+      }
+      joiningRef.current = false;
+      return toast.error(r.error || "Failed");
+    }
     toast.success("You're in!");
     navigate({ to: "/team/$id", params: { id: r.team_id! } });
   };
 
   useEffect(() => {
-    if (user && info && !info.used && !info.expired) {
+    if (user && info && !info.expired) {
       accept();
     }
+     
   }, [user, info]);
 
   const signIn = async (e: React.FormEvent) => {
