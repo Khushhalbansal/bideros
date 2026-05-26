@@ -139,6 +139,9 @@ function InvitePage() {
                 <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon">
                   {busy ? "Signing in..." : "Sign in & join"}
                 </Button>
+                <button type="button" onClick={sendReset} disabled={resetting} className="w-full text-xs text-muted-foreground hover:text-neon">
+                  {resetting ? "Sending..." : "Forgot password? Email me a reset link"}
+                </button>
               </form>
             </TabsContent>
           </Tabs>
