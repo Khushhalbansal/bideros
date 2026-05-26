@@ -60,15 +60,16 @@ function InvitePage() {
   const accept = async () => {
     if (joiningRef.current) return;
     joiningRef.current = true;
+    // No login required — sign in anonymously if needed so the link "just works".
+    if (!user) {
+      const { error: anonErr } = await supabase.auth.signInAnonymously();
+      if (anonErr) { joiningRef.current = false; return toast.error(anonErr.message); }
+    }
     const { data, error } = await supabase.rpc("accept_invite", { p_token: token });
     if (error) { joiningRef.current = false; return toast.error(error.message); }
     const r = data as { ok:boolean; error?:string; team_id?:string };
     if (!r.ok) {
-      // If already used by this same user, still send them to the team lobby
-      if (info?.team_id) {
-        navigate({ to: "/team/$id", params: { id: info.team_id } });
-        return;
-      }
+      if (info?.team_id) { navigate({ to: "/team/$id", params: { id: info.team_id } }); return; }
       joiningRef.current = false;
       return toast.error(r.error || "Failed");
     }
@@ -77,7 +78,7 @@ function InvitePage() {
   };
 
   useEffect(() => {
-    if (user && info && !info.expired) {
+    if (info && !info.expired && !info.used) {
       accept();
     }
      
