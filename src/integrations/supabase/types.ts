@@ -111,6 +111,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "auction_state_current_highest_team_id_fkey"
+            columns: ["current_highest_team_id"]
+            isOneToOne: false
+            referencedRelation: "teams_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "auction_state_current_player_id_fkey"
             columns: ["current_player_id"]
             isOneToOne: false
@@ -226,6 +233,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "bids_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "bids_tournament_id_fkey"
             columns: ["tournament_id"]
             isOneToOne: false
@@ -274,6 +288,13 @@ export type Database = {
             columns: ["team_id"]
             isOneToOne: false
             referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invite_tokens_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams_public"
             referencedColumns: ["id"]
           },
           {
@@ -334,6 +355,13 @@ export type Database = {
             columns: ["sold_to_team_id"]
             isOneToOne: false
             referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "players_sold_to_team_id_fkey"
+            columns: ["sold_to_team_id"]
+            isOneToOne: false
+            referencedRelation: "teams_public"
             referencedColumns: ["id"]
           },
           {
@@ -475,7 +503,47 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      teams_public: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          id: string | null
+          logo_url: string | null
+          name: string | null
+          owner_id: string | null
+          remaining_purse: number | null
+          tournament_id: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          id?: string | null
+          logo_url?: string | null
+          name?: string | null
+          owner_id?: string | null
+          remaining_purse?: number | null
+          tournament_id?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          id?: string | null
+          logo_url?: string | null
+          name?: string | null
+          owner_id?: string | null
+          remaining_purse?: number | null
+          tournament_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teams_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       accept_invite: { Args: { p_token: string }; Returns: Json }
