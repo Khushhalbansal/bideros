@@ -35,7 +35,7 @@ function AdminPanel() {
   const load = useCallback(async () => {
     const [{ data: tt }, { data: tm }, { data: pl }, { data: st }] = await Promise.all([
       supabase.from("tournaments").select("*").eq("id", id).single(),
-      supabase.from("teams").select("*").eq("tournament_id", id).order("created_at"),
+      supabase.rpc("admin_list_teams", { p_tournament: id }),
       supabase.from("players").select("*").eq("tournament_id", id).order("auction_order", { nullsFirst: false }).order("created_at"),
       supabase.from("auction_state").select("*").eq("tournament_id", id).maybeSingle(),
     ]);
