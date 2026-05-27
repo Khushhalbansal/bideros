@@ -122,9 +122,23 @@ function TeamRoom() {
     toast.success(`Bid ${formatINR(amount)} placed`);
   };
 
+  // call ticker hook
+  return <TeamRoomInner team={team} tournament={tournament} state={state} players={players} allTeams={allTeams} bids={bids} currentPlayer={currentPlayer} leadingTeam={leadingTeam} minNext={minNext} isLeading={!!isLeading} timeLeft={timeLeft} isLive={!!isLive} canBid={!!canBid} squad={squad} bidding={bidding} placeBid={placeBid} soldPlayer={soldPlayer} soldTeam={soldTeam} soldPrice={state?.last_sold_price ?? null} />;
+}
+
+interface InnerProps { team: Team; tournament: Tournament; state: AuctionState|null; players: Player[]; allTeams: Team[]; bids: Bid[]; currentPlayer: Player|null; leadingTeam: Team|undefined; minNext: number; isLeading: boolean; timeLeft: number; isLive: boolean; canBid: boolean; squad: Player[]; bidding: boolean; placeBid: (n: number) => void; soldPlayer: Player|null|undefined; soldTeam: Team|null|undefined; soldPrice: number|null; }
+
+function TeamRoomInner({ team, tournament, state, allTeams, bids, currentPlayer, leadingTeam, minNext, isLeading, timeLeft, isLive, canBid, squad, bidding, placeBid, soldPlayer, soldTeam, soldPrice }: InnerProps) {
+  useAuctionTicker(team.tournament_id, isLive);
   return (
     <div className="min-h-screen">
-      <TickerWrap tournamentId={team.tournament_id} active={!!isLive} />
+      {isLive && state?.strike_count ? <HammerStrikes count={state.strike_count} /> : null}
+      <AnimatePresence>
+        {soldPlayer && soldTeam && soldPrice != null && (
+          <SoldBanner player={soldPlayer.name} team={soldTeam.name} price={Number(soldPrice)} />
+        )}
+      </AnimatePresence>
+      {tournament.banner_url && <img src={tournament.banner_url} alt="" className="w-full h-32 md:h-48 object-cover" />}
       {isLive && state?.strike_count ? <HammerStrikes count={state.strike_count} /> : null}
       <AnimatePresence>
         {soldPlayer && soldTeam && state?.last_sold_price != null && (
