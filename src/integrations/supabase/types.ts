@@ -77,7 +77,13 @@ export type Database = {
           current_highest_team_id: string | null
           current_player_id: string | null
           id: string
+          last_sold_at: string | null
+          last_sold_player_id: string | null
+          last_sold_price: number | null
+          last_sold_team_id: string | null
           lot_number: number | null
+          strike_count: number
+          strike_resets_at: string | null
           timer_ends_at: string | null
           tournament_id: string
           updated_at: string | null
@@ -87,7 +93,13 @@ export type Database = {
           current_highest_team_id?: string | null
           current_player_id?: string | null
           id?: string
+          last_sold_at?: string | null
+          last_sold_player_id?: string | null
+          last_sold_price?: number | null
+          last_sold_team_id?: string | null
           lot_number?: number | null
+          strike_count?: number
+          strike_resets_at?: string | null
           timer_ends_at?: string | null
           tournament_id: string
           updated_at?: string | null
@@ -97,7 +109,13 @@ export type Database = {
           current_highest_team_id?: string | null
           current_player_id?: string | null
           id?: string
+          last_sold_at?: string | null
+          last_sold_player_id?: string | null
+          last_sold_price?: number | null
+          last_sold_team_id?: string | null
           lot_number?: number | null
+          strike_count?: number
+          strike_resets_at?: string | null
           timer_ends_at?: string | null
           tournament_id?: string
           updated_at?: string | null
@@ -394,6 +412,48 @@ export type Database = {
         }
         Relationships: []
       }
+      super_admin_allowlist: {
+        Row: {
+          created_at: string
+          email: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+        }
+        Relationships: []
+      }
+      super_admin_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          id: string
+          payload: Json | null
+          target: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          payload?: Json | null
+          target?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          payload?: Json | null
+          target?: string | null
+        }
+        Relationships: []
+      }
       teams: {
         Row: {
           color: string | null
@@ -444,7 +504,10 @@ export type Database = {
       tournaments: {
         Row: {
           admin_id: string
+          banner_url: string | null
           bid_timer_seconds: number
+          blocked: boolean
+          cover_photo_url: string | null
           created_at: string | null
           id: string
           is_demo: boolean | null
@@ -457,7 +520,10 @@ export type Database = {
         }
         Insert: {
           admin_id: string
+          banner_url?: string | null
           bid_timer_seconds?: number
+          blocked?: boolean
+          cover_photo_url?: string | null
           created_at?: string | null
           id?: string
           is_demo?: boolean | null
@@ -470,7 +536,10 @@ export type Database = {
         }
         Update: {
           admin_id?: string
+          banner_url?: string | null
           bid_timer_seconds?: number
+          blocked?: boolean
+          cover_photo_url?: string | null
           created_at?: string | null
           id?: string
           is_demo?: boolean | null
@@ -593,11 +662,52 @@ export type Database = {
         Args: { p_seconds?: number; p_tournament: string }
         Returns: Json
       }
+      sa_add_super_admin: { Args: { p_email: string }; Returns: Json }
+      sa_delete_tournament: { Args: { p_tournament: string }; Returns: Json }
+      sa_force_end: { Args: { p_tournament: string }; Returns: Json }
+      sa_list_super_admins: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          user_id: string
+        }[]
+      }
+      sa_list_tournaments: {
+        Args: never
+        Returns: {
+          admin_email: string
+          admin_id: string
+          blocked: boolean
+          created_at: string
+          id: string
+          name: string
+          player_count: number
+          status: string
+          team_count: number
+        }[]
+      }
+      sa_list_users: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          roles: string[]
+        }[]
+      }
+      sa_remove_super_admin: { Args: { p_email: string }; Returns: Json }
+      sa_set_blocked: {
+        Args: { p_blocked: boolean; p_tournament: string }
+        Returns: Json
+      }
       skip_lot: { Args: { p_tournament: string }; Returns: Json }
       start_lot: {
         Args: { p_player: string; p_tournament: string }
         Returns: Json
       }
+      tick_auction: { Args: { p_tournament: string }; Returns: Json }
       undo_last_sale: { Args: { p_tournament: string }; Returns: Json }
       validate_admin_invite: { Args: { p_token: string }; Returns: Json }
     }

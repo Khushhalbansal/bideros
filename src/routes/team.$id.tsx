@@ -7,13 +7,18 @@ import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import { formatINR } from "@/lib/format";
 import { Gavel, ChevronRight, Wallet, Hand } from "lucide-react";
+import { useAuctionTicker } from "@/hooks/use-auction-ticker";
+import { HammerStrikes } from "@/components/HammerStrikes";
+import { SoldBanner } from "@/components/SoldBanner";
+import { PlayerAvatar } from "@/components/PlayerAvatar";
+import { AnimatePresence } from "framer-motion";
 
 export const Route = createFileRoute("/team/$id")({ component: TeamRoom });
 
 interface Team { id:string; name:string; tournament_id:string; owner_id:string|null; remaining_purse:number; }
-interface Tournament { id:string; name:string; min_bid_increment:number; status:string; bid_timer_seconds:number; }
-interface Player { id:string; name:string; role:string|null; base_price:number; status:string; sold_to_team_id:string|null; sold_price:number|null; }
-interface AuctionState { current_player_id:string|null; current_highest_bid:number|null; current_highest_team_id:string|null; timer_ends_at:string|null; }
+interface Tournament { id:string; name:string; min_bid_increment:number; status:string; bid_timer_seconds:number; banner_url?:string|null; }
+interface Player { id:string; name:string; role:string|null; base_price:number; status:string; sold_to_team_id:string|null; sold_price:number|null; photo_url?:string|null; }
+interface AuctionState { current_player_id:string|null; current_highest_bid:number|null; current_highest_team_id:string|null; timer_ends_at:string|null; strike_count?:number; last_sold_player_id?:string|null; last_sold_team_id?:string|null; last_sold_price?:number|null; last_sold_at?:string|null; }
 interface Bid { id:string; team_id:string; amount:number; created_at:string; }
 
 function TeamRoom() {
@@ -96,7 +101,11 @@ function TeamRoom() {
     : Number(state.current_highest_bid) + Number(tournament.min_bid_increment);
   const isLeading = state?.current_highest_team_id === team.id;
   const timeLeft = state?.timer_ends_at ? Math.max(0, Math.ceil((new Date(state.timer_ends_at).getTime() - now) / 1000)) : 0;
-  const isLive = currentPlayer && tournament.status === "live" && timeLeft > 0;
+  const isLive = currentPlayer && tournament.status === "live";
+  // soldOverlay: show for 5s after last_sold_at changes
+  const soldRecent = state?.last_sold_at && Date.now() - new Date(state.last_sold_at).getTime() < 5000;
+  const soldPlayer = soldRecent ? players.find(p => p.id === state?.last_sold_player_id) : null;
+  const soldTeam = soldRecent ? allTeams.find(t => t.id === state?.last_sold_team_id) : null;
   const canBid = isLive && !isLeading && minNext <= team.remaining_purse;
   const squad = players.filter(p => p.sold_to_team_id === team.id);
 
@@ -113,8 +122,30 @@ function TeamRoom() {
     toast.success(`Bid ${formatINR(amount)} placed`);
   };
 
+  // call ticker hook
+  return <TeamRoomInner team={team} tournament={tournament} state={state} players={players} allTeams={allTeams} bids={bids} currentPlayer={currentPlayer} leadingTeam={leadingTeam} minNext={minNext} isLeading={!!isLeading} timeLeft={timeLeft} isLive={!!isLive} canBid={!!canBid} squad={squad} bidding={bidding} placeBid={placeBid} soldPlayer={soldPlayer} soldTeam={soldTeam} soldPrice={state?.last_sold_price ?? null} />;
+}
+
+interface InnerProps { team: Team; tournament: Tournament; state: AuctionState|null; players: Player[]; allTeams: Team[]; bids: Bid[]; currentPlayer: Player|null; leadingTeam: Team|undefined; minNext: number; isLeading: boolean; timeLeft: number; isLive: boolean; canBid: boolean; squad: Player[]; bidding: boolean; placeBid: (n: number) => void; soldPlayer: Player|null|undefined; soldTeam: Team|null|undefined; soldPrice: number|null; }
+
+function TeamRoomInner({ team, tournament, state, allTeams, bids, currentPlayer, leadingTeam, minNext, isLeading, timeLeft, isLive, canBid, squad, bidding, placeBid, soldPlayer, soldTeam, soldPrice }: InnerProps) {
+  useAuctionTicker(team.tournament_id, isLive);
   return (
     <div className="min-h-screen">
+      {isLive && state?.strike_count ? <HammerStrikes count={state.strike_count} /> : null}
+      <AnimatePresence>
+        {soldPlayer && soldTeam && soldPrice != null && (
+          <SoldBanner player={soldPlayer.name} team={soldTeam.name} price={Number(soldPrice)} />
+        )}
+      </AnimatePresence>
+      {tournament.banner_url && <img src={tournament.banner_url} alt="" className="w-full h-32 md:h-48 object-cover" />}
+      {isLive && state?.strike_count ? <HammerStrikes count={state.strike_count} /> : null}
+      <AnimatePresence>
+        {soldPlayer && soldTeam && state?.last_sold_price != null && (
+          <SoldBanner player={soldPlayer.name} team={soldTeam.name} price={Number(state.last_sold_price)} />
+        )}
+      </AnimatePresence>
+      {tournament.banner_url && <img src={tournament.banner_url} alt="" className="w-full h-32 md:h-48 object-cover" />}
       <header className="container mx-auto flex items-center justify-between py-5 px-4">
         <div className="flex items-center gap-3">
           <Logo />
@@ -134,10 +165,13 @@ function TeamRoom() {
         <section className="lg:col-span-2 bg-glass border border-border rounded-xl p-6">
           {isLive && currentPlayer ? (
             <div className="space-y-6 animate-slide-up">
-              <div className="rounded-xl gradient-neon p-6 text-primary-foreground">
-                <div className="text-xs uppercase tracking-widest opacity-80">On the block • ⏱ {timeLeft}s</div>
-                <div className="text-4xl font-bold mt-1">{currentPlayer.name}</div>
-                <div className="text-sm opacity-80">{currentPlayer.role} • Base {formatINR(currentPlayer.base_price)}</div>
+              <div className="rounded-xl gradient-neon p-6 text-primary-foreground flex items-center gap-4">
+                <PlayerAvatar url={currentPlayer.photo_url} name={currentPlayer.name} size={80} />
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs uppercase tracking-widest opacity-80">On the block • ⏱ {timeLeft}s</div>
+                  <div className="text-3xl md:text-4xl font-bold mt-1 truncate">{currentPlayer.name}</div>
+                  <div className="text-sm opacity-80">{currentPlayer.role} • Base {formatINR(currentPlayer.base_price)}</div>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <Stat label="Current bid" value={state?.current_highest_bid ? formatINR(state.current_highest_bid) : "—"} accent="neon" />

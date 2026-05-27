@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SuperAdminRouteImport } from './routes/super-admin'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -20,6 +21,11 @@ import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as AdminRegisterRouteImport } from './routes/admin.register'
 import { Route as AdminIdRouteImport } from './routes/admin.$id'
 
+const SuperAdminRoute = SuperAdminRouteImport.update({
+  id: '/super-admin',
+  path: '/super-admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -76,6 +82,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/super-admin': typeof SuperAdminRoute
   '/admin/$id': typeof AdminIdRoute
   '/admin/register': typeof AdminRegisterRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -88,6 +95,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/super-admin': typeof SuperAdminRoute
   '/admin/$id': typeof AdminIdRoute
   '/admin/register': typeof AdminRegisterRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -101,6 +109,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/super-admin': typeof SuperAdminRoute
   '/admin/$id': typeof AdminIdRoute
   '/admin/register': typeof AdminRegisterRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -115,6 +124,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/reset-password'
+    | '/super-admin'
     | '/admin/$id'
     | '/admin/register'
     | '/invite/$token'
@@ -127,6 +137,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/reset-password'
+    | '/super-admin'
     | '/admin/$id'
     | '/admin/register'
     | '/invite/$token'
@@ -139,6 +150,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/reset-password'
+    | '/super-admin'
     | '/admin/$id'
     | '/admin/register'
     | '/invite/$token'
@@ -152,6 +164,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   DashboardRoute: typeof DashboardRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SuperAdminRoute: typeof SuperAdminRoute
   AdminIdRoute: typeof AdminIdRoute
   AdminRegisterRoute: typeof AdminRegisterRoute
   InviteTokenRoute: typeof InviteTokenRoute
@@ -162,6 +175,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/super-admin': {
+      id: '/super-admin'
+      path: '/super-admin'
+      fullPath: '/super-admin'
+      preLoaderRoute: typeof SuperAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -240,6 +260,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   DashboardRoute: DashboardRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SuperAdminRoute: SuperAdminRoute,
   AdminIdRoute: AdminIdRoute,
   AdminRegisterRoute: AdminRegisterRoute,
   InviteTokenRoute: InviteTokenRoute,
