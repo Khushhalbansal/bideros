@@ -597,8 +597,8 @@ function TournamentImages({ tournament, onChange }: { tournament: Tournament; on
     setBusy(kind);
     try {
       const url = await uploadImage("tournament-assets", file, tournament.id);
-      const field = kind === "banner" ? "banner_url" : "cover_photo_url";
-      const { error } = await supabase.from("tournaments").update({ [field]: url }).eq("id", tournament.id);
+      const patch = kind === "banner" ? { banner_url: url } : { cover_photo_url: url };
+      const { error } = await supabase.from("tournaments").update(patch).eq("id", tournament.id);
       if (error) throw error;
       toast.success(`${kind === "banner" ? "Banner" : "Cover"} updated`);
       onChange();
@@ -610,8 +610,8 @@ function TournamentImages({ tournament, onChange }: { tournament: Tournament; on
   };
 
   const clear = async (kind: "banner" | "cover") => {
-    const field = kind === "banner" ? "banner_url" : "cover_photo_url";
-    await supabase.from("tournaments").update({ [field]: null }).eq("id", tournament.id);
+    const patch = kind === "banner" ? { banner_url: null } : { cover_photo_url: null };
+    await supabase.from("tournaments").update(patch).eq("id", tournament.id);
     onChange();
   };
 
