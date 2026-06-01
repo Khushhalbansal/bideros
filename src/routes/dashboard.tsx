@@ -17,6 +17,7 @@ export const Route = createFileRoute("/dashboard")({ component: Dashboard });
 interface Tournament {
   id: string; name: string; status: string; purse_per_team: number;
   max_players_per_team: number; admin_id: string; created_at: string; starts_at: string | null;
+  cover_photo_url?: string | null;
 }
 interface TeamRow { id: string; name: string; tournament_id: string; tournaments: { name: string } | null }
 
