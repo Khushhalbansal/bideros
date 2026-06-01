@@ -23,7 +23,7 @@ export function Landing() {
 
   useEffect(() => {
     supabase.from("tournaments")
-      .select("id,name,status,purse_per_team,max_players_per_team,created_at,starts_at")
+      .select("id,name,status,purse_per_team,max_players_per_team,created_at,starts_at,cover_photo_url")
       .order("created_at", { ascending: false })
       .then(({ data }) => setTournaments((data as PublicTournament[]) || []));
   }, []);
