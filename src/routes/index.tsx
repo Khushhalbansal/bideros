@@ -13,6 +13,7 @@ export const Route = createFileRoute("/")({ component: Landing });
 interface PublicTournament {
   id: string; name: string; status: string; purse_per_team: number;
   max_players_per_team: number; created_at: string; starts_at: string | null;
+  cover_photo_url?: string | null;
 }
 
 export function Landing() {
