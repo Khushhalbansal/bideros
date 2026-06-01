@@ -13,6 +13,8 @@ import { Play, Pause, SkipForward, Undo2, XCircle, Flag, Monitor, Gavel, Chevron
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { uploadImage } from "@/lib/uploads";
+import { PlayerAvatar } from "@/components/PlayerAvatar";
 
 export const Route = createFileRoute("/admin/$id")({ component: AdminPanel });
 
