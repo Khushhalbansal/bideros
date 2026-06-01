@@ -589,3 +589,53 @@ function SettingsTab({ tournament, onChange }: { tournament: Tournament; onChang
     </div>
   );
 }
+
+function TournamentImages({ tournament, onChange }: { tournament: Tournament; onChange: () => void }) {
+  const [busy, setBusy] = useState<"banner" | "cover" | null>(null);
+
+  const handleUpload = async (kind: "banner" | "cover", file: File) => {
+    setBusy(kind);
+    try {
+      const url = await uploadImage("tournament-assets", file, tournament.id);
+      const field = kind === "banner" ? "banner_url" : "cover_photo_url";
+      const { error } = await supabase.from("tournaments").update({ [field]: url }).eq("id", tournament.id);
+      if (error) throw error;
+      toast.success(`${kind === "banner" ? "Banner" : "Cover"} updated`);
+      onChange();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const clear = async (kind: "banner" | "cover") => {
+    const field = kind === "banner" ? "banner_url" : "cover_photo_url";
+    await supabase.from("tournaments").update({ [field]: null }).eq("id", tournament.id);
+    onChange();
+  };
+
+  return (
+    <div className="bg-glass border border-border rounded-xl p-6 space-y-4">
+      <h3 className="font-bold">Branding</h3>
+      {(["cover", "banner"] as const).map(kind => {
+        const url = kind === "banner" ? tournament.banner_url : tournament.cover_photo_url;
+        return (
+          <div key={kind} className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="capitalize">{kind === "cover" ? "Cover photo (cards)" : "Banner (in-auction header)"}</Label>
+              {url && <button onClick={() => clear(kind)} className="text-[10px] text-destructive hover:underline">Remove</button>}
+            </div>
+            {url && <img src={url} alt="" className="w-full h-24 object-cover rounded-md border border-border" />}
+            <label className="block">
+              <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={busy === kind} onChange={e => { const f = e.target.files?.[0]; if (f) handleUpload(kind, f); e.currentTarget.value = ""; }} />
+              <span className="cursor-pointer block w-full text-center text-xs py-2 rounded-md border border-dashed border-border hover:border-neon hover:text-neon">
+                {busy === kind ? "Uploading…" : url ? "Replace image" : "Upload image (max 5MB)"}
+              </span>
+            </label>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
