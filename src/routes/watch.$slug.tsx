@@ -56,6 +56,8 @@ function Spectator() {
     return () => { supabase.removeChannel(ch); };
   }, [t, load]);
 
+  useAuctionTicker(slug, t?.status === "live");
+
   if (!t) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Tournament not found.</div>;
 
   const currentPlayer = players.find(p => p.id === state?.current_player_id) || null;
@@ -64,11 +66,10 @@ function Spectator() {
   const timeLeft = state?.timer_ends_at ? Math.max(0, Math.ceil((new Date(state.timer_ends_at).getTime() - now) / 1000)) : null;
   const isLive = currentPlayer && state?.timer_ends_at && timeLeft! > 0;
 
-  useAuctionTicker(t.id, t.status === "live");
-
   const soldRecent = state?.last_sold_at && Date.now() - new Date(state.last_sold_at).getTime() < 5000;
   const soldPlayer = soldRecent ? players.find(p => p.id === state?.last_sold_player_id) : null;
   const soldTeam = soldRecent ? teams.find(tm => tm.id === state?.last_sold_team_id) : null;
+
 
   return (
     <div className="min-h-screen flex flex-col">
