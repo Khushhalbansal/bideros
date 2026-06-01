@@ -340,21 +340,30 @@ function PlayersTab({ tournament, players, teams, onChange }:{ tournament: Tourn
   const [name, setName] = useState("");
   const [role, setRole] = useState<string>("Batter");
   const [base, setBase] = useState("1 L");
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
 
   const add = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
-    const maxOrder = Math.max(0, ...players.map(p => p.auction_order ?? 0));
-    const { error } = await supabase.from("players").insert({
-      tournament_id: tournament.id, name, role, base_price: parseINR(base),
-      auction_order: maxOrder + 1,
-    });
-    setBusy(false);
-    if (error) return toast.error(error.message);
-    setName(""); setBase("1 L");
-    onChange();
+    try {
+      let photo_url: string | null = null;
+      if (photoFile) photo_url = await uploadImage("player-photos", photoFile, tournament.id);
+      const maxOrder = Math.max(0, ...players.map(p => p.auction_order ?? 0));
+      const { error } = await supabase.from("players").insert({
+        tournament_id: tournament.id, name, role, base_price: parseINR(base),
+        auction_order: maxOrder + 1, photo_url,
+      });
+      if (error) throw error;
+      setName(""); setBase("1 L"); setPhotoFile(null);
+      onChange();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed");
+    } finally {
+      setBusy(false);
+    }
   };
+
 
   const remove = async (id: string) => {
     if (!confirm("Delete player?")) return;
