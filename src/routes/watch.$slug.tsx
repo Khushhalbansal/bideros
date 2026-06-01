@@ -3,13 +3,17 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatINR } from "@/lib/format";
 import { Gavel } from "lucide-react";
+import { useAuctionTicker } from "@/hooks/use-auction-ticker";
+import { HammerStrikes } from "@/components/HammerStrikes";
+import { SoldBanner } from "@/components/SoldBanner";
+import { AnimatePresence } from "framer-motion";
 
 export const Route = createFileRoute("/watch/$slug")({ component: Spectator });
 
-interface Tournament { id:string; name:string; min_bid_increment:number; status:string; }
+interface Tournament { id:string; name:string; min_bid_increment:number; status:string; banner_url?:string|null; cover_photo_url?:string|null; }
 interface Team { id:string; name:string; logo_url:string|null; remaining_purse:number; }
-interface Player { id:string; name:string; role:string|null; base_price:number; status:string; sold_to_team_id:string|null; sold_price:number|null; }
-interface AuctionState { current_player_id:string|null; current_highest_bid:number|null; current_highest_team_id:string|null; timer_ends_at:string|null; updated_at:string; }
+interface Player { id:string; name:string; role:string|null; base_price:number; status:string; sold_to_team_id:string|null; sold_price:number|null; photo_url?:string|null; }
+interface AuctionState { current_player_id:string|null; current_highest_bid:number|null; current_highest_team_id:string|null; timer_ends_at:string|null; updated_at:string; strike_count?:number; last_sold_player_id?:string|null; last_sold_team_id?:string|null; last_sold_price?:number|null; last_sold_at?:string|null; }
 
 function Spectator() {
   const { slug } = Route.useParams(); // slug = tournament id
