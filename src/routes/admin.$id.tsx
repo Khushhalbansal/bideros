@@ -457,8 +457,20 @@ function PlayersTab({ tournament, players, teams, onChange }:{ tournament: Tourn
       <div className="md:col-span-2 space-y-2">
         {players.map(p => {
           const team = teams.find(t => t.id === p.sold_to_team_id);
+          const onPhoto = async (file: File) => {
+            try {
+              const url = await uploadImage("player-photos", file, tournament.id);
+              await updateField(p.id, { photo_url: url });
+              toast.success("Photo uploaded");
+            } catch (err) { toast.error(err instanceof Error ? err.message : "Upload failed"); }
+          };
           return (
             <div key={p.id} className="bg-glass border border-border rounded-xl p-3 flex items-center justify-between gap-3">
+              <label className="cursor-pointer relative group shrink-0" title="Click to upload/replace photo">
+                <PlayerAvatar url={p.photo_url} name={p.name} size={44} />
+                <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) onPhoto(f); e.currentTarget.value = ""; }} />
+                <span className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-[10px] text-neon">edit</span>
+              </label>
               <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-2 items-center">
                 <Input value={p.name} onChange={e => updateField(p.id, { name: e.target.value })} className="h-8 text-xs" />
                 <Select value={p.role ?? "Batter"} onValueChange={(v) => updateField(p.id, { role: v })}>
