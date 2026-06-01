@@ -426,7 +426,12 @@ function PlayersTab({ tournament, players, teams, onChange }:{ tournament: Tourn
             </Select>
           </div>
           <div><Label>Base price</Label><Input value={base} onChange={e=>setBase(e.target.value)} placeholder="1 L" /></div>
-          <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon">Add</Button>
+          <div>
+            <Label>Photo (optional, max 5MB)</Label>
+            <Input type="file" accept="image/jpeg,image/png,image/webp" onChange={e => setPhotoFile(e.target.files?.[0] || null)} />
+            {photoFile && <p className="text-[10px] text-muted-foreground mt-1">📷 {photoFile.name}</p>}
+          </div>
+          <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon">{busy ? "Adding…" : "Add"}</Button>
         </form>
         <div className="bg-glass border border-border rounded-xl p-5 space-y-2">
           <h3 className="font-bold text-sm flex items-center gap-2"><Upload className="h-4 w-4" />Bulk import</h3>
