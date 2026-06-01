@@ -13,6 +13,7 @@ export const Route = createFileRoute("/")({ component: Landing });
 interface PublicTournament {
   id: string; name: string; status: string; purse_per_team: number;
   max_players_per_team: number; created_at: string; starts_at: string | null;
+  cover_photo_url?: string | null;
 }
 
 export function Landing() {
@@ -22,7 +23,7 @@ export function Landing() {
 
   useEffect(() => {
     supabase.from("tournaments")
-      .select("id,name,status,purse_per_team,max_players_per_team,created_at,starts_at")
+      .select("id,name,status,purse_per_team,max_players_per_team,created_at,starts_at,cover_photo_url")
       .order("created_at", { ascending: false })
       .then(({ data }) => setTournaments((data as PublicTournament[]) || []));
   }, []);
@@ -131,13 +132,16 @@ export function TournamentGroup({ title, items, emptyText, accent }: { title: st
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {items.map(t => (
-            <Link key={t.id} to="/watch/$slug" params={{ slug: t.id }} className={`bg-glass border border-border rounded-xl p-4 transition ${border} block`}>
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <h4 className="font-bold">{t.name}</h4>
-                <span className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full ${accent === "hot" ? "bg-destructive/20 text-hot" : accent === "neon" ? "bg-primary/15 text-neon" : "bg-muted text-muted-foreground"}`}>{t.status}</span>
+            <Link key={t.id} to="/watch/$slug" params={{ slug: t.id }} className={`bg-glass border border-border rounded-xl overflow-hidden transition ${border} block`}>
+              {t.cover_photo_url && <img src={t.cover_photo_url} alt="" className="w-full h-32 object-cover" />}
+              <div className="p-4">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <h4 className="font-bold">{t.name}</h4>
+                  <span className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full ${accent === "hot" ? "bg-destructive/20 text-hot" : accent === "neon" ? "bg-primary/15 text-neon" : "bg-muted text-muted-foreground"}`}>{t.status}</span>
+                </div>
+                <div className="text-xs text-muted-foreground mb-3">Purse {formatINR(t.purse_per_team)} • Squad {t.max_players_per_team}</div>
+                <div className="flex items-center text-xs text-neon"><Eye className="h-3 w-3 mr-1" />Watch live</div>
               </div>
-              <div className="text-xs text-muted-foreground mb-3">Purse {formatINR(t.purse_per_team)} • Squad {t.max_players_per_team}</div>
-              <div className="flex items-center text-xs text-neon"><Eye className="h-3 w-3 mr-1" />Watch live</div>
             </Link>
           ))}
         </div>

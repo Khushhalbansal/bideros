@@ -139,13 +139,7 @@ function TeamRoomInner({ team, tournament, state, allTeams, bids, currentPlayer,
         )}
       </AnimatePresence>
       {tournament.banner_url && <img src={tournament.banner_url} alt="" className="w-full h-32 md:h-48 object-cover" />}
-      {isLive && state?.strike_count ? <HammerStrikes count={state.strike_count} /> : null}
-      <AnimatePresence>
-        {soldPlayer && soldTeam && state?.last_sold_price != null && (
-          <SoldBanner player={soldPlayer.name} team={soldTeam.name} price={Number(state.last_sold_price)} />
-        )}
-      </AnimatePresence>
-      {tournament.banner_url && <img src={tournament.banner_url} alt="" className="w-full h-32 md:h-48 object-cover" />}
+
       <header className="container mx-auto flex items-center justify-between py-5 px-4">
         <div className="flex items-center gap-3">
           <Logo />

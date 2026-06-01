@@ -13,6 +13,8 @@ import { Play, Pause, SkipForward, Undo2, XCircle, Flag, Monitor, Gavel, Chevron
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { uploadImage } from "@/lib/uploads";
+import { PlayerAvatar } from "@/components/PlayerAvatar";
 
 export const Route = createFileRoute("/admin/$id")({ component: AdminPanel });
 
@@ -338,21 +340,30 @@ function PlayersTab({ tournament, players, teams, onChange }:{ tournament: Tourn
   const [name, setName] = useState("");
   const [role, setRole] = useState<string>("Batter");
   const [base, setBase] = useState("1 L");
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
 
   const add = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
-    const maxOrder = Math.max(0, ...players.map(p => p.auction_order ?? 0));
-    const { error } = await supabase.from("players").insert({
-      tournament_id: tournament.id, name, role, base_price: parseINR(base),
-      auction_order: maxOrder + 1,
-    });
-    setBusy(false);
-    if (error) return toast.error(error.message);
-    setName(""); setBase("1 L");
-    onChange();
+    try {
+      let photo_url: string | null = null;
+      if (photoFile) photo_url = await uploadImage("player-photos", photoFile, tournament.id);
+      const maxOrder = Math.max(0, ...players.map(p => p.auction_order ?? 0));
+      const { error } = await supabase.from("players").insert({
+        tournament_id: tournament.id, name, role, base_price: parseINR(base),
+        auction_order: maxOrder + 1, photo_url,
+      });
+      if (error) throw error;
+      setName(""); setBase("1 L"); setPhotoFile(null);
+      onChange();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed");
+    } finally {
+      setBusy(false);
+    }
   };
+
 
   const remove = async (id: string) => {
     if (!confirm("Delete player?")) return;
@@ -415,7 +426,12 @@ function PlayersTab({ tournament, players, teams, onChange }:{ tournament: Tourn
             </Select>
           </div>
           <div><Label>Base price</Label><Input value={base} onChange={e=>setBase(e.target.value)} placeholder="1 L" /></div>
-          <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon">Add</Button>
+          <div>
+            <Label>Photo (optional, max 5MB)</Label>
+            <Input type="file" accept="image/jpeg,image/png,image/webp" onChange={e => setPhotoFile(e.target.files?.[0] || null)} />
+            {photoFile && <p className="text-[10px] text-muted-foreground mt-1">📷 {photoFile.name}</p>}
+          </div>
+          <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon">{busy ? "Adding…" : "Add"}</Button>
         </form>
         <div className="bg-glass border border-border rounded-xl p-5 space-y-2">
           <h3 className="font-bold text-sm flex items-center gap-2"><Upload className="h-4 w-4" />Bulk import</h3>
@@ -441,8 +457,20 @@ function PlayersTab({ tournament, players, teams, onChange }:{ tournament: Tourn
       <div className="md:col-span-2 space-y-2">
         {players.map(p => {
           const team = teams.find(t => t.id === p.sold_to_team_id);
+          const onPhoto = async (file: File) => {
+            try {
+              const url = await uploadImage("player-photos", file, tournament.id);
+              await updateField(p.id, { photo_url: url });
+              toast.success("Photo uploaded");
+            } catch (err) { toast.error(err instanceof Error ? err.message : "Upload failed"); }
+          };
           return (
             <div key={p.id} className="bg-glass border border-border rounded-xl p-3 flex items-center justify-between gap-3">
+              <label className="cursor-pointer relative group shrink-0" title="Click to upload/replace photo">
+                <PlayerAvatar url={p.photo_url} name={p.name} size={44} />
+                <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) onPhoto(f); e.currentTarget.value = ""; }} />
+                <span className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-[10px] text-neon">edit</span>
+              </label>
               <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-2 items-center">
                 <Input value={p.name} onChange={e => updateField(p.id, { name: e.target.value })} className="h-8 text-xs" />
                 <Select value={p.role ?? "Batter"} onValueChange={(v) => updateField(p.id, { role: v })}>
@@ -538,6 +566,7 @@ function SettingsTab({ tournament, onChange }: { tournament: Tournament; onChang
         <Button onClick={save} disabled={saving} className="w-full gradient-neon text-primary-foreground shadow-neon"><Save className="h-4 w-4 mr-1" />Save settings</Button>
       </div>
       <div className="space-y-4">
+        <TournamentImages tournament={tournament} onChange={onChange} />
         <div className="bg-glass border border-border rounded-xl p-6 space-y-3">
           <h3 className="font-bold">Spectator link</h3>
           <div className="flex gap-2">
@@ -557,6 +586,56 @@ function SettingsTab({ tournament, onChange }: { tournament: Tournament; onChang
         </div>
         <p className="text-xs text-muted-foreground">Completed tournaments are automatically deleted after 20 days.</p>
       </div>
+    </div>
+  );
+}
+
+function TournamentImages({ tournament, onChange }: { tournament: Tournament; onChange: () => void }) {
+  const [busy, setBusy] = useState<"banner" | "cover" | null>(null);
+
+  const handleUpload = async (kind: "banner" | "cover", file: File) => {
+    setBusy(kind);
+    try {
+      const url = await uploadImage("tournament-assets", file, tournament.id);
+      const patch = kind === "banner" ? { banner_url: url } : { cover_photo_url: url };
+      const { error } = await supabase.from("tournaments").update(patch).eq("id", tournament.id);
+      if (error) throw error;
+      toast.success(`${kind === "banner" ? "Banner" : "Cover"} updated`);
+      onChange();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const clear = async (kind: "banner" | "cover") => {
+    const patch = kind === "banner" ? { banner_url: null } : { cover_photo_url: null };
+    await supabase.from("tournaments").update(patch).eq("id", tournament.id);
+    onChange();
+  };
+
+  return (
+    <div className="bg-glass border border-border rounded-xl p-6 space-y-4">
+      <h3 className="font-bold">Branding</h3>
+      {(["cover", "banner"] as const).map(kind => {
+        const url = kind === "banner" ? tournament.banner_url : tournament.cover_photo_url;
+        return (
+          <div key={kind} className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="capitalize">{kind === "cover" ? "Cover photo (cards)" : "Banner (in-auction header)"}</Label>
+              {url && <button onClick={() => clear(kind)} className="text-[10px] text-destructive hover:underline">Remove</button>}
+            </div>
+            {url && <img src={url} alt="" className="w-full h-24 object-cover rounded-md border border-border" />}
+            <label className="block">
+              <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={busy === kind} onChange={e => { const f = e.target.files?.[0]; if (f) handleUpload(kind, f); e.currentTarget.value = ""; }} />
+              <span className="cursor-pointer block w-full text-center text-xs py-2 rounded-md border border-dashed border-border hover:border-neon hover:text-neon">
+                {busy === kind ? "Uploading…" : url ? "Replace image" : "Upload image (max 5MB)"}
+              </span>
+            </label>
+          </div>
+        );
+      })}
     </div>
   );
 }

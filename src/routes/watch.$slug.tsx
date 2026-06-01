@@ -3,13 +3,17 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatINR } from "@/lib/format";
 import { Gavel } from "lucide-react";
+import { useAuctionTicker } from "@/hooks/use-auction-ticker";
+import { HammerStrikes } from "@/components/HammerStrikes";
+import { SoldBanner } from "@/components/SoldBanner";
+import { AnimatePresence } from "framer-motion";
 
 export const Route = createFileRoute("/watch/$slug")({ component: Spectator });
 
-interface Tournament { id:string; name:string; min_bid_increment:number; status:string; }
+interface Tournament { id:string; name:string; min_bid_increment:number; status:string; banner_url?:string|null; cover_photo_url?:string|null; }
 interface Team { id:string; name:string; logo_url:string|null; remaining_purse:number; }
-interface Player { id:string; name:string; role:string|null; base_price:number; status:string; sold_to_team_id:string|null; sold_price:number|null; }
-interface AuctionState { current_player_id:string|null; current_highest_bid:number|null; current_highest_team_id:string|null; timer_ends_at:string|null; updated_at:string; }
+interface Player { id:string; name:string; role:string|null; base_price:number; status:string; sold_to_team_id:string|null; sold_price:number|null; photo_url?:string|null; }
+interface AuctionState { current_player_id:string|null; current_highest_bid:number|null; current_highest_team_id:string|null; timer_ends_at:string|null; updated_at:string; strike_count?:number; last_sold_player_id?:string|null; last_sold_team_id?:string|null; last_sold_price?:number|null; last_sold_at?:string|null; }
 
 function Spectator() {
   const { slug } = Route.useParams(); // slug = tournament id
@@ -52,6 +56,8 @@ function Spectator() {
     return () => { supabase.removeChannel(ch); };
   }, [t, load]);
 
+  useAuctionTicker(slug, t?.status === "live");
+
   if (!t) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Tournament not found.</div>;
 
   const currentPlayer = players.find(p => p.id === state?.current_player_id) || null;
@@ -60,8 +66,20 @@ function Spectator() {
   const timeLeft = state?.timer_ends_at ? Math.max(0, Math.ceil((new Date(state.timer_ends_at).getTime() - now) / 1000)) : null;
   const isLive = currentPlayer && state?.timer_ends_at && timeLeft! > 0;
 
+  const soldRecent = state?.last_sold_at && Date.now() - new Date(state.last_sold_at).getTime() < 5000;
+  const soldPlayer = soldRecent ? players.find(p => p.id === state?.last_sold_player_id) : null;
+  const soldTeam = soldRecent ? teams.find(tm => tm.id === state?.last_sold_team_id) : null;
+
+
   return (
     <div className="min-h-screen flex flex-col">
+      {isLive && state?.strike_count ? <HammerStrikes count={state.strike_count} /> : null}
+      <AnimatePresence>
+        {soldPlayer && soldTeam && state?.last_sold_price != null && (
+          <SoldBanner player={soldPlayer.name} team={soldTeam.name} price={Number(state.last_sold_price)} />
+        )}
+      </AnimatePresence>
+      {t.banner_url && <img src={t.banner_url} alt="" className="w-full h-28 md:h-40 object-cover" />}
       <header className="px-6 py-4 flex items-center justify-between border-b border-border bg-glass">
         <div className="flex items-center gap-3">
           <span className="inline-block h-3 w-3 rounded-full bg-hot animate-pulse-neon" />
@@ -80,7 +98,11 @@ function Spectator() {
             {isLive && currentPlayer ? (
               <div className="animate-slide-up w-full">
                 <div className="text-xs uppercase tracking-[0.3em] text-neon mb-4">Now on the block</div>
-                <div className="text-7xl md:text-9xl font-display font-bold mb-4">{currentPlayer.name}</div>
+                {currentPlayer.photo_url && (
+                  <img src={currentPlayer.photo_url} alt={currentPlayer.name} className="mx-auto mb-4 h-32 w-32 md:h-40 md:w-40 rounded-full object-cover border-4 border-neon/60 shadow-neon" />
+                )}
+                <div className="text-6xl md:text-8xl font-display font-bold mb-4">{currentPlayer.name}</div>
+
                 <div className="flex justify-center gap-4 mb-6 text-muted-foreground">
                   <span>{currentPlayer.role}</span>
                   <span>•</span>

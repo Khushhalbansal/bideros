@@ -1,17 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatINR } from "@/lib/format";
 import { Gavel } from "lucide-react";
+import { useAuctionTicker } from "@/hooks/use-auction-ticker";
+import { HammerStrikes } from "@/components/HammerStrikes";
+import { SoldBanner } from "@/components/SoldBanner";
+import { AnimatePresence } from "framer-motion";
 
 export const Route = createFileRoute("/projector/$id")({ component: Projector });
 
-interface Tournament { id:string; name:string; status:string; }
+interface Tournament { id:string; name:string; status:string; banner_url?:string|null; cover_photo_url?:string|null; }
 interface Team { id:string; name:string; remaining_purse:number; color:string|null; }
-interface Player { id:string; name:string; role:string|null; base_price:number; status:string; sold_to_team_id:string|null; sold_price:number|null; }
-interface AuctionState { current_player_id:string|null; current_highest_bid:number|null; current_highest_team_id:string|null; timer_ends_at:string|null; }
-
-interface SoldOverlay { player: string; team: string; price: number; }
+interface Player { id:string; name:string; role:string|null; base_price:number; status:string; sold_to_team_id:string|null; sold_price:number|null; photo_url?:string|null; }
+interface AuctionState { current_player_id:string|null; current_highest_bid:number|null; current_highest_team_id:string|null; timer_ends_at:string|null; strike_count?:number; last_sold_player_id?:string|null; last_sold_team_id?:string|null; last_sold_price?:number|null; last_sold_at?:string|null; }
 
 function Projector() {
   const { id } = Route.useParams();
@@ -20,8 +22,6 @@ function Projector() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [state, setState] = useState<AuctionState|null>(null);
   const [now, setNow] = useState(Date.now());
-  const [sold, setSold] = useState<SoldOverlay|null>(null);
-  const lastPlayerRef = useRef<string|null>(null);
 
   useEffect(() => { const i = setInterval(() => setNow(Date.now()), 250); return () => clearInterval(i); }, []);
 
@@ -44,32 +44,33 @@ function Projector() {
     const ch = supabase.channel(`projector:${id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "auction_state", filter: `tournament_id=eq.${id}` }, () => load())
       .on("postgres_changes", { event: "*", schema: "public", table: "teams", filter: `tournament_id=eq.${id}` }, () => load())
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "players", filter: `tournament_id=eq.${id}` }, (payload) => {
-        const np = payload.new as Player;
-        if (np.status === "sold" && lastPlayerRef.current !== np.id) {
-          lastPlayerRef.current = np.id;
-          // Find team name asynchronously
-          supabase.from("teams_public").select("name").eq("id", np.sold_to_team_id!).maybeSingle().then(({ data }) => {
-            setSold({ player: np.name, team: (data as { name:string }|null)?.name || "—", price: Number(np.sold_price || 0) });
-            setTimeout(() => setSold(null), 4500);
-          });
-        }
-        load();
-      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "players", filter: `tournament_id=eq.${id}` }, () => load())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [id, load]);
+
+  const isLive = !!(t && t.status === "live");
+  useAuctionTicker(id, isLive);
 
   if (!t) return <div className="min-h-screen flex items-center justify-center text-muted-foreground bg-background">Loading…</div>;
 
   const currentPlayer = players.find(p => p.id === state?.current_player_id) || null;
   const leading = teams.find(tm => tm.id === state?.current_highest_team_id);
   const timeLeft = state?.timer_ends_at ? Math.max(0, Math.ceil((new Date(state.timer_ends_at).getTime() - now) / 1000)) : null;
-  const isLive = currentPlayer && timeLeft != null && timeLeft > 0;
+  const liveLot = currentPlayer && timeLeft != null && timeLeft > 0;
+
+  const soldRecent = state?.last_sold_at && Date.now() - new Date(state.last_sold_at).getTime() < 5000;
+  const soldPlayer = soldRecent ? players.find(p => p.id === state?.last_sold_player_id) : null;
+  const soldTeam = soldRecent ? teams.find(tm => tm.id === state?.last_sold_team_id) : null;
 
   return (
     <div className="min-h-screen flex flex-col bg-background overflow-hidden relative">
-      {sold && <SoldOverlayView data={sold} />}
+      {liveLot && state?.strike_count ? <HammerStrikes count={state.strike_count} /> : null}
+      <AnimatePresence>
+        {soldPlayer && soldTeam && state?.last_sold_price != null && (
+          <SoldBanner player={soldPlayer.name} team={soldTeam.name} price={Number(state.last_sold_price)} />
+        )}
+      </AnimatePresence>
 
       <header className="px-10 py-5 flex items-center justify-between border-b border-border">
         <div className="flex items-center gap-4">
@@ -81,10 +82,13 @@ function Projector() {
 
       <main className="flex-1 grid grid-cols-[1fr_420px] gap-8 p-10">
         <section className="rounded-3xl border border-border bg-glass p-12 flex flex-col justify-center items-center text-center">
-          {isLive && currentPlayer ? (
+          {liveLot && currentPlayer ? (
             <div className="animate-slide-up w-full">
               <div className="text-sm uppercase tracking-[0.4em] text-neon mb-6">Now on the block</div>
-              <div className="text-[10rem] leading-none font-display font-bold mb-6">{currentPlayer.name}</div>
+              {currentPlayer.photo_url && (
+                <img src={currentPlayer.photo_url} alt={currentPlayer.name} className="mx-auto mb-6 h-48 w-48 md:h-64 md:w-64 rounded-full object-cover border-4 border-neon/60 shadow-neon" />
+              )}
+              <div className="text-[7rem] md:text-[10rem] leading-none font-display font-bold mb-6">{currentPlayer.name}</div>
               <div className="flex justify-center gap-6 mb-10 text-2xl text-muted-foreground">
                 <span>{currentPlayer.role}</span><span>•</span><span>Base {formatINR(currentPlayer.base_price)}</span>
               </div>
@@ -127,50 +131,6 @@ function Projector() {
           </div>
         </aside>
       </main>
-    </div>
-  );
-}
-
-function SoldOverlayView({ data }: { data: SoldOverlay }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-sm animate-slide-up">
-      <Confetti />
-      <div className="text-center relative">
-        <div className="text-[14rem] leading-none font-display font-bold gradient-hot bg-clip-text text-transparent animate-pulse-neon">SOLD!</div>
-        <div className="text-6xl font-bold mt-4">{data.player}</div>
-        <div className="text-3xl text-muted-foreground mt-2">to <span className="text-neon font-bold">{data.team}</span></div>
-        <div className="text-5xl mt-6 text-neon font-bold">{formatINR(data.price)}</div>
-      </div>
-    </div>
-  );
-}
-
-function Confetti() {
-  const pieces = Array.from({ length: 80 });
-  return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      {pieces.map((_, i) => {
-        const left = Math.random() * 100;
-        const delay = Math.random() * 0.6;
-        const duration = 1.8 + Math.random() * 1.5;
-        const colors = ["bg-neon", "bg-hot", "bg-primary", "bg-accent"];
-        const color = colors[i % colors.length];
-        const size = 6 + Math.random() * 8;
-        return (
-          <span
-            key={i}
-            className={`absolute -top-4 ${color} rounded-sm opacity-90`}
-            style={{
-              left: `${left}%`,
-              width: size,
-              height: size,
-              animation: `confetti-fall ${duration}s linear ${delay}s forwards`,
-              transform: `rotate(${Math.random() * 360}deg)`,
-            }}
-          />
-        );
-      })}
-      <style>{`@keyframes confetti-fall { to { transform: translateY(110vh) rotate(720deg); opacity: 0.6; } }`}</style>
     </div>
   );
 }
