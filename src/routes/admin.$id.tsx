@@ -566,6 +566,7 @@ function SettingsTab({ tournament, onChange }: { tournament: Tournament; onChang
         <Button onClick={save} disabled={saving} className="w-full gradient-neon text-primary-foreground shadow-neon"><Save className="h-4 w-4 mr-1" />Save settings</Button>
       </div>
       <div className="space-y-4">
+        <TournamentImages tournament={tournament} onChange={onChange} />
         <div className="bg-glass border border-border rounded-xl p-6 space-y-3">
           <h3 className="font-bold">Spectator link</h3>
           <div className="flex gap-2">
