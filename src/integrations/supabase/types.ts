@@ -324,6 +324,36 @@ export type Database = {
           },
         ]
       }
+      player_invite_tokens: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          id: string
+          revoked: boolean
+          token: string
+          tournament_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          revoked?: boolean
+          token?: string
+          tournament_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          revoked?: boolean
+          token?: string
+          tournament_id?: string
+        }
+        Relationships: []
+      }
       players: {
         Row: {
           auction_order: number | null
@@ -333,11 +363,13 @@ export type Database = {
           name: string
           photo_url: string | null
           role: string | null
+          self_registered: boolean
           sold_price: number | null
           sold_to_team_id: string | null
           stats: Json | null
           status: string
           tournament_id: string
+          user_id: string | null
         }
         Insert: {
           auction_order?: number | null
@@ -347,11 +379,13 @@ export type Database = {
           name: string
           photo_url?: string | null
           role?: string | null
+          self_registered?: boolean
           sold_price?: number | null
           sold_to_team_id?: string | null
           stats?: Json | null
           status?: string
           tournament_id: string
+          user_id?: string | null
         }
         Update: {
           auction_order?: number | null
@@ -361,11 +395,13 @@ export type Database = {
           name?: string
           photo_url?: string | null
           role?: string | null
+          self_registered?: boolean
           sold_price?: number | null
           sold_to_team_id?: string | null
           stats?: Json | null
           status?: string
           tournament_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -393,22 +429,40 @@ export type Database = {
       }
       profiles: {
         Row: {
+          age: number | null
+          avatar_url: string | null
+          bio: string | null
           created_at: string
           email: string | null
           full_name: string | null
           id: string
+          phone: string | null
+          stats: Json
+          updated_at: string
         }
         Insert: {
+          age?: number | null
+          avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id: string
+          phone?: string | null
+          stats?: Json
+          updated_at?: string
         }
         Update: {
+          age?: number | null
+          avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
+          phone?: string | null
+          stats?: Json
+          updated_at?: string
         }
         Relationships: []
       }
@@ -616,7 +670,21 @@ export type Database = {
     }
     Functions: {
       accept_invite: { Args: { p_token: string }; Returns: Json }
+      accept_player_invite: {
+        Args: {
+          p_base_price?: number
+          p_name: string
+          p_photo_url?: string
+          p_role?: string
+          p_token: string
+        }
+        Returns: Json
+      }
       admin_generate_invite: { Args: { p_team: string }; Returns: Json }
+      admin_generate_player_invite: {
+        Args: { p_tournament: string }
+        Returns: Json
+      }
       admin_list_teams: {
         Args: { p_tournament: string }
         Returns: {
@@ -637,6 +705,7 @@ export type Database = {
       consume_admin_invite: { Args: { p_token: string }; Returns: Json }
       end_auction: { Args: { p_tournament: string }; Returns: Json }
       get_invite_info: { Args: { p_token: string }; Returns: Json }
+      get_player_invite_info: { Args: { p_token: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
