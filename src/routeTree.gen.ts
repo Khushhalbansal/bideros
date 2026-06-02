@@ -11,12 +11,14 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SuperAdminRouteImport } from './routes/super-admin'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WatchSlugRouteImport } from './routes/watch.$slug'
 import { Route as TeamIdRouteImport } from './routes/team.$id'
 import { Route as ProjectorIdRouteImport } from './routes/projector.$id'
+import { Route as PlayerInviteTokenRouteImport } from './routes/player-invite.$token'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as AdminRegisterRouteImport } from './routes/admin.register'
 import { Route as AdminIdRouteImport } from './routes/admin.$id'
@@ -29,6 +31,11 @@ const SuperAdminRoute = SuperAdminRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -61,6 +68,11 @@ const ProjectorIdRoute = ProjectorIdRouteImport.update({
   path: '/projector/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlayerInviteTokenRoute = PlayerInviteTokenRouteImport.update({
+  id: '/player-invite/$token',
+  path: '/player-invite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InviteTokenRoute = InviteTokenRouteImport.update({
   id: '/invite/$token',
   path: '/invite/$token',
@@ -81,11 +93,13 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
+  '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/super-admin': typeof SuperAdminRoute
   '/admin/$id': typeof AdminIdRoute
   '/admin/register': typeof AdminRegisterRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/player-invite/$token': typeof PlayerInviteTokenRoute
   '/projector/$id': typeof ProjectorIdRoute
   '/team/$id': typeof TeamIdRoute
   '/watch/$slug': typeof WatchSlugRoute
@@ -94,11 +108,13 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
+  '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/super-admin': typeof SuperAdminRoute
   '/admin/$id': typeof AdminIdRoute
   '/admin/register': typeof AdminRegisterRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/player-invite/$token': typeof PlayerInviteTokenRoute
   '/projector/$id': typeof ProjectorIdRoute
   '/team/$id': typeof TeamIdRoute
   '/watch/$slug': typeof WatchSlugRoute
@@ -108,11 +124,13 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
+  '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/super-admin': typeof SuperAdminRoute
   '/admin/$id': typeof AdminIdRoute
   '/admin/register': typeof AdminRegisterRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/player-invite/$token': typeof PlayerInviteTokenRoute
   '/projector/$id': typeof ProjectorIdRoute
   '/team/$id': typeof TeamIdRoute
   '/watch/$slug': typeof WatchSlugRoute
@@ -123,11 +141,13 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/dashboard'
+    | '/profile'
     | '/reset-password'
     | '/super-admin'
     | '/admin/$id'
     | '/admin/register'
     | '/invite/$token'
+    | '/player-invite/$token'
     | '/projector/$id'
     | '/team/$id'
     | '/watch/$slug'
@@ -136,11 +156,13 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/dashboard'
+    | '/profile'
     | '/reset-password'
     | '/super-admin'
     | '/admin/$id'
     | '/admin/register'
     | '/invite/$token'
+    | '/player-invite/$token'
     | '/projector/$id'
     | '/team/$id'
     | '/watch/$slug'
@@ -149,11 +171,13 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/dashboard'
+    | '/profile'
     | '/reset-password'
     | '/super-admin'
     | '/admin/$id'
     | '/admin/register'
     | '/invite/$token'
+    | '/player-invite/$token'
     | '/projector/$id'
     | '/team/$id'
     | '/watch/$slug'
@@ -163,11 +187,13 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   DashboardRoute: typeof DashboardRoute
+  ProfileRoute: typeof ProfileRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SuperAdminRoute: typeof SuperAdminRoute
   AdminIdRoute: typeof AdminIdRoute
   AdminRegisterRoute: typeof AdminRegisterRoute
   InviteTokenRoute: typeof InviteTokenRoute
+  PlayerInviteTokenRoute: typeof PlayerInviteTokenRoute
   ProjectorIdRoute: typeof ProjectorIdRoute
   TeamIdRoute: typeof TeamIdRoute
   WatchSlugRoute: typeof WatchSlugRoute
@@ -187,6 +213,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -231,6 +264,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectorIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/player-invite/$token': {
+      id: '/player-invite/$token'
+      path: '/player-invite/$token'
+      fullPath: '/player-invite/$token'
+      preLoaderRoute: typeof PlayerInviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/invite/$token': {
       id: '/invite/$token'
       path: '/invite/$token'
@@ -259,11 +299,13 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   DashboardRoute: DashboardRoute,
+  ProfileRoute: ProfileRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SuperAdminRoute: SuperAdminRoute,
   AdminIdRoute: AdminIdRoute,
   AdminRegisterRoute: AdminRegisterRoute,
   InviteTokenRoute: InviteTokenRoute,
+  PlayerInviteTokenRoute: PlayerInviteTokenRoute,
   ProjectorIdRoute: ProjectorIdRoute,
   TeamIdRoute: TeamIdRoute,
   WatchSlugRoute: WatchSlugRoute,

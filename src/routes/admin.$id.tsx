@@ -413,6 +413,7 @@ function PlayersTab({ tournament, players, teams, onChange }:{ tournament: Tourn
   return (
     <div className="grid md:grid-cols-3 gap-6">
       <div className="space-y-3 h-fit">
+        <PlayerInviteCard tournamentId={tournament.id} tournamentName={tournament.name} />
         <form onSubmit={add} className="bg-glass border border-border rounded-xl p-5 space-y-3">
           <h3 className="font-bold">Add player</h3>
           <div><Label>Name</Label><Input value={name} onChange={e=>setName(e.target.value)} required /></div>
@@ -636,6 +637,50 @@ function TournamentImages({ tournament, onChange }: { tournament: Tournament; on
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function PlayerInviteCard({ tournamentId, tournamentName }: { tournamentId: string; tournamentName: string }) {
+  const [url, setUrl] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const generate = async () => {
+    setBusy(true);
+    const { data, error } = await supabase.rpc("admin_generate_player_invite", { p_tournament: tournamentId });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    const r = data as { ok: boolean; token?: string; error?: string };
+    if (!r.ok) return toast.error(r.error || "Failed");
+    setUrl(`${window.location.origin}/player-invite/${r.token}`);
+  };
+
+  const waUrl = url
+    ? `https://wa.me/?text=${encodeURIComponent(`🏏 You're invited to register as a player in *${tournamentName}*!\n\nFill in your details and a photo here:\n${url}\n\nTeam owners will bid on you during the live auction.`)}`
+    : "";
+
+  return (
+    <div className="bg-glass border border-neon/40 rounded-xl p-5 space-y-3">
+      <h3 className="font-bold text-sm flex items-center gap-2"><LinkIcon className="h-4 w-4 text-neon" />Player self-registration</h3>
+      <p className="text-xs text-muted-foreground">Share one link with players so they can register themselves with name, role, base price and photo. Valid 30 days.</p>
+      {url ? (
+        <div className="space-y-2">
+          <div className="font-mono text-[11px] break-all text-neon bg-card/60 rounded p-2 border border-border">{url}</div>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" className="flex-1" onClick={() => { navigator.clipboard.writeText(url); toast.success("Copied"); }}>
+              <Copy className="h-3 w-3 mr-1" />Copy
+            </Button>
+            <Button asChild size="sm" className="flex-1 gradient-neon text-primary-foreground">
+              <a href={waUrl} target="_blank" rel="noopener noreferrer"><Share2 className="h-3 w-3 mr-1" />WhatsApp</a>
+            </Button>
+          </div>
+          <button onClick={() => setUrl(null)} className="text-[10px] text-muted-foreground hover:text-neon">Generate another</button>
+        </div>
+      ) : (
+        <Button size="sm" disabled={busy} onClick={generate} className="w-full gradient-neon text-primary-foreground shadow-neon">
+          {busy ? "Generating…" : "Generate player invite link"}
+        </Button>
+      )}
     </div>
   );
 }
