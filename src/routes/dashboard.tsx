@@ -88,6 +88,7 @@ function Dashboard() {
         <Logo />
         <div className="flex items-center gap-3">
           <span className="text-sm text-muted-foreground hidden sm:block">{user.email}</span>
+          <Button asChild variant="outline" size="sm"><Link to="/profile">My profile</Link></Button>
           <Button variant="ghost" size="sm" onClick={signOut}><LogOut className="h-4 w-4 mr-1" />Sign out</Button>
         </div>
       </header>
