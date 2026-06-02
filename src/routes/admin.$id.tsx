@@ -413,6 +413,7 @@ function PlayersTab({ tournament, players, teams, onChange }:{ tournament: Tourn
   return (
     <div className="grid md:grid-cols-3 gap-6">
       <div className="space-y-3 h-fit">
+        <PlayerInviteCard tournamentId={tournament.id} tournamentName={tournament.name} />
         <form onSubmit={add} className="bg-glass border border-border rounded-xl p-5 space-y-3">
           <h3 className="font-bold">Add player</h3>
           <div><Label>Name</Label><Input value={name} onChange={e=>setName(e.target.value)} required /></div>
