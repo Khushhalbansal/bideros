@@ -73,7 +73,7 @@ function PlayerInvitePage() {
         p_name: name,
         p_role: role,
         p_base_price: parseINR(base) || 100000,
-        p_photo_url: photo_url,
+        p_photo_url: photo_url ?? undefined,
       });
       if (error) throw error;
       const r = data as { ok: boolean; error?: string };
