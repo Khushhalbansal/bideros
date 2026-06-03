@@ -83,21 +83,29 @@ function AdminPanel() {
 
       <main className="container mx-auto px-4 pb-16">
         <Tabs defaultValue="auction">
-          <TabsList>
+          <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="auction"><Gavel className="h-3 w-3 mr-1" />Live auction</TabsTrigger>
+            <TabsTrigger value="lobby"><Users className="h-3 w-3 mr-1" />Lobby</TabsTrigger>
             <TabsTrigger value="teams">Teams ({teams.length})</TabsTrigger>
             <TabsTrigger value="players">Players ({players.length})</TabsTrigger>
+            <TabsTrigger value="categories"><Tag className="h-3 w-3 mr-1" />Categories ({categories.length})</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
           <TabsContent value="auction" className="mt-6">
             <AuctionControl tournament={t} players={players} teams={teams} state={state} />
           </TabsContent>
+          <TabsContent value="lobby" className="mt-6">
+            <LobbyPanel tournamentId={t.id} />
+          </TabsContent>
           <TabsContent value="teams" className="mt-6">
             <TeamsTab tournament={t} teams={teams} players={players} onChange={load} />
           </TabsContent>
           <TabsContent value="players" className="mt-6">
-            <PlayersTab tournament={t} players={players} teams={teams} onChange={load} />
+            <PlayersTab tournament={t} players={players} teams={teams} categories={categories} onChange={load} />
+          </TabsContent>
+          <TabsContent value="categories" className="mt-6">
+            <CategoriesTab tournamentId={t.id} defaultBase={100000} defaultIncrement={t.min_bid_increment} />
           </TabsContent>
           <TabsContent value="settings" className="mt-6">
             <SettingsTab tournament={t} onChange={load} />
