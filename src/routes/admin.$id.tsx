@@ -9,18 +9,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import { formatINR, parseINR } from "@/lib/format";
-import { Play, Pause, SkipForward, Undo2, XCircle, Flag, Monitor, Gavel, ChevronRight, Eye, Copy, Trash2, Share2, Link as LinkIcon, Save, Upload } from "lucide-react";
+import { Play, Pause, SkipForward, Undo2, XCircle, Flag, Monitor, Gavel, ChevronRight, Eye, Copy, Trash2, Share2, Link as LinkIcon, Save, Users, Tag } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
 import { uploadImage } from "@/lib/uploads";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
+import { BulkImportPlayers } from "@/components/admin/BulkImportPlayers";
+import { CategoriesTab, type Category } from "@/components/admin/CategoriesTab";
+import { LobbyPanel } from "@/components/admin/LobbyPanel";
 
 export const Route = createFileRoute("/admin/$id")({ component: AdminPanel });
 
 interface Tournament { id:string; name:string; status:string; purse_per_team:number; max_players_per_team:number; min_bid_increment:number; bid_timer_seconds:number; admin_id:string; starts_at:string|null; banner_url?:string|null; cover_photo_url?:string|null; }
 interface Team { id:string; name:string; owner_id:string|null; owner_email:string|null; owner_name:string|null; remaining_purse:number; logo_url:string|null; }
-interface Player { id:string; name:string; role:string|null; base_price:number; status:string; sold_to_team_id:string|null; sold_price:number|null; auction_order:number|null; photo_url?:string|null; }
+interface Player { id:string; name:string; role:string|null; base_price:number; status:string; sold_to_team_id:string|null; sold_price:number|null; auction_order:number|null; photo_url?:string|null; category_id?:string|null; }
 interface AuctionState { tournament_id:string; current_player_id:string|null; current_highest_bid:number|null; current_highest_team_id:string|null; timer_ends_at:string|null; }
 
 function AdminPanel() {
