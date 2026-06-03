@@ -33,18 +33,21 @@ function AdminPanel() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
   const [state, setState] = useState<AuctionState|null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => { if (!loading && !user) navigate({ to: "/auth" }); }, [user, loading, navigate]);
 
   const load = useCallback(async () => {
-    const [{ data: tt }, { data: tm }, { data: pl }, { data: st }] = await Promise.all([
+    const [{ data: tt }, { data: tm }, { data: pl }, { data: st }, { data: cats }] = await Promise.all([
       supabase.from("tournaments").select("*").eq("id", id).single(),
       supabase.rpc("admin_list_teams", { p_tournament: id }),
       supabase.from("players").select("*").eq("tournament_id", id).order("auction_order", { nullsFirst: false }).order("created_at"),
       supabase.from("auction_state").select("*").eq("tournament_id", id).maybeSingle(),
+      supabase.from("player_categories").select("*").eq("tournament_id", id).order("sort_order"),
     ]);
     setT(tt as Tournament); setTeams((tm as Team[]) || []); setPlayers((pl as Player[]) || []);
     setState(st as AuctionState | null);
+    setCategories((cats as Category[]) || []);
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
