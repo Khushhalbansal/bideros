@@ -9,11 +9,16 @@ import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 
-export const Route = createFileRoute("/auth")({ component: AuthPage });
+export const Route = createFileRoute("/auth")({
+  component: AuthPage,
+  validateSearch: (s: Record<string, unknown>) => ({ next: typeof s.next === "string" ? s.next : undefined }),
+});
 
 function AuthPage() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const { next } = Route.useSearch();
+  const target = next && next.startsWith("/") ? next : "/dashboard";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -21,8 +26,8 @@ function AuthPage() {
   const [forgot, setForgot] = useState(false);
 
   useEffect(() => {
-    if (!loading && user && !user.is_anonymous) navigate({ to: "/dashboard" });
-  }, [user, loading, navigate]);
+    if (!loading && user && !user.is_anonymous) navigate({ to: target });
+  }, [user, loading, navigate, target]);
 
   const signIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +35,7 @@ function AuthPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
     if (error) return toast.error(error.message);
-    navigate({ to: "/dashboard" });
+    navigate({ to: target });
   };
 
   const signUp = async (e: React.FormEvent) => {
@@ -40,7 +45,7 @@ function AuthPage() {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
+        emailRedirectTo: `${window.location.origin}${target}`,
         data: { full_name: fullName },
       },
     });
@@ -66,6 +71,11 @@ function AuthPage() {
       <header className="container mx-auto py-6 px-4"><Logo /></header>
       <main className="flex-1 flex items-center justify-center px-4">
         <div className="w-full max-w-md bg-glass border border-border rounded-2xl p-8 shadow-neon animate-slide-up">
+          {next && (
+            <div className="mb-4 text-xs text-neon bg-neon/10 border border-neon/30 rounded-md px-3 py-2">
+              Sign in to continue to your invite.
+            </div>
+          )}
           {forgot ? (
             <>
               <h1 className="text-2xl font-bold mb-1">Reset password</h1>
@@ -79,7 +89,7 @@ function AuthPage() {
               </form>
             </>
           ) : (
-            <Tabs defaultValue="signin">
+            <Tabs defaultValue={next ? "signup" : "signin"}>
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="signin">Sign in</TabsTrigger>
                 <TabsTrigger value="signup">Create account</TabsTrigger>
