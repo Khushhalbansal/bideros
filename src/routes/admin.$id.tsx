@@ -9,18 +9,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import { formatINR, parseINR } from "@/lib/format";
-import { Play, Pause, SkipForward, Undo2, XCircle, Flag, Monitor, Gavel, ChevronRight, Eye, Copy, Trash2, Share2, Link as LinkIcon, Save, Upload } from "lucide-react";
+import { Play, Pause, SkipForward, Undo2, XCircle, Flag, Monitor, Gavel, ChevronRight, Eye, Copy, Trash2, Share2, Link as LinkIcon, Save, Users, Tag } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
 import { uploadImage } from "@/lib/uploads";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
+import { BulkImportPlayers } from "@/components/admin/BulkImportPlayers";
+import { CategoriesTab, type Category } from "@/components/admin/CategoriesTab";
+import { LobbyPanel } from "@/components/admin/LobbyPanel";
 
 export const Route = createFileRoute("/admin/$id")({ component: AdminPanel });
 
 interface Tournament { id:string; name:string; status:string; purse_per_team:number; max_players_per_team:number; min_bid_increment:number; bid_timer_seconds:number; admin_id:string; starts_at:string|null; banner_url?:string|null; cover_photo_url?:string|null; }
 interface Team { id:string; name:string; owner_id:string|null; owner_email:string|null; owner_name:string|null; remaining_purse:number; logo_url:string|null; }
-interface Player { id:string; name:string; role:string|null; base_price:number; status:string; sold_to_team_id:string|null; sold_price:number|null; auction_order:number|null; photo_url?:string|null; }
+interface Player { id:string; name:string; role:string|null; base_price:number; status:string; sold_to_team_id:string|null; sold_price:number|null; auction_order:number|null; photo_url?:string|null; category_id?:string|null; }
 interface AuctionState { tournament_id:string; current_player_id:string|null; current_highest_bid:number|null; current_highest_team_id:string|null; timer_ends_at:string|null; }
 
 function AdminPanel() {
@@ -31,18 +33,21 @@ function AdminPanel() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
   const [state, setState] = useState<AuctionState|null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => { if (!loading && !user) navigate({ to: "/auth" }); }, [user, loading, navigate]);
 
   const load = useCallback(async () => {
-    const [{ data: tt }, { data: tm }, { data: pl }, { data: st }] = await Promise.all([
+    const [{ data: tt }, { data: tm }, { data: pl }, { data: st }, { data: cats }] = await Promise.all([
       supabase.from("tournaments").select("*").eq("id", id).single(),
       supabase.rpc("admin_list_teams", { p_tournament: id }),
       supabase.from("players").select("*").eq("tournament_id", id).order("auction_order", { nullsFirst: false }).order("created_at"),
       supabase.from("auction_state").select("*").eq("tournament_id", id).maybeSingle(),
+      supabase.from("player_categories").select("*").eq("tournament_id", id).order("sort_order"),
     ]);
     setT(tt as Tournament); setTeams((tm as Team[]) || []); setPlayers((pl as Player[]) || []);
     setState(st as AuctionState | null);
+    setCategories((cats as Category[]) || []);
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
@@ -78,21 +83,29 @@ function AdminPanel() {
 
       <main className="container mx-auto px-4 pb-16">
         <Tabs defaultValue="auction">
-          <TabsList>
+          <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="auction"><Gavel className="h-3 w-3 mr-1" />Live auction</TabsTrigger>
+            <TabsTrigger value="lobby"><Users className="h-3 w-3 mr-1" />Lobby</TabsTrigger>
             <TabsTrigger value="teams">Teams ({teams.length})</TabsTrigger>
             <TabsTrigger value="players">Players ({players.length})</TabsTrigger>
+            <TabsTrigger value="categories"><Tag className="h-3 w-3 mr-1" />Categories ({categories.length})</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
           <TabsContent value="auction" className="mt-6">
             <AuctionControl tournament={t} players={players} teams={teams} state={state} />
           </TabsContent>
+          <TabsContent value="lobby" className="mt-6">
+            <LobbyPanel tournamentId={t.id} />
+          </TabsContent>
           <TabsContent value="teams" className="mt-6">
             <TeamsTab tournament={t} teams={teams} players={players} onChange={load} />
           </TabsContent>
           <TabsContent value="players" className="mt-6">
-            <PlayersTab tournament={t} players={players} teams={teams} onChange={load} />
+            <PlayersTab tournament={t} players={players} teams={teams} categories={categories} onChange={load} />
+          </TabsContent>
+          <TabsContent value="categories" className="mt-6">
+            <CategoriesTab tournamentId={t.id} defaultBase={100000} defaultIncrement={t.min_bid_increment} />
           </TabsContent>
           <TabsContent value="settings" className="mt-6">
             <SettingsTab tournament={t} onChange={load} />
@@ -336,10 +349,11 @@ function TeamsTab({ tournament, teams, players, onChange }: { tournament: Tourna
 }
 
 // === PLAYERS TAB ===
-function PlayersTab({ tournament, players, teams, onChange }:{ tournament: Tournament; players: Player[]; teams: Team[]; onChange: () => void; }) {
+function PlayersTab({ tournament, players, teams, categories, onChange }:{ tournament: Tournament; players: Player[]; teams: Team[]; categories: Category[]; onChange: () => void; }) {
   const [name, setName] = useState("");
   const [role, setRole] = useState<string>("Batter");
   const [base, setBase] = useState("1 L");
+  const [categoryId, setCategoryId] = useState<string>("__none__");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -350,9 +364,12 @@ function PlayersTab({ tournament, players, teams, onChange }:{ tournament: Tourn
       let photo_url: string | null = null;
       if (photoFile) photo_url = await uploadImage("player-photos", photoFile, tournament.id);
       const maxOrder = Math.max(0, ...players.map(p => p.auction_order ?? 0));
+      const cat = categories.find(c => c.id === categoryId);
       const { error } = await supabase.from("players").insert({
-        tournament_id: tournament.id, name, role, base_price: parseINR(base),
+        tournament_id: tournament.id, name, role,
+        base_price: cat ? cat.base_price : parseINR(base),
         auction_order: maxOrder + 1, photo_url,
+        category_id: cat ? cat.id : null,
       });
       if (error) throw error;
       setName(""); setBase("1 L"); setPhotoFile(null);
@@ -363,7 +380,6 @@ function PlayersTab({ tournament, players, teams, onChange }:{ tournament: Tourn
       setBusy(false);
     }
   };
-
 
   const remove = async (id: string) => {
     if (!confirm("Delete player?")) return;
@@ -377,38 +393,7 @@ function PlayersTab({ tournament, players, teams, onChange }:{ tournament: Tourn
     else onChange();
   };
 
-  const [bulkOpen, setBulkOpen] = useState(false);
-  const [bulkText, setBulkText] = useState("");
-  const [bulkBusy, setBulkBusy] = useState(false);
-
-  const importBulk = async () => {
-    const lines = bulkText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-    if (lines.length === 0) return toast.error("Paste at least one row");
-    setBulkBusy(true);
-    const startOrder = Math.max(0, ...players.map(p => p.auction_order ?? 0));
-    const rows = lines.map((line, i) => {
-      const parts = line.split(/[,\t]/).map(s => s.trim());
-      const [n, r, b] = parts;
-      return {
-        tournament_id: tournament.id,
-        name: n || `Player ${i+1}`,
-        role: r || "Batter",
-        base_price: parseINR(b || "1 L") || 100000,
-        auction_order: startOrder + i + 1,
-      };
-    });
-    const { error } = await supabase.from("players").insert(rows);
-    setBulkBusy(false);
-    if (error) return toast.error(error.message);
-    toast.success(`Imported ${rows.length} players`);
-    setBulkText(""); setBulkOpen(false); onChange();
-  };
-
-  const onCsvFile = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = () => { setBulkText(String(reader.result || "")); setBulkOpen(true); };
-    reader.readAsText(file);
-  };
+  const startOrder = Math.max(0, ...players.map(p => p.auction_order ?? 0));
 
   return (
     <div className="grid md:grid-cols-3 gap-6">
@@ -426,7 +411,21 @@ function PlayersTab({ tournament, players, teams, onChange }:{ tournament: Tourn
               </SelectContent>
             </Select>
           </div>
-          <div><Label>Base price</Label><Input value={base} onChange={e=>setBase(e.target.value)} placeholder="1 L" /></div>
+          {categories.length > 0 && (
+            <div>
+              <Label>Category</Label>
+              <Select value={categoryId} onValueChange={setCategoryId}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">— None (use base price below) —</SelectItem>
+                  {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name} · base {formatINR(c.base_price)}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          {categoryId === "__none__" && (
+            <div><Label>Base price</Label><Input value={base} onChange={e=>setBase(e.target.value)} placeholder="1 L" /></div>
+          )}
           <div>
             <Label>Photo (optional, max 5MB)</Label>
             <Input type="file" accept="image/jpeg,image/png,image/webp" onChange={e => setPhotoFile(e.target.files?.[0] || null)} />
@@ -434,30 +433,18 @@ function PlayersTab({ tournament, players, teams, onChange }:{ tournament: Tourn
           </div>
           <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon">{busy ? "Adding…" : "Add"}</Button>
         </form>
-        <div className="bg-glass border border-border rounded-xl p-5 space-y-2">
-          <h3 className="font-bold text-sm flex items-center gap-2"><Upload className="h-4 w-4" />Bulk import</h3>
-          <p className="text-xs text-muted-foreground">CSV format: <code>Name, Role, Base price</code> per line. Upload .csv or paste rows.</p>
-          <Button variant="outline" size="sm" className="w-full" onClick={() => setBulkOpen(true)}>Paste CSV / TSV</Button>
-          <label className="block">
-            <input type="file" accept=".csv,.tsv,.txt" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) onCsvFile(f); e.currentTarget.value = ""; }} />
-            <span className="cursor-pointer block w-full text-center text-xs py-2 rounded-md border border-dashed border-border hover:border-neon hover:text-neon">Or upload .csv file</span>
-          </label>
-        </div>
+        <BulkImportPlayers
+          tournamentId={tournament.id}
+          startOrder={startOrder}
+          categories={categories.map(c => ({ id: c.id, name: c.name }))}
+          onDone={onChange}
+        />
       </div>
-      <Dialog open={bulkOpen} onOpenChange={setBulkOpen}>
-        <DialogContent className="bg-card border-border max-w-2xl">
-          <DialogHeader><DialogTitle>Bulk import players</DialogTitle></DialogHeader>
-          <p className="text-xs text-muted-foreground">One player per line. Comma or tab separated. Example:<br/><code className="text-neon">Virat Kohli, Batter, 2 Cr</code></p>
-          <Textarea value={bulkText} onChange={e => setBulkText(e.target.value)} rows={12} className="font-mono text-xs" placeholder={"Virat Kohli, Batter, 2 Cr\nJasprit Bumrah, Bowler, 2 Cr\nHardik Pandya, All-rounder, 1.5 Cr"} />
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setBulkOpen(false)}>Cancel</Button>
-            <Button disabled={bulkBusy} onClick={importBulk} className="gradient-neon text-primary-foreground shadow-neon">{bulkBusy ? "Importing…" : `Import ${bulkText.split(/\r?\n/).filter(l=>l.trim()).length} rows`}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
       <div className="md:col-span-2 space-y-2">
         {players.map(p => {
           const team = teams.find(t => t.id === p.sold_to_team_id);
+          const isSold = p.status === "sold";
           const onPhoto = async (file: File) => {
             try {
               const url = await uploadImage("player-photos", file, tournament.id);
@@ -466,31 +453,57 @@ function PlayersTab({ tournament, players, teams, onChange }:{ tournament: Tourn
             } catch (err) { toast.error(err instanceof Error ? err.message : "Upload failed"); }
           };
           return (
-            <div key={p.id} className="bg-glass border border-border rounded-xl p-3 flex items-center justify-between gap-3">
+            <div key={p.id} className={`bg-glass border rounded-xl p-3 flex items-center justify-between gap-3 ${isSold ? "border-neon/40" : "border-border"}`}>
               <label className="cursor-pointer relative group shrink-0" title="Click to upload/replace photo">
                 <PlayerAvatar url={p.photo_url} name={p.name} size={44} />
                 <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) onPhoto(f); e.currentTarget.value = ""; }} />
                 <span className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-[10px] text-neon">edit</span>
               </label>
-              <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-2 items-center">
-                <Input value={p.name} onChange={e => updateField(p.id, { name: e.target.value })} className="h-8 text-xs" />
-                <Select value={p.role ?? "Batter"} onValueChange={(v) => updateField(p.id, { role: v })}>
-                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {["Batter","Bowler","All-rounder","Wicket-keeper"].map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                <Input
-                  defaultValue={String(p.base_price)}
-                  onBlur={e => { const v = parseINR(e.target.value); if (v && v !== p.base_price) updateField(p.id, { base_price: v }); }}
-                  className="h-8 text-xs font-mono"
-                />
+              <div className="flex-1 grid grid-cols-2 md:grid-cols-5 gap-2 items-center">
+                {isSold ? (
+                  <div className="text-sm font-semibold truncate">{p.name}</div>
+                ) : (
+                  <Input value={p.name} onChange={e => updateField(p.id, { name: e.target.value })} className="h-8 text-xs" />
+                )}
+                {isSold ? (
+                  <div className="text-xs text-muted-foreground">{p.role}</div>
+                ) : (
+                  <Select value={p.role ?? "Batter"} onValueChange={(v) => updateField(p.id, { role: v })}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {["Batter","Bowler","All-rounder","Wicket-keeper"].map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                )}
+                {isSold ? (
+                  <div className="text-xs font-mono">{formatINR(p.base_price)}</div>
+                ) : (
+                  <Input
+                    defaultValue={String(p.base_price)}
+                    onBlur={e => { const v = parseINR(e.target.value); if (v && v !== p.base_price) updateField(p.id, { base_price: v }); }}
+                    className="h-8 text-xs font-mono"
+                  />
+                )}
+                {categories.length > 0 && (
+                  isSold ? (
+                    <div className="text-xs text-muted-foreground truncate">{categories.find(c => c.id === p.category_id)?.name || "—"}</div>
+                  ) : (
+                    <Select value={p.category_id ?? "__none__"} onValueChange={(v) => updateField(p.id, { category_id: v === "__none__" ? null : v })}>
+                      <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Category" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">— None —</SelectItem>
+                        {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  )
+                )}
                 <div className="text-xs text-muted-foreground">
-                  <span className={`uppercase tracking-wider ${p.status === "sold" ? "text-neon" : p.status === "unsold" ? "text-hot" : ""}`}>{p.status}</span>
-                  {team && <div>{team.name} — {formatINR(p.sold_price)}</div>}
+                  <span className={`uppercase tracking-wider font-bold ${p.status === "sold" ? "text-neon" : p.status === "unsold" ? "text-hot" : ""}`}>{p.status}</span>
+                  {team && <div className="truncate">{team.name} — {formatINR(p.sold_price)}</div>}
+                  {isSold && <div className="text-[10px] text-muted-foreground/70">Use "Undo sale" in auction tab to refund.</div>}
                 </div>
               </div>
-              <Button size="sm" variant="ghost" onClick={() => remove(p.id)}><Trash2 className="h-3 w-3" /></Button>
+              <Button size="sm" variant="ghost" onClick={() => remove(p.id)} disabled={isSold} title={isSold ? "Undo the sale first" : "Delete"}><Trash2 className="h-3 w-3" /></Button>
             </div>
           );
         })}
