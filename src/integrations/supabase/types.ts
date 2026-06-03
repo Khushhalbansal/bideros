@@ -324,6 +324,36 @@ export type Database = {
           },
         ]
       }
+      player_categories: {
+        Row: {
+          base_price: number
+          created_at: string
+          id: string
+          min_bid_increment: number
+          name: string
+          sort_order: number
+          tournament_id: string
+        }
+        Insert: {
+          base_price?: number
+          created_at?: string
+          id?: string
+          min_bid_increment?: number
+          name: string
+          sort_order?: number
+          tournament_id: string
+        }
+        Update: {
+          base_price?: number
+          created_at?: string
+          id?: string
+          min_bid_increment?: number
+          name?: string
+          sort_order?: number
+          tournament_id?: string
+        }
+        Relationships: []
+      }
       player_invite_tokens: {
         Row: {
           created_at: string
@@ -358,6 +388,7 @@ export type Database = {
         Row: {
           auction_order: number | null
           base_price: number
+          category_id: string | null
           created_at: string | null
           id: string
           name: string
@@ -374,6 +405,7 @@ export type Database = {
         Insert: {
           auction_order?: number | null
           base_price?: number
+          category_id?: string | null
           created_at?: string | null
           id?: string
           name: string
@@ -390,6 +422,7 @@ export type Database = {
         Update: {
           auction_order?: number | null
           base_price?: number
+          category_id?: string | null
           created_at?: string | null
           id?: string
           name?: string
@@ -404,6 +437,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "players_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "player_categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "players_sold_to_team_id_fkey"
             columns: ["sold_to_team_id"]
@@ -680,6 +720,18 @@ export type Database = {
         }
         Returns: Json
       }
+      accept_team_owner_invite: {
+        Args: {
+          p_avatar_url?: string
+          p_banner_url?: string
+          p_logo_url?: string
+          p_owner_email?: string
+          p_owner_name: string
+          p_team_name: string
+          p_token: string
+        }
+        Returns: Json
+      }
       admin_generate_invite: { Args: { p_team: string }; Returns: Json }
       admin_generate_player_invite: {
         Args: { p_tournament: string }
@@ -706,6 +758,7 @@ export type Database = {
       end_auction: { Args: { p_tournament: string }; Returns: Json }
       get_invite_info: { Args: { p_token: string }; Returns: Json }
       get_player_invite_info: { Args: { p_token: string }; Returns: Json }
+      get_tournament_lobby: { Args: { p_tournament: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
