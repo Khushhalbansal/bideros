@@ -36,6 +36,9 @@ We are specifically aiming to add:
 - **Clicking & Page Animations**: Smooth page transitions using Framer Motion.
 - **Animated Backgrounds**: To replace static elements and add IPL-level energy.
 
+**Reference Inspiration:**  
+Check out [Drake Design](https://www.drakedesign.work/) for the level of interactive, high-end animations and cinematic feel we are aiming to achieve!
+
 ## Development Setup
 
 See the [README.md](README.md) for instructions on how to install dependencies and run the local development server.
