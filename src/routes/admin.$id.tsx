@@ -356,6 +356,31 @@ function PlayersTab({ tournament, players, teams, categories, onChange }:{ tourn
   const [categoryId, setCategoryId] = useState<string>("__none__");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkCat, setBulkCat] = useState<string>("__none__");
+
+  const toggleSel = (id: string) => {
+    const next = new Set(selected);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelected(next);
+  };
+  const selectablePlayers = players.filter(p => p.status !== "sold");
+  const allSelected = selectablePlayers.length > 0 && selectablePlayers.every(p => selected.has(p.id));
+  const toggleAll = () => setSelected(allSelected ? new Set() : new Set(selectablePlayers.map(p => p.id)));
+
+  const applyBulkCategory = async () => {
+    if (selected.size === 0) return toast.error("Select at least one player");
+    const { data, error } = await supabase.rpc("admin_bulk_assign_category" as never, {
+      p_tournament: tournament.id,
+      p_player_ids: Array.from(selected),
+      p_category_id: bulkCat === "__none__" ? null : bulkCat,
+    } as never);
+    if (error) return toast.error(error.message);
+    const r = data as { ok: boolean; error?: string; updated?: number };
+    if (!r.ok) return toast.error(r.error || "Failed");
+    toast.success(`Updated ${r.updated} player(s)`);
+    setSelected(new Set()); onChange();
+  };
 
   const add = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -368,7 +393,7 @@ function PlayersTab({ tournament, players, teams, categories, onChange }:{ tourn
       const { error } = await supabase.from("players").insert({
         tournament_id: tournament.id, name, role,
         base_price: cat ? cat.base_price : parseINR(base),
-        auction_order: maxOrder + 1, photo_url,
+        auction_order: maxOrder + 1, photo_url: photo_url ?? undefined,
         category_id: cat ? cat.id : null,
       });
       if (error) throw error;
@@ -442,6 +467,23 @@ function PlayersTab({ tournament, players, teams, categories, onChange }:{ tourn
       </div>
 
       <div className="md:col-span-2 space-y-2">
+        {categories.length > 0 && selectablePlayers.length > 0 && (
+          <div className="bg-glass border border-border rounded-xl p-3 flex flex-wrap items-center gap-2 sticky top-2 z-10 backdrop-blur">
+            <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
+              <input type="checkbox" checked={allSelected} onChange={toggleAll} className="accent-primary h-4 w-4" />
+              Select all ({selected.size}/{selectablePlayers.length})
+            </label>
+            <div className="flex-1" />
+            <Select value={bulkCat} onValueChange={setBulkCat}>
+              <SelectTrigger className="h-8 w-44 text-xs"><SelectValue placeholder="Move to…" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">— Uncategorised —</SelectItem>
+                {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Button size="sm" disabled={selected.size === 0} onClick={applyBulkCategory} className="gradient-neon text-primary-foreground">Apply to {selected.size}</Button>
+          </div>
+        )}
         {players.map(p => {
           const team = teams.find(t => t.id === p.sold_to_team_id);
           const isSold = p.status === "sold";
@@ -453,7 +495,10 @@ function PlayersTab({ tournament, players, teams, categories, onChange }:{ tourn
             } catch (err) { toast.error(err instanceof Error ? err.message : "Upload failed"); }
           };
           return (
-            <div key={p.id} className={`bg-glass border rounded-xl p-3 flex items-center justify-between gap-3 ${isSold ? "border-neon/40" : "border-border"}`}>
+            <div key={p.id} className={`bg-glass border rounded-xl p-3 flex items-center justify-between gap-3 ${isSold ? "border-neon/40" : selected.has(p.id) ? "border-neon" : "border-border"}`}>
+              {!isSold && (
+                <input type="checkbox" checked={selected.has(p.id)} onChange={() => toggleSel(p.id)} className="accent-primary h-4 w-4 shrink-0" title="Select for bulk actions" />
+              )}
               <label className="cursor-pointer relative group shrink-0" title="Click to upload/replace photo">
                 <PlayerAvatar url={p.photo_url} name={p.name} size={44} />
                 <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) onPhoto(f); e.currentTarget.value = ""; }} />
@@ -475,8 +520,8 @@ function PlayersTab({ tournament, players, teams, categories, onChange }:{ tourn
                     </SelectContent>
                   </Select>
                 )}
-                {isSold ? (
-                  <div className="text-xs font-mono">{formatINR(p.base_price)}</div>
+                {isSold || p.category_id ? (
+                  <div className="text-xs font-mono" title={p.category_id ? "Locked by category" : ""}>{formatINR(p.base_price)}{p.category_id && <span className="text-[9px] text-muted-foreground ml-1">cat</span>}</div>
                 ) : (
                   <Input
                     defaultValue={String(p.base_price)}

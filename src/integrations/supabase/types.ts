@@ -732,6 +732,14 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_bulk_assign_category: {
+        Args: {
+          p_category_id: string
+          p_player_ids: string[]
+          p_tournament: string
+        }
+        Returns: Json
+      }
       admin_generate_invite: { Args: { p_team: string }; Returns: Json }
       admin_generate_player_invite: {
         Args: { p_tournament: string }
