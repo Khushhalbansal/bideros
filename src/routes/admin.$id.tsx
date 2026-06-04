@@ -356,6 +356,31 @@ function PlayersTab({ tournament, players, teams, categories, onChange }:{ tourn
   const [categoryId, setCategoryId] = useState<string>("__none__");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkCat, setBulkCat] = useState<string>("__none__");
+
+  const toggleSel = (id: string) => {
+    const next = new Set(selected);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelected(next);
+  };
+  const selectablePlayers = players.filter(p => p.status !== "sold");
+  const allSelected = selectablePlayers.length > 0 && selectablePlayers.every(p => selected.has(p.id));
+  const toggleAll = () => setSelected(allSelected ? new Set() : new Set(selectablePlayers.map(p => p.id)));
+
+  const applyBulkCategory = async () => {
+    if (selected.size === 0) return toast.error("Select at least one player");
+    const { data, error } = await supabase.rpc("admin_bulk_assign_category", {
+      p_tournament: tournament.id,
+      p_player_ids: Array.from(selected),
+      p_category_id: bulkCat === "__none__" ? null : bulkCat,
+    });
+    if (error) return toast.error(error.message);
+    const r = data as { ok: boolean; error?: string; updated?: number };
+    if (!r.ok) return toast.error(r.error || "Failed");
+    toast.success(`Updated ${r.updated} player(s)`);
+    setSelected(new Set()); onChange();
+  };
 
   const add = async (e: React.FormEvent) => {
     e.preventDefault();
