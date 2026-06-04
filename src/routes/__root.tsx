@@ -9,6 +9,8 @@ import {
 } from "@tanstack/react-router";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/hooks/use-auth";
+import { ThemeProvider } from "@/hooks/use-theme";
+import { ClickRipple } from "@/components/ClickRipple";
 
 import appCss from "../styles.css?url";
 
@@ -118,10 +120,13 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Outlet />
-        <Toaster theme="dark" position="top-right" />
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <ClickRipple />
+          <Outlet />
+          <Toaster theme="dark" position="top-right" />
+        </AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
