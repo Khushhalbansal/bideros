@@ -393,7 +393,7 @@ function PlayersTab({ tournament, players, teams, categories, onChange }:{ tourn
       const { error } = await supabase.from("players").insert({
         tournament_id: tournament.id, name, role,
         base_price: cat ? cat.base_price : parseINR(base),
-        auction_order: maxOrder + 1, photo_url,
+        auction_order: maxOrder + 1, photo_url: photo_url ?? undefined,
         category_id: cat ? cat.id : null,
       });
       if (error) throw error;
