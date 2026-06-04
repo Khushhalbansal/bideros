@@ -495,7 +495,10 @@ function PlayersTab({ tournament, players, teams, categories, onChange }:{ tourn
             } catch (err) { toast.error(err instanceof Error ? err.message : "Upload failed"); }
           };
           return (
-            <div key={p.id} className={`bg-glass border rounded-xl p-3 flex items-center justify-between gap-3 ${isSold ? "border-neon/40" : "border-border"}`}>
+            <div key={p.id} className={`bg-glass border rounded-xl p-3 flex items-center justify-between gap-3 ${isSold ? "border-neon/40" : selected.has(p.id) ? "border-neon" : "border-border"}`}>
+              {!isSold && (
+                <input type="checkbox" checked={selected.has(p.id)} onChange={() => toggleSel(p.id)} className="accent-primary h-4 w-4 shrink-0" title="Select for bulk actions" />
+              )}
               <label className="cursor-pointer relative group shrink-0" title="Click to upload/replace photo">
                 <PlayerAvatar url={p.photo_url} name={p.name} size={44} />
                 <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) onPhoto(f); e.currentTarget.value = ""; }} />
