@@ -467,6 +467,23 @@ function PlayersTab({ tournament, players, teams, categories, onChange }:{ tourn
       </div>
 
       <div className="md:col-span-2 space-y-2">
+        {categories.length > 0 && selectablePlayers.length > 0 && (
+          <div className="bg-glass border border-border rounded-xl p-3 flex flex-wrap items-center gap-2 sticky top-2 z-10 backdrop-blur">
+            <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
+              <input type="checkbox" checked={allSelected} onChange={toggleAll} className="accent-primary h-4 w-4" />
+              Select all ({selected.size}/{selectablePlayers.length})
+            </label>
+            <div className="flex-1" />
+            <Select value={bulkCat} onValueChange={setBulkCat}>
+              <SelectTrigger className="h-8 w-44 text-xs"><SelectValue placeholder="Move to…" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">— Uncategorised —</SelectItem>
+                {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Button size="sm" disabled={selected.size === 0} onClick={applyBulkCategory} className="gradient-neon text-primary-foreground">Apply to {selected.size}</Button>
+          </div>
+        )}
         {players.map(p => {
           const team = teams.find(t => t.id === p.sold_to_team_id);
           const isSold = p.status === "sold";
