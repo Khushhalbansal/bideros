@@ -1,5 +1,7 @@
 # BidArena 🏏
 
+[![Live Demo](https://img.shields.io/badge/Live_Demo-bidarena.lovable.app-brightgreen?style=for-the-badge)](https://bidarena.lovable.app/)
+
 **The cinematic way to run your cricket auction.**
 
 BidArena is a modern, real-time web application designed to run cricket auctions with the energy and feel of the IPL. It provides a cinematic, stadium-grade experience for admins, team owners, and spectators.
@@ -51,6 +53,8 @@ Create a `.env` file based on the required Supabase credentials and other config
 npm run dev
 ```
 
-## 📜 License
+## 📜 License & Copyright
 
 This project is built for the love of the game.
+
+Copyright &copy; 2024-2026 Khushhal Bansal. All Rights Reserved.
