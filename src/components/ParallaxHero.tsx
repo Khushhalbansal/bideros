@@ -64,7 +64,7 @@ export function ParallaxHero({ children }: { children: React.ReactNode }) {
       {icons.map(({ I, layer, mx: mmx, my: mmy, color, size, ...pos }, i) => (
         <motion.div
           key={i}
-          style={{ y: layer, x: mmx, ...pos } as React.CSSProperties}
+          style={{ y: layer, x: mmx, ...pos } as any}
           animate={{ y: [0, -15, 0] }}
           transition={{ duration: 4 + i, repeat: Infinity, ease: "easeInOut" }}
           className="pointer-events-none absolute opacity-20"
