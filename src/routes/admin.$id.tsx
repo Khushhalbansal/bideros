@@ -520,8 +520,8 @@ function PlayersTab({ tournament, players, teams, categories, onChange }:{ tourn
                     </SelectContent>
                   </Select>
                 )}
-                {isSold ? (
-                  <div className="text-xs font-mono">{formatINR(p.base_price)}</div>
+                {isSold || p.category_id ? (
+                  <div className="text-xs font-mono" title={p.category_id ? "Locked by category" : ""}>{formatINR(p.base_price)}{p.category_id && <span className="text-[9px] text-muted-foreground ml-1">cat</span>}</div>
                 ) : (
                   <Input
                     defaultValue={String(p.base_price)}
