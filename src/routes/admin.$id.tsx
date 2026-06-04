@@ -370,11 +370,11 @@ function PlayersTab({ tournament, players, teams, categories, onChange }:{ tourn
 
   const applyBulkCategory = async () => {
     if (selected.size === 0) return toast.error("Select at least one player");
-    const { data, error } = await supabase.rpc("admin_bulk_assign_category", {
+    const { data, error } = await supabase.rpc("admin_bulk_assign_category" as never, {
       p_tournament: tournament.id,
       p_player_ids: Array.from(selected),
       p_category_id: bulkCat === "__none__" ? null : bulkCat,
-    });
+    } as never);
     if (error) return toast.error(error.message);
     const r = data as { ok: boolean; error?: string; updated?: number };
     if (!r.ok) return toast.error(r.error || "Failed");
