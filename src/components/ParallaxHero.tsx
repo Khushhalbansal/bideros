@@ -51,10 +51,10 @@ export function ParallaxHero({ children }: { children: React.ReactNode }) {
       <SequentialVideoBackground 
         opacity="opacity-40"
         videos={[
-          "/videos/Cricket_background_animated_collage_202606041623.mp4",
-          "/videos/Collage_of_cricket_highlights_fr…_202606041624.mp4",
-          "/videos/Animated_background_with_doodle_…_202606051539.mp4",
-          "/videos/Animated_cricket_feature_background_202606041624.mp4"
+          "/videos/bg-11.mp4",
+          "/videos/bg-10.mp4",
+          "/videos/bg-3.mp4",
+          "/videos/bg-7.mp4"
         ]}
       />
 

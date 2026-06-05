@@ -162,8 +162,8 @@ export function Landing() {
           <div className="relative overflow-hidden rounded-[2.5rem] p-8 mb-8 border border-hot/30 shadow-[0_0_40px_-10px_rgba(255,50,50,0.15)]">
             <SequentialVideoBackground
               videos={[
-                "/videos/Animated_cricket_auction_background_202606041624.mp4",
-                "/videos/Animated_cricket_feature_background_202606041624.mp4"
+                "/videos/bg-5.mp4",
+                "/videos/bg-7.mp4"
               ]}
             />
             <div className="relative z-10">
@@ -175,8 +175,8 @@ export function Landing() {
           <div className="relative overflow-hidden rounded-[2.5rem] p-8 mb-8 border border-neon/30 shadow-[0_0_40px_-10px_rgba(50,255,150,0.1)]">
             <SequentialVideoBackground
               videos={[
-                "/videos/Upcoming_matches_calendar_loop_202606041624.mp4",
-                "/videos/Animated_background_with_doodle_…_202606051539.mp4"
+                "/videos/bg-13.mp4",
+                "/videos/bg-3.mp4"
               ]}
             />
             <div className="relative z-10">
@@ -188,8 +188,8 @@ export function Landing() {
           <div className="relative overflow-hidden rounded-[2.5rem] p-8 border border-muted/30">
             <SequentialVideoBackground
               videos={[
-                "/videos/Trophy_surrounded_by_sunburst_lines_202606041624.mp4",
-                "/videos/Animated_background_for_cricket_…_202606051539.mp4"
+                "/videos/bg-12.mp4",
+                "/videos/bg-1.mp4"
               ]}
             />
             <div className="relative z-10">
@@ -201,8 +201,8 @@ export function Landing() {
         <section className="mt-32 max-w-5xl mx-auto relative rounded-[3rem] overflow-hidden py-24 px-6 border border-border/50">
           <SequentialVideoBackground
             videos={[
-              "/videos/Animated_cricket_feature_background_202606041624.mp4",
-              "/videos/Animated_background_for_cricket_…_202606051539.mp4"
+              "/videos/bg-7.mp4",
+              "/videos/bg-1.mp4"
             ]}
           />
           <div className="absolute inset-0 z-0 pointer-events-none bg-gradient-to-b from-background via-transparent to-background" />
@@ -243,8 +243,8 @@ export function Landing() {
           <section className="mt-32 max-w-4xl mx-auto text-center border border-neon/30 rounded-[3rem] p-16 shadow-[0_0_60px_-15px_rgba(50,255,150,0.3)] relative overflow-hidden">
             <SequentialVideoBackground
               videos={[
-                "/videos/Arrows_pointing_toward_portal_202606041624.mp4",
-                "/videos/Animated_lines_sketch_cricket_st…_202606051539.mp4"
+                "/videos/bg-9.mp4",
+                "/videos/bg-8.mp4"
               ]}
             />
             <div className="absolute inset-0 z-0 pointer-events-none gradient-neon opacity-10" />

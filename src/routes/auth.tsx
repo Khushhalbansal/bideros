@@ -74,9 +74,9 @@ function AuthPage() {
     <div className="min-h-screen flex flex-col relative overflow-hidden">
       <SequentialVideoBackground 
         videos={[
-          "/videos/Animated_collage_cricket_sign-in…_202606051539.mp4",
-          "/videos/Animated_background_for_cricket_…_202606051539.mp4",
-          "/videos/Animated_lines_sketch_cricket_st…_202606051539.mp4"
+          "/videos/bg-4.mp4",
+          "/videos/bg-1.mp4",
+          "/videos/bg-8.mp4"
         ]}
       />
       <div className="relative z-10 flex flex-col min-h-screen">

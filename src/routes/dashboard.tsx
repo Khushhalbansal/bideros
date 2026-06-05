@@ -89,10 +89,10 @@ function Dashboard() {
         <SequentialVideoBackground 
           opacity="opacity-30"
           videos={[
-            "/videos/Animated_cricket_dashboard_backg…_202606041624.mp4",
-            "/videos/Animated_background_with_doodle_…_202606051539.mp4",
-            "/videos/Animated_background_geometric_sh…_202606041623.mp4",
-            "/videos/Collage_of_cricket_highlights_fr…_202606041624.mp4"
+            "/videos/bg-6.mp4",
+            "/videos/bg-3.mp4",
+            "/videos/bg-2.mp4",
+            "/videos/bg-10.mp4"
           ]}
         />
       </div>

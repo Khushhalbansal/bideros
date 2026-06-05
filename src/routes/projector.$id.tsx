@@ -67,7 +67,7 @@ function Projector() {
     <div className="min-h-screen flex flex-col bg-background overflow-hidden relative">
       <div className="absolute inset-0 z-0 pointer-events-none">
         <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-screen">
-          <source src="/videos/Animated_cricket_auction_background_202606041624.mp4" type="video/mp4" />
+          <source src="/videos/bg-5.mp4" type="video/mp4" />
         </video>
         <div className="absolute inset-0 bg-background/80" />
       </div>

@@ -75,7 +75,7 @@ function InvitePage() {
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
       <div className="absolute inset-0 z-0 pointer-events-none">
         <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-screen">
-          <source src="/videos/Arrows_pointing_toward_portal_202606041624.mp4" type="video/mp4" />
+          <source src="/videos/bg-9.mp4" type="video/mp4" />
         </video>
         <div className="absolute inset-0 bg-background/80" />
       </div>
