@@ -221,6 +221,201 @@ a:hover,
     50% { text-shadow: 0 0 32px oklch(0.7 0.28 5 / 1), 0 0 64px oklch(0.7 0.28 5 / 0.8); }
   }
   .animate-pulse-text-hot { animation: pulse-text-hot 1.5s ease-in-out infinite; }
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-neon: var(--neon);
+  --color-hot: var(--hot);
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+:root {
+  --radius: 0.75rem;
+  /* Neon Stadium dark theme everywhere */
+  --background: oklch(0.12 0.04 270);
+  --foreground: oklch(0.97 0.01 240);
+  --card: oklch(0.16 0.05 270);
+  --card-foreground: oklch(0.97 0.01 240);
+  --popover: oklch(0.18 0.05 270);
+  --popover-foreground: oklch(0.97 0.01 240);
+  --primary: oklch(0.85 0.22 165); /* electric mint #00ffae */
+  --primary-foreground: oklch(0.12 0.04 270);
+  --secondary: oklch(0.22 0.06 270);
+  --secondary-foreground: oklch(0.97 0.01 240);
+  --muted: oklch(0.22 0.05 270);
+  --muted-foreground: oklch(0.7 0.04 250);
+  --accent: oklch(0.22 0.06 270);
+  --accent-foreground: oklch(0.97 0.01 240);
+  --destructive: oklch(0.65 0.25 20);
+  --destructive-foreground: oklch(0.97 0.01 240);
+  --border: oklch(0.28 0.06 270 / 60%);
+  --input: oklch(0.22 0.06 270);
+  --ring: oklch(0.85 0.22 165);
+  --neon: oklch(0.85 0.22 165);
+  --hot: oklch(0.7 0.28 5); /* hot pink #ff2d6f */
+
+  --gradient-arena: radial-gradient(ellipse at top, oklch(0.22 0.1 280) 0%, oklch(0.1 0.04 270) 60%);
+  --gradient-neon: linear-gradient(135deg, oklch(0.85 0.22 165), oklch(0.75 0.25 200));
+  --gradient-hot: linear-gradient(135deg, oklch(0.7 0.28 5), oklch(0.65 0.27 320));
+  --shadow-neon: 0 0 24px oklch(0.85 0.22 165 / 0.5), 0 0 60px oklch(0.85 0.22 165 / 0.25);
+  --shadow-hot: 0 0 24px oklch(0.7 0.28 5 / 0.5);
+  --glass: oklch(0.15 0.05 270 / 0.75);
+}
+
+/* Light theme — soft daylight stadium */
+:root.light {
+  --background: oklch(0.98 0.01 240);
+  --foreground: oklch(0.12 0.04 270);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.12 0.04 270);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.12 0.04 270);
+  --primary: oklch(0.6 0.18 165);
+  --primary-foreground: oklch(0.98 0.01 240);
+  --secondary: oklch(0.95 0.02 240);
+  --secondary-foreground: oklch(0.12 0.04 270);
+  --muted: oklch(0.95 0.02 240);
+  --muted-foreground: oklch(0.25 0.04 270);
+  --accent: oklch(0.94 0.04 200);
+  --accent-foreground: oklch(0.18 0.04 270);
+  --destructive: oklch(0.6 0.24 20);
+  --destructive-foreground: oklch(0.98 0.01 240);
+  --border: oklch(0.85 0.02 250);
+  --input: oklch(0.95 0.02 240);
+  --ring: oklch(0.6 0.18 165);
+  --neon: oklch(0.55 0.2 165);
+  --hot: oklch(0.6 0.26 5);
+  --gradient-arena: radial-gradient(ellipse at top, oklch(0.95 0.05 200) 0%, oklch(0.98 0.01 240) 60%);
+  --glass: oklch(1 0 0 / 0.7);
+}
+
+/* High Contrast theme */
+:root.high-contrast {
+  --background: oklch(0 0 0);
+  --foreground: oklch(1 0 0);
+  --card: oklch(0 0 0);
+  --card-foreground: oklch(1 0 0);
+  --popover: oklch(0 0 0);
+  --popover-foreground: oklch(1 0 0);
+  --primary: oklch(0.95 0.3 110);
+  --primary-foreground: oklch(0 0 0);
+  --secondary: oklch(0 0 0);
+  --secondary-foreground: oklch(1 0 0);
+  --muted: oklch(0.15 0 0);
+  --muted-foreground: oklch(0.9 0 0);
+  --accent: oklch(0.15 0 0);
+  --accent-foreground: oklch(1 0 0);
+  --destructive: oklch(0.6 0.25 20);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(1 0 0 / 0.8);
+  --input: oklch(0 0 0);
+  --ring: oklch(0.95 0.3 110);
+  --neon: oklch(0.95 0.3 110);
+  --hot: oklch(0.6 0.3 5);
+  --gradient-arena: none;
+  --glass: oklch(0.18 0.04 270 / 0.85);
+}
+
+:root.funky {
+  --background: oklch(0.2 0.1 300);
+  --foreground: oklch(0.98 0.02 90);
+  --card: oklch(0.25 0.15 310);
+  --card-foreground: oklch(0.98 0.02 90);
+  --popover: oklch(0.25 0.15 310);
+  --popover-foreground: oklch(0.98 0.02 90);
+  --primary: oklch(0.85 0.3 140); /* Toxic Lime Green */
+  --primary-foreground: oklch(0.1 0 0);
+  --secondary: oklch(0.35 0.2 320);
+  --secondary-foreground: oklch(0.98 0.02 90);
+  --muted: oklch(0.3 0.15 320);
+  --muted-foreground: oklch(0.7 0.1 320);
+  --accent: oklch(0.65 0.35 340); /* Hot Magenta */
+  --accent-foreground: oklch(0.98 0 0);
+  --destructive: oklch(0.6 0.3 20);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.1 0 0); /* Solid black borders for brutalism */
+  --input: oklch(0.25 0.15 310);
+  --ring: oklch(0.85 0.3 140);
+  
+  --neon: oklch(0.85 0.3 140);
+  --hot: oklch(0.65 0.35 340);
+  --gradient-arena: linear-gradient(135deg, oklch(0.2 0.1 300) 0%, oklch(0.4 0.2 320) 100%);
+  --glass: oklch(0.3 0.15 320 / 0.7);
+}
+
+.funky body {
+  font-family: 'Bricolage Grotesque', 'Inter', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.funky h1, .funky h2, .funky h3, .funky h4, .funky h5, .funky h6, .funky .font-bold {
+  font-family: 'Syne', 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.funky .text-shadow-strong {
+  text-shadow: 4px 4px 0px var(--primary), 8px 8px 0px var(--hot), 12px 12px 0px #000 !important;
+}
+
+.funky button, .funky .bg-glass, .funky input {
+  border: 3px solid #000 !important;
+  border-radius: 16px !important;
+  box-shadow: 6px 6px 0px #000 !important;
+}
+
+.funky button:hover, .funky a:hover {
+  transform: translate(-4px, -4px) scale(1.05) !important;
+  box-shadow: 12px 12px 0px var(--primary) !important;
+}
+
+button:hover, 
+a:hover, 
+.group:hover {
+  transform: scale(1.15) !important;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.high-contrast .text-shadow-strong {
+  text-shadow: 2px 2px 0px #000, -2px -2px 0px #000, 2px -2px 0px #000, -2px 2px 0px #000, 0 4px 24px rgba(0,0,0,1) !important;
+}
+
+@layer base {
+  * { border-color: var(--color-border); }
+  html, body { background: var(--background); color: var(--foreground); }
+  body {
+    background-image: var(--gradient-arena);
+    background-attachment: fixed;
+    font-family: var(--font-sans);
+  }
+  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.02em; }
+}
+
+@layer utilities {
+  .text-neon { color: var(--neon); text-shadow: 0 0 12px oklch(0.85 0.22 165 / 0.6); }
+  .text-hot { color: var(--hot); text-shadow: 0 0 12px oklch(0.7 0.28 5 / 0.6); }
+  .bg-glass { background: var(--glass); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+  .shadow-neon { box-shadow: var(--shadow-neon); }
+  .shadow-hot { box-shadow: var(--shadow-hot); }
+  .gradient-neon { background-image: var(--gradient-neon); }
+  .gradient-hot { background-image: var(--gradient-hot); }
+  .border-neon { border-color: var(--neon); }
+  .ring-neon { box-shadow: 0 0 0 2px var(--neon), 0 0 24px oklch(0.85 0.22 165 / 0.5); }
+  
+  .text-shadow-strong { text-shadow: 0 4px 24px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6); }
+  .light .text-shadow-strong { text-shadow: 0 4px 24px rgba(255,255,255,0.9), 0 0 8px rgba(255,255,255,0.9), 0 0 4px rgba(255,255,255,1); }
+
+  @keyframes pulse-neon {
+    0%, 100% { box-shadow: 0 0 12px oklch(0.85 0.22 165 / 0.4); }
+    50% { box-shadow: 0 0 32px oklch(0.85 0.22 165 / 0.9), 0 0 64px oklch(0.85 0.22 165 / 0.4); }
+  }
+  .animate-pulse-neon { animation: pulse-neon 1.5s ease-in-out infinite; }
+
+  @keyframes pulse-text-hot {
+    0%, 100% { text-shadow: 0 0 16px oklch(0.7 0.28 5 / 0.8); }
+    50% { text-shadow: 0 0 32px oklch(0.7 0.28 5 / 1), 0 0 64px oklch(0.7 0.28 5 / 0.8); }
+  }
+  .animate-pulse-text-hot { animation: pulse-text-hot 1.5s ease-in-out infinite; }
   @keyframes slide-up {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
@@ -234,12 +429,12 @@ a:hover,
   .animate-sold { animation: sold-stamp 0.8s cubic-bezier(.2,1.5,.4,1); }
 }
 
-/* Global click ripple */
+/* Global click ripple (Dark mode & defaults) */
 .lv-ripple {
   position: fixed;
   width: 12px;
   height: 12px;
-  border-radius: 9999px;
+  border-radius: 50%;
   pointer-events: none;
   z-index: 9999;
   transform: translate(-50%, -50%);
@@ -247,9 +442,48 @@ a:hover,
   box-shadow: 0 0 18px oklch(0.85 0.22 165 / 0.7);
   animation: lv-ripple 0.7s ease-out forwards;
 }
+
+/* Light Theme: Subtle expanding solid circle */
+.light .lv-ripple {
+  border: none;
+  background: var(--primary);
+  opacity: 0.5;
+  box-shadow: none;
+}
+
+/* High Contrast Theme: Sharp square box */
+.high-contrast .lv-ripple {
+  border-radius: 0;
+  border: 4px solid var(--hot);
+  box-shadow: 4px 4px 0px var(--foreground);
+}
+
+/* Funky Theme: Exploding star sticker */
+.funky .lv-ripple {
+  border: none;
+  background: var(--primary);
+  box-shadow: none;
+  border-radius: 0;
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  animation: funky-ripple 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* Page-specific overrides */
+.ripple-auth {
+  border-color: var(--hot) !important;
+}
+.light .ripple-auth, .funky .ripple-auth {
+  background: var(--hot) !important;
+}
+
 @keyframes lv-ripple {
   0% { opacity: 1; transform: translate(-50%, -50%) scale(0.4); }
   100% { opacity: 0; transform: translate(-50%, -50%) scale(8); }
+}
+
+@keyframes funky-ripple {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(0.1) rotate(0deg); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(6) rotate(180deg); }
 }
 
 /* Smooth scrolling everywhere */
