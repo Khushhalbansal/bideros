@@ -126,8 +126,6 @@
 .high-contrast .group:hover {
   transform: scale(1.15) !important;
   transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-  outline: 3px solid var(--primary);
-  outline-offset: 2px;
 }
 
 .high-contrast .text-shadow-strong {
@@ -164,6 +162,12 @@
     50% { box-shadow: 0 0 32px oklch(0.85 0.22 165 / 0.9), 0 0 64px oklch(0.85 0.22 165 / 0.4); }
   }
   .animate-pulse-neon { animation: pulse-neon 1.5s ease-in-out infinite; }
+
+  @keyframes pulse-text-hot {
+    0%, 100% { text-shadow: 0 0 16px oklch(0.7 0.28 5 / 0.8); }
+    50% { text-shadow: 0 0 32px oklch(0.7 0.28 5 / 1), 0 0 64px oklch(0.7 0.28 5 / 0.8); }
+  }
+  .animate-pulse-text-hot { animation: pulse-text-hot 1.5s ease-in-out infinite; }
   @keyframes slide-up {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }

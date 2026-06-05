@@ -4,10 +4,10 @@ type Theme = "dark" | "light" | "high-contrast";
 const Ctx = createContext<{ theme: Theme; toggle: () => void }>({ theme: "dark", toggle: () => {} });
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("dark");
+  const [theme, setTheme] = useState<Theme>("high-contrast");
 
   useEffect(() => {
-    const stored = (typeof window !== "undefined" && (localStorage.getItem("bidarena-theme") as Theme | null)) || "dark";
+    const stored = (typeof window !== "undefined" && (localStorage.getItem("bidarena-theme") as Theme | null)) || "high-contrast";
     setTheme(stored as Theme);
   }, []);
 
