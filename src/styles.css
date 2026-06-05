@@ -260,3 +260,56 @@ html { scroll-behavior: smooth; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 9999px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--neon); }
+
+/* Funky Theme Special FX */
+@keyframes spray-color {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.funky .spray-paint-text {
+  font-family: 'Permanent Marker', cursive !important;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, var(--primary), var(--hot), var(--neon), var(--primary));
+  background-size: 300% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: spray-color 4s linear infinite;
+  display: inline-block;
+  transform: rotate(-3deg);
+  position: relative;
+  z-index: 1;
+}
+
+.funky .spray-paint-text::after {
+  content: attr(data-text);
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  z-index: -1;
+  color: #000;
+  -webkit-text-stroke: 4px #000;
+  text-shadow: 4px 4px 0px #000;
+}
+
+@keyframes float-rotate {
+  0% { transform: translateY(0) rotate(-10deg); }
+  50% { transform: translateY(-15px) rotate(10deg) scale(1.1); }
+  100% { transform: translateY(0) rotate(-10deg); }
+}
+
+.funky-sticker {
+  display: none !important;
+  position: absolute;
+  font-size: 4rem;
+  animation: float-rotate 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 50;
+  filter: drop-shadow(4px 4px 0px #000);
+}
+
+.funky .funky-sticker {
+  display: block !important;
+}
