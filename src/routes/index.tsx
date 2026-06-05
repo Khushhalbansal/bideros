@@ -30,6 +30,15 @@ export function Landing() {
   const [q, setQ] = useState("");
   const { scrollYProgress } = useScroll();
   const progressX = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
+  
+  // Gen Z Parallax Transforms
+  const leftSidebarY = useTransform(scrollYProgress, [0, 1], ["0%", "-50%"]);
+  const rightSidebarY = useTransform(scrollYProgress, [0, 1], ["-50%", "0%"]);
+  const rotateFastForward = useTransform(scrollYProgress, [0, 1], [0, 1080]);
+  const rotateFastBackward = useTransform(scrollYProgress, [0, 1], [0, -1080]);
+  const rotateSlowForward = useTransform(scrollYProgress, [0, 1], [0, 720]);
+  const rotateSlowBackward = useTransform(scrollYProgress, [0, 1], [0, -720]);
+  const scalePulse = useTransform(scrollYProgress, [0, 0.5, 1], [1, 2, 1]);
 
   useEffect(() => {
     supabase.from("tournaments")
@@ -144,29 +153,29 @@ export function Landing() {
         <>
           {/* Left Sidebar - Scrolls UP as you scroll down */}
           <motion.div 
-            style={{ y: useTransform(scrollYProgress, [0, 1], ["0%", "-50%"]) }}
+            style={{ y: leftSidebarY }}
             className="hidden 2xl:flex fixed left-8 top-0 h-[250vh] flex-col items-center justify-start pt-20 gap-32 pointer-events-none z-0 opacity-90"
           >
             {[...Array(3)].map((_, i) => (
               <React.Fragment key={`left-${i}`}>
                 <div className="font-[Permanent Marker] text-5xl -rotate-90 whitespace-nowrap text-hot tracking-widest filter drop-shadow-md">NO CAP</div>
-                <motion.div style={{ rotate: useTransform(scrollYProgress, [0, 1], [0, 1080]), scale: useTransform(scrollYProgress, [0, 0.5, 1], [1, 2, 1]) }} className="text-7xl filter drop-shadow-lg">💀</motion.div>
+                <motion.div style={{ rotate: rotateFastForward, scale: scalePulse }} className="text-7xl filter drop-shadow-lg">💀</motion.div>
                 <div className="font-[Permanent Marker] text-6xl -rotate-90 whitespace-nowrap text-neon filter drop-shadow-md">FR FR</div>
-                <motion.div style={{ rotate: useTransform(scrollYProgress, [0, 1], [0, -720]) }} className="text-6xl filter drop-shadow-lg">🧢</motion.div>
+                <motion.div style={{ rotate: rotateSlowBackward }} className="text-6xl filter drop-shadow-lg">🧢</motion.div>
               </React.Fragment>
             ))}
           </motion.div>
 
           {/* Right Sidebar - Scrolls DOWN as you scroll down */}
           <motion.div 
-            style={{ y: useTransform(scrollYProgress, [0, 1], ["-50%", "0%"]) }}
+            style={{ y: rightSidebarY }}
             className="hidden 2xl:flex fixed right-8 top-0 h-[250vh] flex-col items-center justify-end pb-20 gap-32 pointer-events-none z-0 opacity-90"
           >
             {[...Array(3)].map((_, i) => (
               <React.Fragment key={`right-${i}`}>
-                <motion.div style={{ rotate: useTransform(scrollYProgress, [0, 1], [0, 720]), scale: useTransform(scrollYProgress, [0, 0.5, 1], [1, 2, 1]) }} className="text-6xl filter drop-shadow-lg">💅</motion.div>
+                <motion.div style={{ rotate: rotateSlowForward, scale: scalePulse }} className="text-6xl filter drop-shadow-lg">💅</motion.div>
                 <div className="font-[Permanent Marker] text-5xl rotate-90 whitespace-nowrap text-neon filter drop-shadow-md">VIBE CHECK</div>
-                <motion.div style={{ rotate: useTransform(scrollYProgress, [0, 1], [0, -1080]) }} className="text-7xl filter drop-shadow-lg">🛹</motion.div>
+                <motion.div style={{ rotate: rotateFastBackward }} className="text-7xl filter drop-shadow-lg">🛹</motion.div>
                 <div className="font-[Permanent Marker] text-6xl rotate-90 whitespace-nowrap text-hot tracking-widest filter drop-shadow-md">SHEESH</div>
               </React.Fragment>
             ))}
