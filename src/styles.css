@@ -121,9 +121,9 @@
   --glass: oklch(0.18 0.04 270 / 0.85);
 }
 
-.high-contrast button:hover, 
-.high-contrast a:hover, 
-.high-contrast .group:hover {
+button:hover, 
+a:hover, 
+.group:hover {
   transform: scale(1.15) !important;
   transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }

@@ -90,7 +90,7 @@ export function Landing() {
           >
             The <span className="text-primary drop-shadow-[0_0_15px_rgba(0,255,174,0.5)]">cinematic</span> way to run
             <br />
-            your cricket <span className="text-hot drop-shadow-[0_0_15px_rgba(255,45,111,0.9)] animate-pulse-text-hot">auction</span>.
+            your cricket <span className="text-hot drop-shadow-[0_0_15px_rgba(255,45,111,0.5)]">auction</span>.
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
