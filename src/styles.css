@@ -360,17 +360,7 @@ html { scroll-behavior: smooth; }
   transform: rotate(-3deg);
   position: relative;
   z-index: 1;
-}
-
-.funky .spray-paint-text::after {
-  content: attr(data-text);
-  position: absolute;
-  left: 3px;
-  top: 3px;
-  z-index: -1;
-  color: #000;
-  -webkit-text-stroke: 4px #000;
-  text-shadow: 4px 4px 0px #000;
+  filter: drop-shadow(3px 3px 0px #000) drop-shadow(-1px -1px 0px #000);
 }
 
 @keyframes float-rotate {

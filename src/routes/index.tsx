@@ -139,14 +139,32 @@ export function Landing() {
         </section>
       </ParallaxHero>
 
-      <main className="container mx-auto px-4 pb-24">
+      {/* Gen Z Sidebars for Empty Space on Large Screens */}
+      {isFunky && (
+        <>
+          <div className="hidden 2xl:flex fixed left-8 top-1/2 -translate-y-1/2 flex-col items-center gap-16 pointer-events-none z-0 opacity-90">
+            <div className="font-[Permanent Marker] text-5xl -rotate-90 whitespace-nowrap text-hot tracking-widest filter drop-shadow-md">NO CAP</div>
+            <div className="text-7xl animate-pulse filter drop-shadow-lg">💀</div>
+            <div className="font-[Permanent Marker] text-6xl -rotate-90 whitespace-nowrap text-neon filter drop-shadow-md">FR FR</div>
+            <div className="text-6xl animate-bounce filter drop-shadow-lg">🧢</div>
+          </div>
+          <div className="hidden 2xl:flex fixed right-8 top-1/2 -translate-y-1/2 flex-col items-center gap-16 pointer-events-none z-0 opacity-90">
+            <div className="text-6xl animate-bounce filter drop-shadow-lg">💅</div>
+            <div className="font-[Permanent Marker] text-5xl rotate-90 whitespace-nowrap text-neon filter drop-shadow-md">VIBE CHECK</div>
+            <div className="text-7xl animate-pulse filter drop-shadow-lg">🛹</div>
+            <div className="font-[Permanent Marker] text-6xl rotate-90 whitespace-nowrap text-hot tracking-widest filter drop-shadow-md">SHEESH</div>
+          </div>
+        </>
+      )}
+
+      <main id="browse" className="container mx-auto px-4 pb-24 relative z-10">
         <section id="browse" className="mt-10 max-w-6xl mx-auto scroll-mt-24">
           <Reveal>
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
               <div>
                 <h2 className="text-3xl md:text-4xl font-bold">
                   {isFunky ? (
-                    <span className="spray-paint-text text-5xl" data-text="Scope the auctions">Scope the auctions</span>
+                    <span className="spray-paint-text text-5xl leading-relaxed">Scope the auctions</span>
                   ) : "Browse auctions"}
                 </h2>
                 <p className="text-sm text-muted-foreground mt-1">No account needed. Tap any tournament to watch live.</p>
