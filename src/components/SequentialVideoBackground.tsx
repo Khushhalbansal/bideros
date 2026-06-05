@@ -18,10 +18,10 @@ export function SequentialVideoBackground({
         playsInline
         className="absolute inset-0 w-full h-full object-cover"
         onEnded={() => setCurrentIndex((prev) => (prev + 1) % videos.length)}
+        style={{ objectPosition: 'center center', opacity: 1 }}
       >
         <source src={videos[currentIndex]} type="video/mp4" />
       </video>
-      <div className="absolute inset-0 bg-black/25" />
     </div>
   );
 }
