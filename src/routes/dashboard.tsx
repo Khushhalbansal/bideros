@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { Plus, LogOut, Trophy, Eye, Settings, Search } from "lucide-react";
 import { formatINR, parseINR } from "@/lib/format";
 import { TournamentGroup } from "./index";
+import { SequentialVideoBackground } from "@/components/SequentialVideoBackground";
 
 export const Route = createFileRoute("/dashboard")({ component: Dashboard });
 
@@ -83,7 +84,19 @@ function Dashboard() {
   if (loading || !user) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative">
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <SequentialVideoBackground 
+          opacity="opacity-30"
+          videos={[
+            "/videos/Animated_cricket_dashboard_backg…_202606041624.mp4",
+            "/videos/Animated_background_with_doodle_…_202606051539.mp4",
+            "/videos/Animated_background_geometric_sh…_202606041623.mp4",
+            "/videos/Collage_of_cricket_highlights_fr…_202606041624.mp4"
+          ]}
+        />
+      </div>
+      <div className="relative z-10">
       <header className="container mx-auto flex items-center justify-between py-6 px-4">
         <Logo />
         <div className="flex items-center gap-3">
@@ -178,6 +191,7 @@ function Dashboard() {
           <TournamentGroup title="🏆 Past" items={past} emptyText="No completed tournaments yet." accent="muted" />
         </section>
       </main>
+      </div>
     </div>
   );
 }

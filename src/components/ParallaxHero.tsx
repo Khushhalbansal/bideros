@@ -1,6 +1,7 @@
 import { motion, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
 import { useRef, useEffect } from "react";
 import { Gavel, Trophy, Zap, Tv, Users, ShieldCheck } from "lucide-react";
+import { SequentialVideoBackground } from "@/components/SequentialVideoBackground";
 
 /** Drake-inspired parallax hero: layered floating glyphs + mouse parallax + scroll depth */
 export function ParallaxHero({ children }: { children: React.ReactNode }) {
@@ -46,6 +47,17 @@ export function ParallaxHero({ children }: { children: React.ReactNode }) {
 
   return (
     <div ref={ref} className="relative overflow-hidden">
+      {/* Video Background */}
+      <SequentialVideoBackground 
+        opacity="opacity-40"
+        videos={[
+          "/videos/Cricket_background_animated_collage_202606041623.mp4",
+          "/videos/Collage_of_cricket_highlights_fr…_202606041624.mp4",
+          "/videos/Animated_background_with_doodle_…_202606051539.mp4",
+          "/videos/Animated_cricket_feature_background_202606041624.mp4"
+        ]}
+      />
+
       {/* Animated gradient orbs */}
       <motion.div
         style={{ y: y2, scale, x: tx1 }}

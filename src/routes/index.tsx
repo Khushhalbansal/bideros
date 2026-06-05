@@ -11,6 +11,7 @@ import { Gavel, Users, Tv, Zap, ShieldCheck, Trophy, Search, Eye, ArrowRight } f
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { formatINR } from "@/lib/format";
+import { SequentialVideoBackground } from "@/components/SequentialVideoBackground";
 
 export const Route = createFileRoute("/")({ component: Landing });
 
@@ -85,16 +86,17 @@ export function Landing() {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-            className="text-5xl md:text-7xl font-bold leading-[1.02] mb-6 tracking-tight"
+            className="text-5xl md:text-7xl font-bold mb-6 tracking-tight text-shadow-strong"
           >
-            The <span className="text-neon">cinematic</span> way to run your
-            <br />cricket <span className="text-hot">auction</span>.
+            The <span className="text-primary drop-shadow-[0_0_15px_rgba(0,255,174,0.5)]">cinematic</span> way to run
+            <br />
+            your cricket <span className="text-hot drop-shadow-[0_0_15px_rgba(255,45,111,0.5)] animate-pulse-neon">auction</span>.
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.45 }}
-            className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto mb-10"
+            className="text-xl text-foreground font-medium mb-10 max-w-2xl mx-auto text-shadow-strong"
           >
             IPL-style live bidding. Real-time team rooms. A stadium-grade spectator view — no login required to watch.
           </motion.p>
@@ -132,13 +134,57 @@ export function Landing() {
             </div>
           </Reveal>
 
-          <TournamentGroup title="🔴 Ongoing" items={ongoing} emptyText="No auctions live right now." accent="hot" />
-          <TournamentGroup title="🗓 Upcoming" items={upcoming} emptyText="No upcoming tournaments." accent="neon" />
-          <TournamentGroup title="🏆 Past" items={past} emptyText="No completed tournaments yet." accent="muted" />
+          {/* Ongoing Section */}
+          <div className="relative overflow-hidden rounded-[2.5rem] p-8 mb-8 border border-hot/30 shadow-[0_0_40px_-10px_rgba(255,50,50,0.15)]">
+            <SequentialVideoBackground
+              videos={[
+                "/videos/Animated_cricket_auction_background_202606041624.mp4",
+                "/videos/Animated_cricket_feature_background_202606041624.mp4"
+              ]}
+            />
+            <div className="relative z-10">
+              <TournamentGroup title="🔴 Ongoing" items={ongoing} emptyText="No auctions live right now." accent="hot" />
+            </div>
+          </div>
+
+          {/* Upcoming Section */}
+          <div className="relative overflow-hidden rounded-[2.5rem] p-8 mb-8 border border-neon/30 shadow-[0_0_40px_-10px_rgba(50,255,150,0.1)]">
+            <SequentialVideoBackground
+              videos={[
+                "/videos/Upcoming_matches_calendar_loop_202606041624.mp4",
+                "/videos/Animated_background_with_doodle_…_202606051539.mp4"
+              ]}
+            />
+            <div className="relative z-10">
+              <TournamentGroup title="🗓 Upcoming" items={upcoming} emptyText="No upcoming tournaments." accent="neon" />
+            </div>
+          </div>
+
+          {/* Past Section */}
+          <div className="relative overflow-hidden rounded-[2.5rem] p-8 border border-muted/30">
+            <SequentialVideoBackground
+              videos={[
+                "/videos/Trophy_surrounded_by_sunburst_lines_202606041624.mp4",
+                "/videos/Animated_background_for_cricket_…_202606051539.mp4"
+              ]}
+            />
+            <div className="relative z-10">
+              <TournamentGroup title="🏆 Past" items={past} emptyText="No completed tournaments yet." accent="muted" />
+            </div>
+          </div>
         </section>
 
-        <section className="mt-32 max-w-5xl mx-auto">
-          <Reveal>
+        <section className="mt-32 max-w-5xl mx-auto relative rounded-[3rem] overflow-hidden py-24 px-6 border border-border/50">
+          <SequentialVideoBackground
+            videos={[
+              "/videos/Animated_cricket_feature_background_202606041624.mp4",
+              "/videos/Animated_background_for_cricket_…_202606051539.mp4"
+            ]}
+          />
+          <div className="absolute inset-0 z-0 pointer-events-none bg-gradient-to-b from-background via-transparent to-background" />
+          
+          <div className="relative z-10">
+            <Reveal>
             <h2 className="text-3xl md:text-5xl font-bold text-center mb-3">Built for <span className="text-neon">IPL energy</span></h2>
             <p className="text-center text-muted-foreground mb-12">Every detail engineered to make each bid feel monumental.</p>
           </Reveal>
@@ -165,15 +211,24 @@ export function Landing() {
                 </motion.div>
               </Reveal>
             ))}
+            </div>
           </div>
         </section>
 
         <Reveal>
-          <section className="mt-32 max-w-4xl mx-auto text-center bg-glass border border-neon/30 rounded-3xl p-12 shadow-neon relative overflow-hidden">
-            <div className="absolute inset-0 gradient-neon opacity-10" />
-            <div className="relative">
-              <h2 className="text-3xl md:text-5xl font-bold mb-4">Ready to run your auction?</h2>
-              <p className="text-muted-foreground mb-8 max-w-xl mx-auto">Spin up a tournament in under a minute. Invite owners. Go live.</p>
+          <section className="mt-32 max-w-4xl mx-auto text-center border border-neon/30 rounded-[3rem] p-16 shadow-[0_0_60px_-15px_rgba(50,255,150,0.3)] relative overflow-hidden">
+            <SequentialVideoBackground
+              videos={[
+                "/videos/Arrows_pointing_toward_portal_202606041624.mp4",
+                "/videos/Animated_lines_sketch_cricket_st…_202606051539.mp4"
+              ]}
+            />
+            <div className="absolute inset-0 z-0 pointer-events-none gradient-neon opacity-10" />
+            <div className="relative z-10">
+              <h2 className="text-3xl md:text-5xl font-bold mb-4 text-shadow-strong">Ready to run your auction?</h2>
+              <p className="text-foreground font-medium mb-8 max-w-xl mx-auto text-shadow-strong">
+                Spin up a tournament in under a minute. Invite owners. Go live.
+              </p>
               <Button asChild size="lg" className="gradient-neon text-primary-foreground shadow-neon font-semibold hover:scale-105 transition-transform">
                 <Link to="/auth">Get started — it's free <ArrowRight className="ml-1" /></Link>
               </Button>

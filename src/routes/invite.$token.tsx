@@ -62,12 +62,26 @@ function InvitePage() {
      
   }, [user, info]);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
-  if (!info) return <div className="min-h-screen flex items-center justify-center text-muted-foreground p-8 text-center">Invite not found.</div>;
-  if (info.used) {
+  let content = <div className="text-muted-foreground">Joining your team…</div>;
+  if (loading) content = <div className="text-muted-foreground">Loading…</div>;
+  else if (!info) content = <div className="text-muted-foreground p-8 text-center bg-glass border border-border rounded-xl">Invite not found.</div>;
+  else if (info.used) {
     if (info.team_id) { navigate({ to: "/team/$id", params: { id: info.team_id } }); return null; }
-    return <div className="min-h-screen flex items-center justify-center text-muted-foreground p-8 text-center">This invite has already been used. <Link to="/auth" className="text-neon ml-2">Sign in</Link></div>;
+    content = <div className="text-muted-foreground p-8 text-center bg-glass border border-border rounded-xl">This invite has already been used. <Link to="/auth" className="text-neon ml-2">Sign in</Link></div>;
   }
-  if (info.expired) return <div className="min-h-screen flex items-center justify-center text-muted-foreground p-8 text-center">This invite has expired. Ask your admin for a new one.</div>;
-  return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Joining your team…</div>;
+  else if (info.expired) content = <div className="text-muted-foreground p-8 text-center bg-glass border border-border rounded-xl">This invite has expired. Ask your admin for a new one.</div>;
+
+  return (
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-screen">
+          <source src="/videos/Arrows_pointing_toward_portal_202606041624.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-background/80" />
+      </div>
+      <div className="relative z-10 text-xl font-bold font-display">
+        {content}
+      </div>
+    </div>
+  );
 }

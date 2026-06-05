@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
+import { SequentialVideoBackground } from "@/components/SequentialVideoBackground";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -67,8 +68,16 @@ function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="container mx-auto py-6 px-4"><Logo /></header>
+    <div className="min-h-screen flex flex-col relative overflow-hidden">
+      <SequentialVideoBackground 
+        videos={[
+          "/videos/Animated_collage_cricket_sign-in…_202606051539.mp4",
+          "/videos/Animated_background_for_cricket_…_202606051539.mp4",
+          "/videos/Animated_lines_sketch_cricket_st…_202606051539.mp4"
+        ]}
+      />
+      <div className="relative z-10 flex flex-col min-h-screen">
+        <header className="container mx-auto py-6 px-4"><Logo /></header>
       <main className="flex-1 flex items-center justify-center px-4">
         <div className="w-full max-w-md bg-glass border border-border rounded-2xl p-8 shadow-neon animate-slide-up">
           {next && (
@@ -124,7 +133,8 @@ function AuthPage() {
             <Link to="/" className="hover:text-neon">← Back to home</Link>
           </p>
         </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

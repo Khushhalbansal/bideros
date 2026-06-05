@@ -65,7 +65,14 @@ function Projector() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background overflow-hidden relative">
-      {liveLot && state?.strike_count ? <HammerStrikes count={state.strike_count} /> : null}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-screen">
+          <source src="/videos/Animated_cricket_auction_background_202606041624.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-background/80" />
+      </div>
+      <div className="relative z-10 flex flex-col min-h-screen w-full">
+        {liveLot && state?.strike_count ? <HammerStrikes count={state.strike_count} /> : null}
       <AnimatePresence>
         {soldPlayer && soldTeam && state?.last_sold_price != null && (
           <SoldBanner player={soldPlayer.name} team={soldTeam.name} price={Number(state.last_sold_price)} />
@@ -130,7 +137,8 @@ function Projector() {
             })}
           </div>
         </aside>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }
