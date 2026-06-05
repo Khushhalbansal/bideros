@@ -30,15 +30,6 @@ export function Landing() {
   const [q, setQ] = useState("");
   const { scrollYProgress } = useScroll();
   const progressX = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
-  
-  // Gen Z Parallax Transforms
-  const leftSidebarY = useTransform(scrollYProgress, [0, 1], ["0%", "-50%"]);
-  const rightSidebarY = useTransform(scrollYProgress, [0, 1], ["-50%", "0%"]);
-  const rotateFastForward = useTransform(scrollYProgress, [0, 1], [0, 1080]);
-  const rotateFastBackward = useTransform(scrollYProgress, [0, 1], [0, -1080]);
-  const rotateSlowForward = useTransform(scrollYProgress, [0, 1], [0, 720]);
-  const rotateSlowBackward = useTransform(scrollYProgress, [0, 1], [0, -720]);
-  const scalePulse = useTransform(scrollYProgress, [0, 0.5, 1], [1, 2, 1]);
 
   useEffect(() => {
     supabase.from("tournaments")
@@ -148,38 +139,21 @@ export function Landing() {
         </section>
       </ParallaxHero>
 
-      {/* Gen Z Parallax Sidebars for Large Screens */}
+      {/* Gen Z Sidebars for Empty Space on Large Screens */}
       {isFunky && (
         <>
-          {/* Left Sidebar - Scrolls UP as you scroll down */}
-          <motion.div 
-            style={{ y: leftSidebarY }}
-            className="hidden 2xl:flex fixed left-8 top-0 h-[250vh] flex-col items-center justify-start pt-20 gap-32 pointer-events-none z-0 opacity-90"
-          >
-            {[...Array(3)].map((_, i) => (
-              <React.Fragment key={`left-${i}`}>
-                <div className="font-[Permanent Marker] text-5xl -rotate-90 whitespace-nowrap text-hot tracking-widest filter drop-shadow-md">NO CAP</div>
-                <motion.div style={{ rotate: rotateFastForward, scale: scalePulse }} className="text-7xl filter drop-shadow-lg">💀</motion.div>
-                <div className="font-[Permanent Marker] text-6xl -rotate-90 whitespace-nowrap text-neon filter drop-shadow-md">FR FR</div>
-                <motion.div style={{ rotate: rotateSlowBackward }} className="text-6xl filter drop-shadow-lg">🧢</motion.div>
-              </React.Fragment>
-            ))}
-          </motion.div>
-
-          {/* Right Sidebar - Scrolls DOWN as you scroll down */}
-          <motion.div 
-            style={{ y: rightSidebarY }}
-            className="hidden 2xl:flex fixed right-8 top-0 h-[250vh] flex-col items-center justify-end pb-20 gap-32 pointer-events-none z-0 opacity-90"
-          >
-            {[...Array(3)].map((_, i) => (
-              <React.Fragment key={`right-${i}`}>
-                <motion.div style={{ rotate: rotateSlowForward, scale: scalePulse }} className="text-6xl filter drop-shadow-lg">💅</motion.div>
-                <div className="font-[Permanent Marker] text-5xl rotate-90 whitespace-nowrap text-neon filter drop-shadow-md">VIBE CHECK</div>
-                <motion.div style={{ rotate: rotateFastBackward }} className="text-7xl filter drop-shadow-lg">🛹</motion.div>
-                <div className="font-[Permanent Marker] text-6xl rotate-90 whitespace-nowrap text-hot tracking-widest filter drop-shadow-md">SHEESH</div>
-              </React.Fragment>
-            ))}
-          </motion.div>
+          <div className="hidden 2xl:flex fixed left-8 top-1/2 -translate-y-1/2 flex-col items-center gap-16 pointer-events-none z-0 opacity-90">
+            <div className="font-[Permanent Marker] text-5xl -rotate-90 whitespace-nowrap text-hot tracking-widest filter drop-shadow-md">NO CAP</div>
+            <div className="text-7xl animate-pulse filter drop-shadow-lg">💀</div>
+            <div className="font-[Permanent Marker] text-6xl -rotate-90 whitespace-nowrap text-neon filter drop-shadow-md">FR FR</div>
+            <div className="text-6xl animate-bounce filter drop-shadow-lg">🧢</div>
+          </div>
+          <div className="hidden 2xl:flex fixed right-8 top-1/2 -translate-y-1/2 flex-col items-center gap-16 pointer-events-none z-0 opacity-90">
+            <div className="text-6xl animate-bounce filter drop-shadow-lg">💅</div>
+            <div className="font-[Permanent Marker] text-5xl rotate-90 whitespace-nowrap text-neon filter drop-shadow-md">VIBE CHECK</div>
+            <div className="text-7xl animate-pulse filter drop-shadow-lg">🛹</div>
+            <div className="font-[Permanent Marker] text-6xl rotate-90 whitespace-nowrap text-hot tracking-widest filter drop-shadow-md">SHEESH</div>
+          </div>
         </>
       )}
 
