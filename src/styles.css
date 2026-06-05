@@ -121,6 +121,59 @@
   --glass: oklch(0.18 0.04 270 / 0.85);
 }
 
+:root.funky {
+  --background: oklch(0.2 0.1 300);
+  --foreground: oklch(0.98 0.02 90);
+  --card: oklch(0.25 0.15 310);
+  --card-foreground: oklch(0.98 0.02 90);
+  --popover: oklch(0.25 0.15 310);
+  --popover-foreground: oklch(0.98 0.02 90);
+  --primary: oklch(0.85 0.3 140); /* Toxic Lime Green */
+  --primary-foreground: oklch(0.1 0 0);
+  --secondary: oklch(0.35 0.2 320);
+  --secondary-foreground: oklch(0.98 0.02 90);
+  --muted: oklch(0.3 0.15 320);
+  --muted-foreground: oklch(0.7 0.1 320);
+  --accent: oklch(0.65 0.35 340); /* Hot Magenta */
+  --accent-foreground: oklch(0.98 0 0);
+  --destructive: oklch(0.6 0.3 20);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.1 0 0); /* Solid black borders for brutalism */
+  --input: oklch(0.25 0.15 310);
+  --ring: oklch(0.85 0.3 140);
+  
+  --neon: oklch(0.85 0.3 140);
+  --hot: oklch(0.65 0.35 340);
+  --gradient-arena: linear-gradient(135deg, oklch(0.2 0.1 300) 0%, oklch(0.4 0.2 320) 100%);
+  --glass: oklch(0.3 0.15 320 / 0.7);
+}
+
+.funky body {
+  font-family: 'Bricolage Grotesque', 'Inter', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.funky h1, .funky h2, .funky h3, .funky h4, .funky h5, .funky h6, .funky .font-bold {
+  font-family: 'Syne', 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.funky .text-shadow-strong {
+  text-shadow: 4px 4px 0px var(--primary), 8px 8px 0px var(--hot), 12px 12px 0px #000 !important;
+}
+
+.funky button, .funky .bg-glass, .funky input {
+  border: 3px solid #000 !important;
+  border-radius: 16px !important;
+  box-shadow: 6px 6px 0px #000 !important;
+}
+
+.funky button:hover, .funky a:hover {
+  transform: translate(-4px, -4px) scale(1.05) !important;
+  box-shadow: 12px 12px 0px var(--primary) !important;
+}
+
 button:hover, 
 a:hover, 
 .group:hover {

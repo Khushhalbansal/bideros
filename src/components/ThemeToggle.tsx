@@ -1,4 +1,4 @@
-import { Moon, Sun, Eye } from "lucide-react";
+import { Moon, Sun, Eye, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ export function ThemeToggle() {
           {theme === "dark" && <Sun className="h-4 w-4 text-neon" />}
           {theme === "light" && <Moon className="h-4 w-4 text-primary" />}
           {theme === "high-contrast" && <Eye className="h-4 w-4 text-hot" />}
+          {theme === "funky" && <Sparkles className="h-4 w-4 text-[#ff00ff]" />}
         </motion.span>
       </AnimatePresence>
     </Button>

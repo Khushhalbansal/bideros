@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
-type Theme = "dark" | "light" | "high-contrast";
+type Theme = "dark" | "light" | "high-contrast" | "funky";
 const Ctx = createContext<{ theme: Theme; toggle: () => void }>({ theme: "dark", toggle: () => {} });
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
@@ -13,7 +13,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (typeof document === "undefined") return;
-    document.documentElement.classList.remove("light", "dark", "high-contrast");
+    document.documentElement.classList.remove("light", "dark", "high-contrast", "funky");
     document.documentElement.classList.add(theme);
     localStorage.setItem("bidarena-theme", theme);
   }, [theme]);
@@ -22,6 +22,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setTheme((t) => {
       if (t === "dark") return "light";
       if (t === "light") return "high-contrast";
+      if (t === "high-contrast") return "funky";
       return "dark";
     });
   };

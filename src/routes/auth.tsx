@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
+import { useTheme } from "@/hooks/use-theme";
 import { SequentialVideoBackground } from "@/components/SequentialVideoBackground";
 
 export const Route = createFileRoute("/auth")({
@@ -18,6 +19,8 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const { theme } = useTheme();
+  const isFunky = theme === "funky";
   const { next } = Route.useSearch();
   const target = next && next.startsWith("/") ? next : "/dashboard";
   const [email, setEmail] = useState("");
@@ -82,17 +85,17 @@ function AuthPage() {
         <div className="w-full max-w-md bg-glass border border-border rounded-2xl p-8 shadow-neon animate-slide-up">
           {next && (
             <div className="mb-4 text-xs text-neon bg-neon/10 border border-neon/30 rounded-md px-3 py-2">
-              Sign in to continue to your invite.
+              {isFunky ? "Log in to secure your spot." : "Sign in to continue to your invite."}
             </div>
           )}
           {forgot ? (
             <>
-              <h1 className="text-2xl font-bold mb-1">Reset password</h1>
-              <p className="text-sm text-muted-foreground mb-6">Enter your email and we'll send a reset link.</p>
+              <h1 className="text-2xl font-bold mb-1">{isFunky ? "Forgot the vibe?" : "Reset password"}</h1>
+              <p className="text-sm text-muted-foreground mb-6">{isFunky ? "Drop your email and we'll hit you with a reset link." : "Enter your email and we'll send a reset link."}</p>
               <form onSubmit={sendReset} className="space-y-4">
                 <div><Label>Email</Label><Input type="email" value={email} onChange={e=>setEmail(e.target.value)} required className="hover:scale-[1.02] focus:scale-[1.02] hover:border-neon transition-all duration-200" /></div>
-                <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon hover:scale-[1.03] transition-transform duration-200">
-                  {busy ? "Sending..." : "Send reset link"}
+                <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon hover:scale-[1.03] transition-transform duration-200 font-bold tracking-wide">
+                  {busy ? "Sending..." : (isFunky ? "Yeet me a link" : "Send reset link")}
                 </Button>
                 <button type="button" onClick={() => setForgot(false)} className="w-full text-xs text-muted-foreground hover:text-neon hover:scale-110 transition-transform duration-200">← Back to sign in</button>
               </form>
@@ -100,30 +103,30 @@ function AuthPage() {
           ) : (
             <Tabs defaultValue={next ? "signup" : "signin"}>
               <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="signin" className="data-[state=active]:scale-[1.03] hover:scale-[1.03] transition-all duration-200">Sign in</TabsTrigger>
-                <TabsTrigger value="signup" className="data-[state=active]:scale-[1.03] hover:scale-[1.03] transition-all duration-200">Create account</TabsTrigger>
+                <TabsTrigger value="signin" className="data-[state=active]:scale-[1.03] hover:scale-[1.03] transition-all duration-200 font-bold">{isFunky ? "Log in" : "Sign in"}</TabsTrigger>
+                <TabsTrigger value="signup" className="data-[state=active]:scale-[1.03] hover:scale-[1.03] transition-all duration-200 font-bold">{isFunky ? "Join squad" : "Create account"}</TabsTrigger>
               </TabsList>
               <TabsContent value="signin">
-                <h1 className="text-2xl font-bold mb-1">Welcome back</h1>
-                <p className="text-sm text-muted-foreground mb-6">Sign in to manage tournaments, teams, or your player profile.</p>
+                <h1 className="text-2xl font-bold mb-1">{isFunky ? "Wassup, welcome back" : "Welcome back"}</h1>
+                <p className="text-sm text-muted-foreground mb-6">{isFunky ? "Log in to manage your tourneys, squads, or player stats." : "Sign in to manage tournaments, teams, or your player profile."}</p>
                 <form onSubmit={signIn} className="space-y-4">
                   <div><Label>Email</Label><Input type="email" value={email} onChange={e=>setEmail(e.target.value)} required className="hover:scale-[1.02] focus:scale-[1.02] hover:border-neon transition-all duration-200" /></div>
                   <div><Label>Password</Label><Input type="password" value={password} onChange={e=>setPassword(e.target.value)} required className="hover:scale-[1.02] focus:scale-[1.02] hover:border-neon transition-all duration-200" /></div>
-                  <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon hover:scale-[1.03] transition-transform duration-200">
-                    {busy ? "Signing in..." : "Sign in"}
+                  <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon hover:scale-[1.03] transition-transform duration-200 font-bold tracking-wide">
+                    {busy ? "Signing in..." : (isFunky ? "Let's go" : "Sign in")}
                   </Button>
                   <button type="button" onClick={() => setForgot(true)} className="w-full text-xs text-muted-foreground hover:text-neon hover:scale-110 transition-transform duration-200">Forgot password?</button>
                 </form>
               </TabsContent>
               <TabsContent value="signup">
-                <h1 className="text-2xl font-bold mb-1">Create your account</h1>
-                <p className="text-sm text-muted-foreground mb-6">Free — host auctions, own a team, or register as a player.</p>
+                <h1 className="text-2xl font-bold mb-1">{isFunky ? "Join the squad" : "Create your account"}</h1>
+                <p className="text-sm text-muted-foreground mb-6">{isFunky ? "100% Free — drop auctions, own a franchise, or play." : "Free — host auctions, own a team, or register as a player."}</p>
                 <form onSubmit={signUp} className="space-y-4">
                   <div><Label>Full name</Label><Input value={fullName} onChange={e=>setFullName(e.target.value)} required placeholder="Your name" className="hover:scale-[1.02] focus:scale-[1.02] hover:border-neon transition-all duration-200" /></div>
                   <div><Label>Email</Label><Input type="email" value={email} onChange={e=>setEmail(e.target.value)} required className="hover:scale-[1.02] focus:scale-[1.02] hover:border-neon transition-all duration-200" /></div>
                   <div><Label>Password</Label><Input type="password" value={password} onChange={e=>setPassword(e.target.value)} required minLength={6} className="hover:scale-[1.02] focus:scale-[1.02] hover:border-neon transition-all duration-200" /></div>
-                  <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon hover:scale-[1.03] transition-transform duration-200">
-                    {busy ? "Creating..." : "Create account"}
+                  <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon hover:scale-[1.03] transition-transform duration-200 font-bold tracking-wide">
+                    {busy ? "Creating..." : (isFunky ? "Sign up fr" : "Create account")}
                   </Button>
                 </form>
               </TabsContent>

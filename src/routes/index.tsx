@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, useMemo } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
+import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/Logo";
@@ -23,6 +24,8 @@ interface PublicTournament {
 
 export function Landing() {
   const { user } = useAuth();
+  const { theme } = useTheme();
+  const isFunky = theme === "funky";
   const [tournaments, setTournaments] = useState<PublicTournament[]>([]);
   const [q, setQ] = useState("");
   const { scrollYProgress } = useScroll();
@@ -83,22 +86,34 @@ export function Landing() {
             Live cricket auctions, reimagined
           </motion.div>
           <motion.h1
-            initial={{ opacity: 0, y: 40 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.8, delay: 0.1 }}
             className="text-5xl md:text-7xl font-bold mb-6 tracking-tight text-shadow-strong"
           >
-            The <span className="text-primary drop-shadow-[0_0_15px_rgba(0,255,174,0.5)]">cinematic</span> way to run
-            <br />
-            your cricket <span className="text-hot drop-shadow-[0_0_15px_rgba(255,45,111,0.5)]">auction</span>.
+            {isFunky ? (
+              <>
+                The <span className="text-primary drop-shadow-[0_0_15px_rgba(0,255,174,0.5)]">most cracked</span> way to run
+                <br />
+                your cricket <span className="text-hot drop-shadow-[0_0_15px_rgba(255,45,111,0.5)]">tourney</span>.
+              </>
+            ) : (
+              <>
+                The <span className="text-primary drop-shadow-[0_0_15px_rgba(0,255,174,0.5)]">cinematic</span> way to run
+                <br />
+                your cricket <span className="text-hot drop-shadow-[0_0_15px_rgba(255,45,111,0.5)]">auction</span>.
+              </>
+            )}
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.45 }}
-            className="text-xl text-foreground font-medium mb-10 max-w-2xl mx-auto text-shadow-strong"
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="text-lg md:text-xl text-foreground font-medium mb-10 max-w-2xl mx-auto text-shadow-strong"
           >
-            IPL-style live bidding. Real-time team rooms. A stadium-grade spectator view — no login required to watch.
+            {isFunky 
+              ? "Main character energy only. Real-time team rooms. A stadium-grade spectator view — no login required to vibe."
+              : "IPL-style live bidding. Real-time team rooms. A stadium-grade spectator view — no login required to watch."}
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -106,15 +121,14 @@ export function Landing() {
             transition={{ delay: 0.6 }}
             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
           >
-            <Button asChild className="h-14 px-10 text-lg rounded-full gradient-neon text-primary-foreground shadow-neon font-bold group hover:scale-105 transition-transform">
               <Link to="/auth">
-                Start a tournament
-                <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
+                <Button size="lg" className="gradient-neon text-primary-foreground shadow-neon rounded-full px-8 hover:scale-105 transition-transform group text-shadow-strong font-bold tracking-wide">
+                  {isFunky ? "Drop a tourney" : "Start a tournament"} <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </Button>
               </Link>
-            </Button>
-            <Button asChild variant="outline" className="h-14 px-10 text-lg rounded-full border-2 border-neon/50 font-bold hover:border-neon hover:shadow-neon transition-all bg-background/50 backdrop-blur-sm">
-              <a href="#browse">Watch a live auction</a>
-            </Button>
+              <Button asChild size="lg" variant="outline" className="rounded-full px-8 border-neon/50 hover:bg-neon/10 hover:shadow-neon transition-all bg-background/50 backdrop-blur-md text-shadow-strong font-bold tracking-wide">
+                <a href="#browse">{isFunky ? "Vibe in the stands" : "Watch a live auction"}</a>
+              </Button>
           </motion.div>
         </section>
       </ParallaxHero>
@@ -225,7 +239,9 @@ export function Landing() {
             />
             <div className="absolute inset-0 z-0 pointer-events-none gradient-neon opacity-10" />
             <div className="relative z-10">
-              <h2 className="text-3xl md:text-5xl font-bold mb-4 text-shadow-strong">Ready to run your auction?</h2>
+              <h2 className="text-3xl md:text-5xl font-bold mb-4 text-shadow-strong">
+                {isFunky ? "Ready to drop the ultimate auction?" : "Ready to run your auction?"}
+              </h2>
               <p className="text-foreground font-medium mb-8 max-w-xl mx-auto text-shadow-strong">
                 Spin up a tournament in under a minute. Invite owners. Go live.
               </p>
