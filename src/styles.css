@@ -118,7 +118,7 @@
   --neon: oklch(0.95 0.3 110);
   --hot: oklch(0.6 0.3 5);
   --gradient-arena: none;
-  --glass: oklch(0 0 0 / 0.95);
+  --glass: oklch(0.18 0.04 270 / 0.85);
 }
 
 .high-contrast button:hover, 

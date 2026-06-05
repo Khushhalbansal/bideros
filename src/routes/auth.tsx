@@ -90,39 +90,39 @@ function AuthPage() {
               <h1 className="text-2xl font-bold mb-1">Reset password</h1>
               <p className="text-sm text-muted-foreground mb-6">Enter your email and we'll send a reset link.</p>
               <form onSubmit={sendReset} className="space-y-4">
-                <div><Label>Email</Label><Input type="email" value={email} onChange={e=>setEmail(e.target.value)} required /></div>
-                <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon">
+                <div><Label>Email</Label><Input type="email" value={email} onChange={e=>setEmail(e.target.value)} required className="hover:scale-[1.02] focus:scale-[1.02] hover:border-neon transition-all duration-200" /></div>
+                <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon hover:scale-[1.03] transition-transform duration-200">
                   {busy ? "Sending..." : "Send reset link"}
                 </Button>
-                <button type="button" onClick={() => setForgot(false)} className="w-full text-xs text-muted-foreground hover:text-neon">← Back to sign in</button>
+                <button type="button" onClick={() => setForgot(false)} className="w-full text-xs text-muted-foreground hover:text-neon hover:scale-110 transition-transform duration-200">← Back to sign in</button>
               </form>
             </>
           ) : (
             <Tabs defaultValue={next ? "signup" : "signin"}>
               <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="signin">Sign in</TabsTrigger>
-                <TabsTrigger value="signup">Create account</TabsTrigger>
+                <TabsTrigger value="signin" className="data-[state=active]:scale-[1.03] hover:scale-[1.03] transition-all duration-200">Sign in</TabsTrigger>
+                <TabsTrigger value="signup" className="data-[state=active]:scale-[1.03] hover:scale-[1.03] transition-all duration-200">Create account</TabsTrigger>
               </TabsList>
               <TabsContent value="signin">
                 <h1 className="text-2xl font-bold mb-1">Welcome back</h1>
                 <p className="text-sm text-muted-foreground mb-6">Sign in to manage tournaments, teams, or your player profile.</p>
                 <form onSubmit={signIn} className="space-y-4">
-                  <div><Label>Email</Label><Input type="email" value={email} onChange={e=>setEmail(e.target.value)} required /></div>
-                  <div><Label>Password</Label><Input type="password" value={password} onChange={e=>setPassword(e.target.value)} required /></div>
-                  <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon">
+                  <div><Label>Email</Label><Input type="email" value={email} onChange={e=>setEmail(e.target.value)} required className="hover:scale-[1.02] focus:scale-[1.02] hover:border-neon transition-all duration-200" /></div>
+                  <div><Label>Password</Label><Input type="password" value={password} onChange={e=>setPassword(e.target.value)} required className="hover:scale-[1.02] focus:scale-[1.02] hover:border-neon transition-all duration-200" /></div>
+                  <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon hover:scale-[1.03] transition-transform duration-200">
                     {busy ? "Signing in..." : "Sign in"}
                   </Button>
-                  <button type="button" onClick={() => setForgot(true)} className="w-full text-xs text-muted-foreground hover:text-neon">Forgot password?</button>
+                  <button type="button" onClick={() => setForgot(true)} className="w-full text-xs text-muted-foreground hover:text-neon hover:scale-110 transition-transform duration-200">Forgot password?</button>
                 </form>
               </TabsContent>
               <TabsContent value="signup">
                 <h1 className="text-2xl font-bold mb-1">Create your account</h1>
                 <p className="text-sm text-muted-foreground mb-6">Free — host auctions, own a team, or register as a player.</p>
                 <form onSubmit={signUp} className="space-y-4">
-                  <div><Label>Full name</Label><Input value={fullName} onChange={e=>setFullName(e.target.value)} required placeholder="Your name" /></div>
-                  <div><Label>Email</Label><Input type="email" value={email} onChange={e=>setEmail(e.target.value)} required /></div>
-                  <div><Label>Password</Label><Input type="password" value={password} onChange={e=>setPassword(e.target.value)} required minLength={6} /></div>
-                  <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon">
+                  <div><Label>Full name</Label><Input value={fullName} onChange={e=>setFullName(e.target.value)} required placeholder="Your name" className="hover:scale-[1.02] focus:scale-[1.02] hover:border-neon transition-all duration-200" /></div>
+                  <div><Label>Email</Label><Input type="email" value={email} onChange={e=>setEmail(e.target.value)} required className="hover:scale-[1.02] focus:scale-[1.02] hover:border-neon transition-all duration-200" /></div>
+                  <div><Label>Password</Label><Input type="password" value={password} onChange={e=>setPassword(e.target.value)} required minLength={6} className="hover:scale-[1.02] focus:scale-[1.02] hover:border-neon transition-all duration-200" /></div>
+                  <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon hover:scale-[1.03] transition-transform duration-200">
                     {busy ? "Creating..." : "Create account"}
                   </Button>
                 </form>
@@ -130,7 +130,7 @@ function AuthPage() {
             </Tabs>
           )}
           <p className="text-xs text-muted-foreground text-center mt-6">
-            <Link to="/" className="hover:text-neon">← Back to home</Link>
+            <Link to="/" className="inline-block hover:text-neon hover:scale-110 hover:-translate-x-1 transition-all duration-200">← Back to home</Link>
           </p>
         </div>
         </main>
