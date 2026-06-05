@@ -104,15 +104,15 @@ export function Landing() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="flex flex-col sm:flex-row gap-3 justify-center"
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
           >
-            <Button asChild size="lg" className="gradient-neon text-primary-foreground shadow-neon font-semibold group hover:scale-105 transition-transform">
+            <Button asChild className="h-14 px-10 text-lg rounded-full gradient-neon text-primary-foreground shadow-neon font-bold group hover:scale-105 transition-transform">
               <Link to="/auth">
                 Start a tournament
-                <ArrowRight className="ml-1 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="border-neon/50 hover:border-neon hover:shadow-neon transition-all">
+            <Button asChild variant="outline" className="h-14 px-10 text-lg rounded-full border-2 border-neon/50 font-bold hover:border-neon hover:shadow-neon transition-all bg-background/50 backdrop-blur-sm">
               <a href="#browse">Watch a live auction</a>
             </Button>
           </motion.div>
