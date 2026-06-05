@@ -1,4 +1,4 @@
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, Eye } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,9 @@ export function ThemeToggle() {
           transition={{ duration: 0.3 }}
           className="absolute inset-0 flex items-center justify-center"
         >
-          {theme === "dark" ? <Sun className="h-4 w-4 text-neon" /> : <Moon className="h-4 w-4 text-primary" />}
+          {theme === "dark" && <Sun className="h-4 w-4 text-neon" />}
+          {theme === "light" && <Moon className="h-4 w-4 text-primary" />}
+          {theme === "high-contrast" && <Eye className="h-4 w-4 text-hot" />}
         </motion.span>
       </AnimatePresence>
     </Button>
