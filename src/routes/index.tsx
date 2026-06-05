@@ -75,7 +75,13 @@ export function Landing() {
       </header>
 
       <ParallaxHero>
-        <section className="container mx-auto px-4 pt-12 pb-32 max-w-4xl text-center min-h-[80vh] flex flex-col justify-center">
+        <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 flex flex-col items-center justify-center text-center px-4 overflow-hidden">
+          {/* Gen Z Funky Stickers */}
+          <div className="funky-sticker" style={{ top: '10%', left: '15%', animationDelay: '0s' }}>🔥</div>
+          <div className="funky-sticker" style={{ top: '35%', right: '10%', animationDelay: '1s' }}>👽</div>
+          <div className="funky-sticker" style={{ bottom: '25%', left: '25%', animationDelay: '0.5s' }}>💸</div>
+          <div className="funky-sticker" style={{ bottom: '15%', right: '25%', animationDelay: '1.5s' }}>✨</div>
+          
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -138,7 +144,11 @@ export function Landing() {
           <Reveal>
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
               <div>
-                <h2 className="text-3xl md:text-4xl font-bold">Browse auctions</h2>
+                <h2 className="text-3xl md:text-4xl font-bold">
+                  {isFunky ? (
+                    <span className="spray-paint-text text-5xl" data-text="Scope the auctions">Scope the auctions</span>
+                  ) : "Browse auctions"}
+                </h2>
                 <p className="text-sm text-muted-foreground mt-1">No account needed. Tap any tournament to watch live.</p>
               </div>
               <div className="relative w-full md:w-80">
