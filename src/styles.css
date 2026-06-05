@@ -234,61 +234,101 @@ a:hover,
   .animate-sold { animation: sold-stamp 0.8s cubic-bezier(.2,1.5,.4,1); }
 }
 
-/* Global click ripple (Dark mode & defaults) */
+/* Global click ripple (Dark mode & defaults) - Particle Explosion */
 .lv-ripple {
   position: fixed;
-  width: 12px;
-  height: 12px;
+  width: 4px;
+  height: 4px;
+  background: transparent;
   border-radius: 50%;
   pointer-events: none;
   z-index: 9999;
   transform: translate(-50%, -50%);
-  border: 2px solid var(--neon);
-  box-shadow: 0 0 18px oklch(0.85 0.22 165 / 0.7);
-  animation: lv-ripple 0.7s ease-out forwards;
+  animation: particle-explosion 0.6s ease-out forwards;
+}
+@keyframes particle-explosion {
+  0% {
+    box-shadow: 
+      0 -5px 0 var(--neon), 5px -5px 0 var(--neon), 
+      5px 0 0 var(--neon), 5px 5px 0 var(--neon), 
+      0 5px 0 var(--neon), -5px 5px 0 var(--neon), 
+      -5px 0 0 var(--neon), -5px -5px 0 var(--neon);
+    opacity: 1;
+  }
+  100% {
+    box-shadow: 
+      0 -50px 0 var(--neon), 40px -40px 0 var(--neon), 
+      50px 0 0 var(--neon), 40px 40px 0 var(--neon), 
+      0 50px 0 var(--neon), -40px 40px 0 var(--neon), 
+      -50px 0 0 var(--neon), -40px -40px 0 var(--neon);
+    opacity: 0;
+  }
 }
 
-/* Light Theme: Subtle expanding solid circle */
+/* Light Theme: Water Drop */
 .light .lv-ripple {
-  border: none;
-  background: var(--primary);
-  opacity: 0.5;
-  box-shadow: none;
+  width: 20px;
+  height: 20px;
+  border: 4px solid var(--primary);
+  border-radius: 50%;
+  animation: water-drop 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+}
+@keyframes water-drop {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 1; border-width: 10px; }
+  100% { transform: translate(-50%, -50%) scale(4); opacity: 0; border-width: 0px; }
 }
 
-/* High Contrast Theme: Sharp square box */
+/* High Contrast Theme: Crosshair Lock-on */
 .high-contrast .lv-ripple {
-  border-radius: 0;
+  width: 40px;
+  height: 40px;
+  background: transparent;
   border: 4px solid var(--hot);
-  box-shadow: 4px 4px 0px var(--foreground);
+  border-radius: 0;
+  animation: crosshair-lock 0.5s ease-out forwards;
+}
+.high-contrast .lv-ripple::before, .high-contrast .lv-ripple::after {
+  content: '';
+  position: absolute;
+  background: var(--hot);
+}
+.high-contrast .lv-ripple::before {
+  top: -15px; bottom: -15px; left: 50%; width: 4px; transform: translateX(-50%);
+}
+.high-contrast .lv-ripple::after {
+  left: -15px; right: -15px; top: 50%; height: 4px; transform: translateY(-50%);
+}
+@keyframes crosshair-lock {
+  0% { transform: translate(-50%, -50%) scale(2) rotate(45deg); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(0.4) rotate(0deg); opacity: 0; }
 }
 
-/* Funky Theme: Exploding star sticker */
+/* Funky Theme: Comic Book Explosion 💥 */
 .funky .lv-ripple {
+  width: auto;
+  height: auto;
+  background: none;
   border: none;
-  background: var(--primary);
-  box-shadow: none;
-  border-radius: 0;
-  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
-  animation: funky-ripple 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  animation: funky-pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+.funky .lv-ripple::after {
+  content: "💥";
+  position: absolute;
+  font-size: 3rem;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(2px 2px 0px #000);
+}
+@keyframes funky-pop {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(0) rotate(-45deg); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.5) rotate(15deg); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(2.5) rotate(45deg); }
 }
 
 /* Page-specific overrides */
 .ripple-auth {
-  border-color: var(--hot) !important;
-}
-.light .ripple-auth, .funky .ripple-auth {
-  background: var(--hot) !important;
-}
-
-@keyframes lv-ripple {
-  0% { opacity: 1; transform: translate(-50%, -50%) scale(0.4); }
-  100% { opacity: 0; transform: translate(-50%, -50%) scale(8); }
-}
-
-@keyframes funky-ripple {
-  0% { opacity: 1; transform: translate(-50%, -50%) scale(0.1) rotate(0deg); }
-  100% { opacity: 0; transform: translate(-50%, -50%) scale(6) rotate(180deg); }
+  /* Let it inherit the color but we can tint it */
 }
 
 /* Smooth scrolling everywhere */
