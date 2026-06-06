@@ -49,12 +49,6 @@ export function Landing() {
 
   return (
     <div className="min-h-screen">
-      {/* Scroll progress bar */}
-      <motion.div
-        style={{ width: progressX }}
-        className="fixed top-0 left-0 h-[3px] gradient-neon z-50 shadow-neon origin-left"
-      />
-
       <header className="container mx-auto flex items-center justify-between py-6 px-4 relative z-20">
         <Logo withWordmark />
         <nav className="flex items-center gap-2 md:gap-3">
@@ -263,8 +257,18 @@ export function Landing() {
         </Reveal>
       </main>
 
-      <footer className="container mx-auto px-4 py-8 text-center text-xs text-muted-foreground border-t border-border">
-        Bideros — built for the love of the game.
+      <footer className="container mx-auto px-4 py-12 text-center text-xs text-muted-foreground border-t border-border space-y-6">
+        <div className="max-w-4xl mx-auto opacity-60 leading-relaxed text-[11px] space-y-2">
+          <p>
+            Bideros is a premier <strong>online auction website</strong> and <strong>live bidding platform</strong> designed for sports drafts, fundraisers, and mock events. Whether you are running an <strong>IPL auction simulator</strong>, a <strong>fantasy cricket auction</strong>, a <strong>sports bidding website</strong>, or an <strong>e-auction</strong> for digital assets, Bideros provides a seamless real-time bidding experience.
+          </p>
+          <p>
+            Built as a next-generation <strong>auction portal</strong> and <strong>digital auction marketplace</strong>, the app supports <strong>smart bidding</strong>, <strong>live player auctions</strong>, <strong>silent auctions</strong>, and interactive team rooms. From casual cricket games to professional fundraising charity auctions, host your next virtual bidding event with full transparency and stadium-grade visual effects.
+          </p>
+        </div>
+        <div>
+          Bideros — built for the love of the game.
+        </div>
       </footer>
     </div>
   );

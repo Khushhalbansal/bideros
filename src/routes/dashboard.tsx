@@ -28,6 +28,7 @@ function Dashboard() {
   const [adminTournaments, setAdminTournaments] = useState<Tournament[]>([]);
   const [ownedTeams, setOwnedTeams] = useState<TeamRow[]>([]);
   const [publicTournaments, setPublicTournaments] = useState<Tournament[]>([]);
+  const [profile, setProfile] = useState<{ subscription_tier: string | null } | null>(null);
   const [q, setQ] = useState("");
   const [name, setName] = useState("");
   const [purse, setPurse] = useState("8 Cr");
@@ -41,20 +42,32 @@ function Dashboard() {
 
   const load = async () => {
     if (!user) return;
-    const [{ data: t }, { data: te }, { data: pt }] = await Promise.all([
+    const [{ data: t }, { data: te }, { data: pt }, { data: p }] = await Promise.all([
       supabase.from("tournaments").select("*").eq("admin_id", user.id).order("created_at", { ascending: false }),
       supabase.from("teams").select("id,name,tournament_id,tournaments(name)").eq("owner_id", user.id),
       supabase.from("tournaments").select("id,name,status,purse_per_team,max_players_per_team,created_at,starts_at,admin_id,cover_photo_url").order("created_at", { ascending: false }),
+      supabase.from("profiles").select("subscription_tier").eq("id", user.id).maybeSingle(),
     ]);
     setAdminTournaments((t as Tournament[]) || []);
     setOwnedTeams((te as unknown as TeamRow[]) || []);
     setPublicTournaments((pt as Tournament[]) || []);
+    setProfile(p);
   };
   useEffect(() => { load(); }, [user]);
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+
+    // Check if free user has reached the 1 tournament limit
+    const isPremium = profile?.subscription_tier === "premium";
+    if (!isPremium && adminTournaments.length >= 1) {
+      toast.error("Free tier is limited to 1 tournament. Upgrade to Pro for unlimited tournaments!");
+      navigate({ to: "/pricing" });
+      setOpen(false);
+      return;
+    }
+
     setCreating(true);
     const { data, error } = await supabase.from("tournaments").insert({
       name, admin_id: user.id,
@@ -101,6 +114,11 @@ function Dashboard() {
         <Logo />
         <div className="flex items-center gap-3">
           <span className="text-sm text-muted-foreground hidden sm:block">{user.email}</span>
+          {profile?.subscription_tier === "premium" ? (
+            <span className="text-[10px] font-bold uppercase tracking-wider bg-primary/25 text-neon px-2.5 py-1 rounded-full border border-neon/30">Pro Member</span>
+          ) : (
+            <Button asChild variant="outline" size="sm" className="border-neon/40 text-neon hover:bg-neon/10"><Link to="/pricing">👑 Go Pro</Link></Button>
+          )}
           <Button asChild variant="outline" size="sm"><Link to="/profile">My profile</Link></Button>
           <Button variant="ghost" size="sm" onClick={signOut}><LogOut className="h-4 w-4 mr-1" />Sign out</Button>
         </div>
@@ -116,20 +134,34 @@ function Dashboard() {
               <DialogContent className="bg-card border-border">
                 <DialogHeader><DialogTitle>Create tournament</DialogTitle></DialogHeader>
                 <form onSubmit={create} className="space-y-4">
-                  <div><Label>Tournament name</Label><Input value={name} onChange={e=>setName(e.target.value)} required placeholder="Mumbai Premier League 2026" /></div>
+                  {profile?.subscription_tier !== "premium" && adminTournaments.length >= 1 && (
+                    <div className="bg-destructive/15 border border-destructive/30 rounded-xl p-3 text-xs text-hot flex flex-col gap-2 mb-4">
+                      <span>You have reached the free tier limit of 1 tournament. Upgrade to Pro to create unlimited tournaments!</span>
+                      <Button asChild size="sm" className="gradient-neon text-primary-foreground font-bold tracking-wide w-full">
+                        <Link to="/pricing">Upgrade to Premium Pro</Link>
+                      </Button>
+                    </div>
+                  )}
+                  <div><Label>Tournament name</Label><Input value={name} onChange={e=>setName(e.target.value)} required placeholder="Mumbai Premier League 2026" disabled={profile?.subscription_tier !== "premium" && adminTournaments.length >= 1} /></div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div><Label>Purse per team</Label><Input value={purse} onChange={e=>setPurse(e.target.value)} placeholder="8 Cr" /></div>
-                    <div><Label>Max players / team</Label><Input value={squad} onChange={e=>setSquad(e.target.value)} type="number" /></div>
+                    <div><Label>Purse per team</Label><Input value={purse} onChange={e=>setPurse(e.target.value)} placeholder="8 Cr" disabled={profile?.subscription_tier !== "premium" && adminTournaments.length >= 1} /></div>
+                    <div><Label>Max players / team</Label><Input value={squad} onChange={e=>setSquad(e.target.value)} type="number" disabled={profile?.subscription_tier !== "premium" && adminTournaments.length >= 1} /></div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div><Label>Bid increment</Label><Input value={increment} onChange={e=>setIncrement(e.target.value)} placeholder="10 L" /></div>
-                    <div><Label>Bid timer (sec)</Label><Input value={timer} onChange={e=>setTimer(e.target.value)} type="number" /></div>
+                    <div><Label>Bid increment</Label><Input value={increment} onChange={e=>setIncrement(e.target.value)} placeholder="10 L" disabled={profile?.subscription_tier !== "premium" && adminTournaments.length >= 1} /></div>
+                    <div><Label>Bid timer (sec)</Label><Input value={timer} onChange={e=>setTimer(e.target.value)} type="number" disabled={profile?.subscription_tier !== "premium" && adminTournaments.length >= 1} /></div>
                   </div>
                   <p className="text-xs text-muted-foreground">Accepts formats like "8 Cr", "50 L", or raw rupees.</p>
                   <DialogFooter>
-                    <Button disabled={creating} className="gradient-neon text-primary-foreground shadow-neon w-full">
-                      {creating ? "Creating..." : "Create"}
-                    </Button>
+                    {profile?.subscription_tier !== "premium" && adminTournaments.length >= 1 ? (
+                      <Button asChild className="gradient-neon text-primary-foreground shadow-neon w-full">
+                        <Link to="/pricing">Get Unlimited Tournaments</Link>
+                      </Button>
+                    ) : (
+                      <Button disabled={creating} className="gradient-neon text-primary-foreground shadow-neon w-full">
+                        {creating ? "Creating..." : "Create"}
+                      </Button>
+                    )}
                   </DialogFooter>
                 </form>
               </DialogContent>
