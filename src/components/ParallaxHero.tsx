@@ -49,7 +49,7 @@ export function ParallaxHero({ children }: { children: React.ReactNode }) {
     <div ref={ref} className="relative overflow-hidden">
       {/* Video Background */}
       <SequentialVideoBackground 
-        opacity="opacity-40"
+        opacity="opacity-60"
         videos={[
           "/videos/bg-11.mp4",
           "/videos/bg-10.mp4",

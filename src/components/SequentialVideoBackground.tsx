@@ -99,7 +99,7 @@ export function SequentialVideoBackground({
         );
       })}
       {/* Soft overlay to wash out the video slightly without causing GPU lag from blur filters */}
-      <div className="absolute inset-0 bg-background/50 z-20" />
+      <div className="absolute inset-0 bg-background/30 z-20" />
     </div>
   );
 }
