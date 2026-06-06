@@ -8,7 +8,7 @@ export function SequentialVideoBackground({
   opacity?: string;
 }) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isNearScreen, setIsNearScreen] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [hasBeenNearScreen, setHasBeenNearScreen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
@@ -17,21 +17,32 @@ export function SequentialVideoBackground({
     const el = containerRef.current;
     if (!el) return;
 
-    // Detect when this specific video background section is near the screen
-    // We trigger a massive 1500px before it comes into view to ensure it preloads way in advance
-    const observer = new IntersectionObserver(
+    // Observer 1: PRELOADING (Triggers 1500px before scroll)
+    // This tells the browser to start downloading the video early
+    const preloadObserver = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => {
-          setIsNearScreen(entry.isIntersecting);
-          if (entry.isIntersecting) {
-            setHasBeenNearScreen(true);
-          }
-        });
+        if (entries[0].isIntersecting) {
+          setHasBeenNearScreen(true);
+        }
       },
       { rootMargin: "1500px" } 
     );
-    observer.observe(el);
-    return () => observer.disconnect();
+    preloadObserver.observe(el);
+
+    // Observer 2: PLAYBACK (Triggers only when actually visible)
+    // This ensures we don't accidentally play 4 videos at once and crush the GPU
+    const playObserver = new IntersectionObserver(
+      (entries) => {
+        setIsPlaying(entries[0].isIntersecting);
+      },
+      { rootMargin: "100px" } 
+    );
+    playObserver.observe(el);
+
+    return () => {
+      preloadObserver.disconnect();
+      playObserver.disconnect();
+    };
   }, []);
 
   useEffect(() => {
@@ -39,7 +50,8 @@ export function SequentialVideoBackground({
       const video = videoRefs.current[idx];
       if (!video) return;
 
-      if (isNearScreen && idx === currentIndex) {
+      // Only play if this section is ACTUALLY visible, and it's the current video in sequence
+      if (isPlaying && idx === currentIndex) {
         if (video.paused) {
             video.play().catch(() => {});
         }
@@ -49,7 +61,7 @@ export function SequentialVideoBackground({
         }
       }
     });
-  }, [currentIndex, videos, isNearScreen, hasBeenNearScreen]);
+  }, [currentIndex, videos, isPlaying, hasBeenNearScreen]);
 
   return (
     <div ref={containerRef} className={`absolute inset-0 z-0 pointer-events-none overflow-hidden ${opacity}`}>
@@ -70,8 +82,8 @@ export function SequentialVideoBackground({
             muted
             playsInline
             loop={videos.length === 1}
-            // Crossfade transitions to completely eliminate black flickers
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
+            // Snappy 500ms crossfade to avoid feeling sluggish
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ease-in-out ${
               isActive ? "opacity-100 z-10" : "opacity-0 z-0"
             }`}
             onEnded={() => {
