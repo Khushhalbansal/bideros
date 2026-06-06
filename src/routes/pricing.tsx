@@ -2,10 +2,11 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
-import { Check, ShieldAlert, Sparkles, ArrowRight, Loader2 } from "lucide-react";
+import { Check, ShieldAlert, Sparkles, ArrowRight, Loader2, Zap, Gift, Target } from "lucide-react";
 import { createCheckoutSession } from "@/lib/checkout.server";
 
 export const Route = createFileRoute("/pricing")({ component: PricingPage });
@@ -15,13 +16,15 @@ interface Profile {
   email: string | null;
   subscription_tier: string | null;
   subscription_end_date: string | null;
+  auctions_quota: number | null;
 }
 
 function PricingPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [redirecting, setRedirecting] = useState(false);
+  const [redirecting, setRedirecting] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -34,16 +37,16 @@ function PricingPage() {
     (async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("id, email, subscription_tier, subscription_end_date")
+        .select("id, email, subscription_tier, subscription_end_date, auctions_quota")
         .eq("id", user.id)
         .maybeSingle();
       setProfile(data as Profile);
     })();
   }, [user]);
 
-  const handleUpgrade = async () => {
+  const handleUpgrade = async (priceId: string, planType: 'single' | 'monthly' | 'yearly') => {
     if (!user || !profile) return;
-    setRedirecting(true);
+    setRedirecting(planType);
 
     try {
       const data = await createCheckoutSession({
@@ -51,6 +54,8 @@ function PricingPage() {
           userId: user.id,
           email: user.email || "",
           origin: window.location.origin,
+          priceId: priceId,
+          planType: planType,
         },
       });
 
@@ -61,7 +66,7 @@ function PricingPage() {
       }
     } catch (err: any) {
       toast.error(err.message || "An error occurred");
-      setRedirecting(false);
+      setRedirecting(null);
     }
   };
 
@@ -69,145 +74,262 @@ function PricingPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground">
         <Loader2 className="h-8 w-8 animate-spin text-primary mr-2" />
-        Loading subscription details…
+        Loading spectacular deals…
       </div>
     );
   }
 
   const isPremium = profile?.subscription_tier === "premium";
+  const quota = profile?.auctions_quota || 0;
+
+  // STRIPE PRICE IDs (Placeholders - user needs to set these)
+  const PRICE_SINGLE = "price_single_placeholder"; // ₹50
+  const PRICE_MONTHLY = "price_monthly_placeholder"; // ₹99
+  const PRICE_YEARLY = "price_yearly_placeholder"; // ₹999
+
+  // Theme-specific styles
+  const isFunky = theme === 'funky';
+  const isLight = theme === 'light';
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden flex flex-col">
+    <div className={`min-h-screen relative overflow-hidden flex flex-col ${isFunky ? 'bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900' : 'bg-background'}`}>
+      <style>{`
+        @keyframes crossOut {
+          0% { width: 0; opacity: 0; }
+          50% { opacity: 1; }
+          100% { width: 110%; opacity: 1; }
+        }
+        .animate-cross-out {
+          position: relative;
+          display: inline-block;
+        }
+        .animate-cross-out::after {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: -5%;
+          height: 3px;
+          background-color: #ff0055;
+          transform: translateY(-50%) rotate(-10deg);
+          animation: crossOut 1.5s cubic-bezier(0.8, 0, 0.2, 1) forwards;
+          animation-delay: 0.5s;
+          width: 0;
+          box-shadow: 0 0 8px #ff0055;
+        }
+        @keyframes floatY {
+          0%, 100% { transform: translateY(0px) scale(1); }
+          50% { transform: translateY(-15px) scale(1.02); }
+        }
+        @keyframes floatZ {
+          0%, 100% { transform: translateY(0px) scale(1) rotate(0deg); }
+          50% { transform: translateY(-20px) scale(1.05) rotate(2deg); }
+        }
+        @keyframes pulseGlow {
+          0%, 100% { box-shadow: 0 0 20px rgba(50,255,150,0.2); }
+          50% { box-shadow: 0 0 50px rgba(50,255,150,0.6); }
+        }
+        @keyframes crazyNeon {
+          0% { filter: hue-rotate(0deg) drop-shadow(0 0 10px #ff0055); }
+          50% { filter: hue-rotate(180deg) drop-shadow(0 0 30px #00ffaa); }
+          100% { filter: hue-rotate(360deg) drop-shadow(0 0 10px #ff0055); }
+        }
+        .card-crazy-hover {
+          transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .card-crazy-hover:hover {
+          transform: translateY(-15px) scale(1.03) rotate(-1deg);
+          z-index: 50;
+        }
+      `}</style>
+
       {/* Background decorations */}
-      <div className="pointer-events-none absolute -top-40 -left-40 h-[500px] w-[500px] rounded-full bg-primary/10 blur-[120px]" />
-      <div className="pointer-events-none absolute top-1/3 -right-32 h-[420px] w-[420px] rounded-full bg-hot/15 blur-[120px]" />
+      {!isFunky && (
+        <>
+          <div className="pointer-events-none absolute -top-40 -left-40 h-[600px] w-[600px] rounded-full bg-primary/10 blur-[150px] animate-[pulse_8s_ease-in-out_infinite]" />
+          <div className="pointer-events-none absolute top-1/3 -right-32 h-[500px] w-[500px] rounded-full bg-hot/15 blur-[150px] animate-[pulse_10s_ease-in-out_infinite_reverse]" />
+        </>
+      )}
 
       <header className="container mx-auto flex items-center justify-between py-6 px-4 relative z-10">
         <div className="flex items-center gap-2">
           <Logo />
           <span className="font-display font-bold text-lg text-neon">Bideros Pro</span>
         </div>
-        <Button asChild variant="ghost" size="sm">
-          <Link to="/dashboard">← Back to Dashboard</Link>
-        </Button>
+        <div className="flex items-center gap-4">
+          <div className="text-sm font-semibold px-3 py-1 bg-glass rounded-full border border-border flex items-center gap-2">
+            <Gift className="w-4 h-4 text-neon" />
+            <span>Free Auctions: {quota}</span>
+          </div>
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/dashboard">← Back to Dashboard</Link>
+          </Button>
+        </div>
       </header>
 
-      <main className="container mx-auto px-4 py-16 max-w-5xl flex-grow relative z-10 flex flex-col justify-center">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 rounded-full bg-glass border border-neon/40 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-neon mb-6">
-            <Sparkles className="h-3 w-3 animate-pulse" /> Upgrade to Pro
+      <main className="container mx-auto px-4 py-12 flex-grow relative z-10 flex flex-col justify-center">
+        <div className="text-center max-w-4xl mx-auto mb-16 relative">
+          <div className={`absolute -top-10 left-1/2 -translate-x-1/2 w-40 h-40 bg-neon/20 blur-[80px] rounded-full ${isFunky ? 'animate-[crazyNeon_3s_infinite]' : ''}`}></div>
+          
+          <div className={`inline-flex items-center gap-2 rounded-full border px-5 py-2 text-sm font-black uppercase tracking-widest mb-8 shadow-xl ${isFunky ? 'bg-black text-white border-white animate-[crazyNeon_3s_infinite]' : 'bg-glass border-neon/40 text-neon'}`}>
+            <Sparkles className="h-4 w-4 animate-pulse" /> Newborn Special — 50% OFF!
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-shadow-strong mb-4">
-            Unleash the ultimate <br />
-            <span className="text-primary drop-shadow-[0_0_15px_rgba(0,255,174,0.5)]">cricket auction</span> experience.
+          <h1 className={`text-5xl md:text-7xl font-extrabold tracking-tight mb-6 ${isLight ? 'text-gray-900' : 'text-white'}`}>
+            Host like a <span className={`text-transparent bg-clip-text ${isFunky ? 'bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 animate-pulse' : 'bg-gradient-to-r from-neon to-primary'}`}>Champion</span>.
           </h1>
-          <p className="text-muted-foreground max-w-xl mx-auto text-base">
-            Get unlimited tournaments, raise team limitations, and unlock premium stadium-grade projector views for your league.
+          <p className={`max-w-2xl mx-auto text-lg md:text-xl font-medium ${isLight ? 'text-gray-600' : 'text-gray-300'}`}>
+            New users get <strong className="text-neon">3 Live + 1 Trial</strong> tournament absolutely free! After that, choose a plan to keep the momentum going.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto w-full items-stretch">
-          {/* Free Tier Card */}
-          <div className="bg-glass border border-border/80 rounded-3xl p-8 flex flex-col justify-between hover:border-border transition-all">
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto w-full items-stretch">
+          
+          {/* Pay-as-you-go Card */}
+          <div className={`bg-glass border rounded-[2rem] p-8 flex flex-col justify-between card-crazy-hover shadow-xl ${isLight ? 'bg-white border-gray-200' : 'border-border/80 hover:border-neon/50 hover:shadow-neon/20'} animate-[floatY_6s_ease-in-out_infinite]`}>
             <div>
-              <div className="text-sm font-semibold tracking-wider text-muted-foreground uppercase mb-2">Free Starter</div>
-              <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-4xl font-bold">$0</span>
-                <span className="text-muted-foreground text-sm">/ forever</span>
+              <div className="flex items-center gap-2 text-sm font-black tracking-wider uppercase mb-4 text-muted-foreground">
+                <Target className="w-5 h-5" /> Single Match
               </div>
-              <p className="text-sm text-muted-foreground mb-8">
-                Great for checking out the app, hosting simple drafts, and testing setup.
+              <div className="mb-6 relative">
+                <div className="text-xl font-bold text-muted-foreground/60 animate-cross-out inline-block mr-2">₹80</div>
+                <div className="flex items-baseline gap-1 mt-2">
+                  <span className={`text-5xl font-black ${isFunky ? 'text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-orange-400' : ''}`}>₹50</span>
+                  <span className="text-muted-foreground font-semibold">/ tourney</span>
+                </div>
+                <div className="absolute -right-4 -top-8 bg-hot text-white text-xs font-black px-3 py-1 rounded-full transform rotate-12 shadow-lg animate-bounce">
+                  37.5% OFF
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground font-medium mb-8">
+                Perfect for one-off tournaments. Grants +1 to your Free Auction quota.
               </p>
-              <ul className="space-y-4 mb-8">
+              <ul className="space-y-4 mb-8 font-medium">
                 {[
-                  "1 active tournament allowed",
-                  "Up to 4 teams per tournament",
-                  "Standard client and owner views",
-                  "Basic player database registration",
-                  "Standard bidding timers",
+                  "1 Active Tournament Credit",
+                  "Standard client & owner views",
+                  "No expiry on credit",
                 ].map((feature) => (
-                  <li key={feature} className="flex items-start gap-3 text-sm text-foreground/80">
-                    <Check className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  <li key={feature} className="flex items-start gap-3 text-sm">
+                    <Check className="h-5 w-5 text-neon shrink-0" />
                     <span>{feature}</span>
                   </li>
                 ))}
               </ul>
             </div>
-            {!isPremium ? (
-              <Button variant="outline" className="w-full rounded-2xl border-border hover:bg-glass/20" disabled>
-                Active Plan
-              </Button>
-            ) : (
-              <Button asChild variant="outline" className="w-full rounded-2xl border-border hover:bg-glass/20">
-                <Link to="/dashboard">Free Tier Active</Link>
-              </Button>
-            )}
+            <Button 
+              onClick={() => handleUpgrade(PRICE_SINGLE, 'single')}
+              disabled={redirecting !== null}
+              className={`w-full rounded-2xl h-14 font-black text-lg shadow-xl transition-all ${isLight ? 'bg-gray-900 text-white hover:bg-gray-800' : 'bg-glass border-2 border-border hover:border-neon hover:text-neon'}`}
+            >
+              {redirecting === 'single' ? <Loader2 className="w-6 h-6 animate-spin" /> : "Buy 1 Credit"}
+            </Button>
           </div>
 
-          {/* Premium Pro Card */}
-          <div className="bg-glass border border-neon/30 rounded-3xl p-8 flex flex-col justify-between relative overflow-hidden shadow-[0_0_40px_-10px_rgba(50,255,150,0.15)] hover:border-neon/60 hover:shadow-[0_0_45px_-10px_rgba(50,255,150,0.25)] transition-all">
-            <div className="absolute top-4 right-4 bg-primary/20 text-neon text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-neon/30">
+          {/* Monthly Pro Card - THE CRAZY ONE */}
+          <div className={`relative bg-glass border-2 rounded-[2.5rem] p-10 flex flex-col justify-between card-crazy-hover transform md:-translate-y-6 z-20 ${isFunky ? 'border-pink-500 bg-black/40 backdrop-blur-2xl animate-[floatZ_4s_ease-in-out_infinite]' : 'border-neon shadow-[0_0_50px_-10px_rgba(50,255,150,0.3)] animate-[pulseGlow_4s_infinite]'}`}>
+            <div className={`absolute -top-5 left-1/2 -translate-x-1/2 text-xs font-black uppercase tracking-widest px-6 py-2 rounded-full border-2 shadow-[0_0_20px_rgba(var(--neon),0.5)] ${isFunky ? 'bg-pink-500 text-white border-pink-300' : 'bg-neon text-black border-green-300'}`}>
               Most Popular
             </div>
+            
             <div>
-              <div className="text-sm font-semibold tracking-wider text-neon uppercase mb-2">Premium Pro</div>
-              <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-4xl font-bold">$9</span>
-                <span className="text-muted-foreground text-sm">/ month</span>
+              <div className={`flex items-center gap-2 text-sm font-black tracking-wider uppercase mb-4 ${isFunky ? 'text-pink-400' : 'text-neon'}`}>
+                <Zap className="w-5 h-5 animate-pulse" /> Monthly Pro
               </div>
-              <p className="text-sm text-muted-foreground mb-8">
-                For leagues, organizers, and groups looking to run large, cinematic cricket auctions.
+              <div className="mb-6 relative">
+                <div className="text-2xl font-bold text-muted-foreground/50 animate-cross-out inline-block mr-2">₹199</div>
+                <div className="flex items-baseline gap-1 mt-2">
+                  <span className={`text-6xl font-black ${isFunky ? 'text-transparent bg-clip-text bg-gradient-to-r from-pink-300 via-purple-300 to-indigo-300' : 'text-foreground'}`}>₹99</span>
+                  <span className="text-muted-foreground font-bold">/ mo</span>
+                </div>
+                <div className={`absolute -right-6 top-0 text-white text-xs font-black px-4 py-1.5 rounded-full transform rotate-6 shadow-xl animate-pulse ${isFunky ? 'bg-purple-600' : 'bg-neon text-black'}`}>
+                  50% OFF!
+                </div>
+              </div>
+              <p className="text-sm font-medium mb-8 text-foreground/80">
+                Unlock everything. Unlimited tournaments, premium projector views, and total freedom.
               </p>
-              <ul className="space-y-4 mb-8">
+              <ul className="space-y-4 mb-8 font-bold">
                 {[
-                  "Unlimited tournaments and seasons",
-                  "Unlimited teams and players",
-                  "Stadium-grade projector view (spectator visual)",
-                  "Custom team logos, colors, and banners",
-                  "Priority live websocket syncing (instant bids)",
-                  "CSV upload/download for players & squads",
+                  "UNLIMITED tournaments",
+                  "UNLIMITED teams & players",
+                  "Stadium-grade projector view",
+                  "Custom logos & colors",
+                  "Priority live websocket syncing",
                 ].map((feature) => (
-                  <li key={feature} className="flex items-start gap-3 text-sm text-foreground/90">
-                    <Check className="h-4 w-4 text-neon mt-0.5 flex-shrink-0" />
+                  <li key={feature} className="flex items-start gap-3 text-sm">
+                    <Check className={`h-5 w-5 shrink-0 ${isFunky ? 'text-pink-400' : 'text-neon'}`} />
                     <span>{feature}</span>
                   </li>
                 ))}
               </ul>
             </div>
             {isPremium ? (
-              <Button className="w-full rounded-2xl bg-glass border border-neon/50 text-neon hover:bg-neon/10" disabled>
-                Your Current Premium Plan
+              <Button className={`w-full rounded-2xl h-14 font-black text-lg cursor-default opacity-80 ${isFunky ? 'bg-pink-900/50 text-pink-200 border-pink-500/50' : 'bg-neon/10 text-neon border border-neon/50'}`}>
+                Your Current Plan
               </Button>
             ) : (
               <Button
-                onClick={handleUpgrade}
-                disabled={redirecting}
-                className="w-full rounded-2xl bg-primary text-primary-foreground font-semibold shadow-neon hover:scale-[1.02] transition-all"
+                onClick={() => handleUpgrade(PRICE_MONTHLY, 'monthly')}
+                disabled={redirecting !== null}
+                className={`w-full rounded-2xl h-16 font-black text-xl shadow-[0_0_30px_rgba(var(--neon),0.4)] hover:scale-105 transition-all ${isFunky ? 'bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white border-none' : 'gradient-neon text-primary-foreground'}`}
               >
-                {redirecting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Redirecting to Stripe...
-                  </>
-                ) : (
-                  <>
-                    Upgrade to Premium <ArrowRight className="h-4 w-4 ml-1.5" />
-                  </>
-                )}
+                {redirecting === 'monthly' ? <Loader2 className="w-6 h-6 animate-spin" /> : "Go Pro Monthly"}
+              </Button>
+            )}
+          </div>
+
+          {/* Yearly Pro Card */}
+          <div className={`bg-glass border rounded-[2rem] p-8 flex flex-col justify-between card-crazy-hover shadow-xl ${isLight ? 'bg-white border-gray-200' : 'border-border/80 hover:border-neon/50 hover:shadow-neon/20'} animate-[floatY_6s_ease-in-out_infinite_1s]`}>
+            <div>
+              <div className="flex items-center gap-2 text-sm font-black tracking-wider uppercase mb-4 text-muted-foreground">
+                <Sparkles className="w-5 h-5" /> Yearly Pro
+              </div>
+              <div className="mb-6 relative">
+                <div className="text-xl font-bold text-muted-foreground/60 animate-cross-out inline-block mr-2">₹1999</div>
+                <div className="flex items-baseline gap-1 mt-2">
+                  <span className={`text-5xl font-black ${isFunky ? 'text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400' : ''}`}>₹999</span>
+                  <span className="text-muted-foreground font-semibold">/ yr</span>
+                </div>
+                <div className="absolute -right-4 -top-8 bg-primary text-primary-foreground text-xs font-black px-3 py-1 rounded-full transform -rotate-12 shadow-lg animate-bounce">
+                  BEST VALUE
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground font-medium mb-8">
+                All the benefits of Monthly Pro, but you save an extra 16% over the year.
+              </p>
+              <ul className="space-y-4 mb-8 font-medium">
+                {[
+                  "Everything in Monthly Pro",
+                  "Lock in the Newborn Special price for a full year",
+                  "Priority support",
+                ].map((feature) => (
+                  <li key={feature} className="flex items-start gap-3 text-sm">
+                    <Check className="h-5 w-5 text-neon shrink-0" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            {isPremium ? (
+              <Button variant="outline" className="w-full rounded-2xl h-14 font-black border-border/50 text-muted-foreground" disabled>
+                Pro Active
+              </Button>
+            ) : (
+              <Button
+                onClick={() => handleUpgrade(PRICE_YEARLY, 'yearly')}
+                disabled={redirecting !== null}
+                className={`w-full rounded-2xl h-14 font-black text-lg shadow-xl transition-all ${isLight ? 'bg-gray-900 text-white hover:bg-gray-800' : 'bg-glass border-2 border-border hover:border-neon hover:text-neon'}`}
+              >
+                {redirecting === 'yearly' ? <Loader2 className="w-6 h-6 animate-spin" /> : "Go Pro Yearly"}
               </Button>
             )}
           </div>
         </div>
 
-        <div className="mt-16 text-center text-xs text-muted-foreground flex items-center justify-center gap-1.5 max-w-md mx-auto bg-glass/20 border border-border/40 p-4 rounded-xl">
-          <ShieldAlert className="h-4 w-4 text-hot shrink-0" />
-          <span>Secure checkout via Stripe. Cancel subscription anytime through your dashboard billing portal.</span>
+        <div className="mt-16 text-center text-xs font-bold text-muted-foreground flex items-center justify-center gap-2 max-w-md mx-auto bg-glass/40 border border-border/50 p-4 rounded-2xl shadow-lg">
+          <ShieldAlert className="h-5 w-5 text-hot shrink-0 animate-pulse" />
+          <span>Secure checkout via Stripe. Cancel subscription anytime through your dashboard.</span>
         </div>
       </main>
-
-      <footer className="container mx-auto px-4 py-8 text-center text-xs text-muted-foreground border-t border-border mt-16">
-        Bideros Pro — built for the love of the game.
-      </footer>
     </div>
   );
 }

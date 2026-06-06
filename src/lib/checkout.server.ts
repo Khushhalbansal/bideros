@@ -2,9 +2,9 @@ import { createServerFn } from '@tanstack/react-start';
 import Stripe from 'stripe';
 
 export const createCheckoutSession = createServerFn({ method: 'POST' })
-  .validator((data: { userId: string; email: string; origin: string }) => data)
+  .validator((data: { userId: string; email: string; origin: string; priceId: string; planType: 'single' | 'monthly' | 'yearly' }) => data)
   .handler(async ({ data }) => {
-    const { userId, email, origin } = data;
+    const { userId, email, origin, priceId, planType } = data;
 
     const stripeSecret = process.env.STRIPE_SECRET_KEY;
     if (!stripeSecret) {
@@ -21,25 +21,16 @@ export const createCheckoutSession = createServerFn({ method: 'POST' })
       customer_email: email,
       line_items: [
         {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: 'Bideros Premium Pro',
-              description: 'Unlock unlimited cricket auctions, premium stadium-grade views, and unlimited teams.',
-            },
-            unit_amount: 900, // $9.00 USD
-            recurring: {
-              interval: 'month',
-            },
-          },
+          price: priceId,
           quantity: 1,
         },
       ],
-      mode: 'subscription',
-      success_url: `${origin}/dashboard?checkout_success=true`,
-      cancel_url: `${origin}/dashboard?checkout_cancel=true`,
+      mode: planType === 'single' ? 'payment' : 'subscription',
+      success_url: `${origin}/dashboard?checkout_success=true&plan=${planType}`,
+      cancel_url: `${origin}/pricing?checkout_cancel=true`,
       metadata: {
         userId: userId,
+        planType: planType,
       },
     });
 

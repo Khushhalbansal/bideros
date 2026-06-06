@@ -103,28 +103,69 @@ async function handleStripeWebhook(request: Request): Promise<Response> {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.metadata?.userId;
+        const planType = session.metadata?.planType;
         const customerId = session.customer as string;
-        const subscriptionId = session.subscription as string;
 
         if (userId) {
-          const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-          const endDate = new Date(subscription.current_period_end * 1000).toISOString();
+          if (planType === 'single') {
+            const { data: userProfile } = await supabaseAdmin.from('profiles').select('auctions_quota, referred_by').eq('id', userId).single();
+            if (userProfile) {
+              await supabaseAdmin.from('profiles').update({
+                auctions_quota: (userProfile.auctions_quota || 0) + 1
+              }).eq('id', userId);
 
-          const { error } = await supabaseAdmin
-            .from("profiles")
-            .update({
-              subscription_tier: "premium",
-              stripe_customer_id: customerId,
-              stripe_subscription_id: subscriptionId,
-              subscription_end_date: endDate,
-            })
-            .eq("id", userId);
+              if (userProfile.referred_by) {
+                const { data: refProfile } = await supabaseAdmin.from('profiles').select('points, auctions_quota').eq('id', userProfile.referred_by).single();
+                if (refProfile) {
+                  let newPoints = (refProfile.points || 0) + 20;
+                  let newQuota = refProfile.auctions_quota || 0;
+                  if (newPoints >= 120) {
+                    newQuota += 1;
+                    newPoints -= 120;
+                  }
+                  await supabaseAdmin.from('profiles').update({
+                    points: newPoints,
+                    auctions_quota: newQuota
+                  }).eq('id', userProfile.referred_by);
+                }
+              }
+              console.log(`Successfully added 1 auction quota to user ${userId}`);
+            }
+          } else {
+            const subscriptionId = session.subscription as string;
+            if (subscriptionId) {
+              const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+              const endDate = new Date(subscription.current_period_end * 1000).toISOString();
 
-          if (error) {
-            console.error(`Failed to update profile for user ${userId}:`, error);
-            return new Response(`Database update error`, { status: 500 });
+              const { data: userProfile } = await supabaseAdmin.from("profiles").select('referred_by').eq("id", userId).single();
+
+              const { error } = await supabaseAdmin
+                .from("profiles")
+                .update({
+                  subscription_tier: "premium",
+                  stripe_customer_id: customerId,
+                  stripe_subscription_id: subscriptionId,
+                  subscription_end_date: endDate,
+                })
+                .eq("id", userId);
+
+              if (error) {
+                console.error(`Failed to update profile for user ${userId}:`, error);
+                return new Response(`Database update error`, { status: 500 });
+              }
+
+              if (userProfile?.referred_by) {
+                const { data: refProfile } = await supabaseAdmin.from('profiles').select('auctions_quota').eq('id', userProfile.referred_by).single();
+                if (refProfile) {
+                  await supabaseAdmin.from('profiles').update({
+                    auctions_quota: (refProfile.auctions_quota || 0) + 1
+                  }).eq('id', userProfile.referred_by);
+                }
+              }
+
+              console.log(`Successfully upgraded user ${userId} to premium`);
+            }
           }
-          console.log(`Successfully upgraded user ${userId} to premium`);
         }
         break;
       }
