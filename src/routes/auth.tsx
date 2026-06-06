@@ -28,6 +28,12 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [forgot, setForgot] = useState(false);
 
+  // Phone Auth State
+  const [authMethod, setAuthMethod] = useState<"email" | "phone">("email");
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+
   useEffect(() => {
     if (!loading && user && !user.is_anonymous) navigate({ to: target });
   }, [user, loading, navigate, target]);
@@ -84,6 +90,25 @@ function AuthPage() {
     }, 400);
   };
 
+  const sendPhoneOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    const { error } = await supabase.auth.signInWithOtp({ phone });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("SMS sent! Enter the 6-digit code below.");
+    setOtpSent(true);
+  };
+
+  const verifyPhoneOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    const { error } = await supabase.auth.verifyOtp({ phone, token: otp, type: 'sms' });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    navigate({ to: target });
+  };
+
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden bg-background">
       <div className="absolute inset-0 z-0 pointer-events-none bg-gradient-to-br from-background via-background to-neon/10" />
@@ -97,8 +122,52 @@ function AuthPage() {
               {isFunky ? "Log in to secure your spot." : "Sign in to continue to your invite."}
             </div>
           )}
-          {forgot ? (
-            <>
+
+          <div className="flex justify-center space-x-6 mb-6 border-b border-border/50 pb-4">
+            <button 
+              onClick={() => { setAuthMethod("email"); setForgot(false); }} 
+              className={`text-sm tracking-wider uppercase transition-all duration-300 ${authMethod === "email" ? "text-neon font-bold drop-shadow-[0_0_8px_rgba(var(--neon),0.5)]" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              Email
+            </button>
+            <button 
+              onClick={() => { setAuthMethod("phone"); setForgot(false); }} 
+              className={`text-sm tracking-wider uppercase transition-all duration-300 ${authMethod === "phone" ? "text-neon font-bold drop-shadow-[0_0_8px_rgba(var(--neon),0.5)]" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              Phone / SMS
+            </button>
+          </div>
+
+          {authMethod === "phone" ? (
+            <div className="space-y-4 animate-fade-in">
+              <h1 className="text-2xl font-bold mb-1">{isFunky ? "Hit my line 📱" : "Phone Login"}</h1>
+              <p className="text-sm text-muted-foreground mb-6">{isFunky ? "Drop your digits for a magic code." : "We'll send you a secure 6-digit code to sign in."}</p>
+              
+              {!otpSent ? (
+                <form onSubmit={sendPhoneOtp} className="space-y-4">
+                  <div>
+                    <Label>Phone Number (with country code)</Label>
+                    <Input type="tel" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+1234567890" required className="hover:scale-[1.02] focus:scale-[1.02] hover:border-neon transition-all duration-200" />
+                  </div>
+                  <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon hover:scale-[1.03] transition-transform duration-200 font-bold tracking-wide">
+                    {busy ? "Sending..." : "Send SMS Code"}
+                  </Button>
+                </form>
+              ) : (
+                <form onSubmit={verifyPhoneOtp} className="space-y-4">
+                  <div>
+                    <Label>6-Digit Code</Label>
+                    <Input type="text" value={otp} onChange={e=>setOtp(e.target.value)} placeholder="123456" required className="hover:scale-[1.02] focus:scale-[1.02] hover:border-neon transition-all duration-200 text-center tracking-widest text-lg font-mono" maxLength={6} />
+                  </div>
+                  <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon hover:scale-[1.03] transition-transform duration-200 font-bold tracking-wide">
+                    {busy ? "Verifying..." : "Verify & Sign In"}
+                  </Button>
+                  <button type="button" onClick={() => setOtpSent(false)} className="w-full text-xs text-muted-foreground hover:text-neon transition-colors">Change phone number</button>
+                </form>
+              )}
+            </div>
+          ) : forgot ? (
+            <div className="animate-fade-in">
               <h1 className="text-2xl font-bold mb-1">{isFunky ? "Forgot the vibe?" : "Reset password"}</h1>
               <p className="text-sm text-muted-foreground mb-6">{isFunky ? "Drop your email and we'll hit you with a reset link." : "Enter your email and we'll send a reset link."}</p>
               <form onSubmit={sendReset} className="space-y-4">
@@ -108,9 +177,9 @@ function AuthPage() {
                 </Button>
                 <button type="button" onClick={() => setForgot(false)} className="w-full text-xs text-muted-foreground hover:text-neon hover:scale-110 transition-transform duration-200">← Back to sign in</button>
               </form>
-            </>
+            </div>
           ) : (
-            <Tabs defaultValue={next ? "signup" : "signin"}>
+            <Tabs defaultValue={next ? "signup" : "signin"} className="animate-fade-in">
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="signin" className="data-[state=active]:scale-[1.03] hover:scale-[1.03] transition-all duration-200 font-bold">{isFunky ? "Log in" : "Sign in"}</TabsTrigger>
                 <TabsTrigger value="signup" className="data-[state=active]:scale-[1.03] hover:scale-[1.03] transition-all duration-200 font-bold">{isFunky ? "Join squad" : "Create account"}</TabsTrigger>
