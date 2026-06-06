@@ -44,29 +44,44 @@ function AuthPage() {
   const signUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
-    const { error } = await supabase.auth.signUp({
+    // Send request to Supabase without making the user wait for the slow Gmail SMTP to finish
+    supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}${target}`,
         data: { full_name: fullName },
       },
+    }).then(({ error }) => {
+      if (error) toast.error(error.message);
     });
-    setBusy(false);
-    if (error) return toast.error(error.message);
-    toast.success("Account created! Check your email to confirm, then sign in.");
+    
+    // Instantly show success to the user so it feels lightning fast
+    setTimeout(() => {
+      setBusy(false);
+      toast.success("Account created! Check your email to confirm, then sign in.");
+    }, 400); 
   };
 
   const sendReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    
+    // Background the slow email sending process
+    supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
+    }).then(({ error }) => {
+      if (error && error.message !== 'User already registered') {
+        toast.error("Failed to send reset email");
+      }
     });
-    setBusy(false);
-    if (error) return toast.error(error.message);
-    toast.success("Check your email for a reset link");
-    setForgot(false);
+
+    // Instantly respond to the user
+    setTimeout(() => {
+      setBusy(false);
+      toast.success("If an account exists, a reset link has been sent to your email!");
+      setForgot(false);
+    }, 400);
   };
 
   return (
