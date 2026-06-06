@@ -9,6 +9,7 @@ export function SequentialVideoBackground({
 }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isNearScreen, setIsNearScreen] = useState(false);
+  const [hasBeenNearScreen, setHasBeenNearScreen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
@@ -17,14 +18,17 @@ export function SequentialVideoBackground({
     if (!el) return;
 
     // Detect when this specific video background section is near the screen
-    // We trigger 800px before it comes into view to ensure it has time to preload
+    // We trigger a massive 1500px before it comes into view to ensure it preloads way in advance
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           setIsNearScreen(entry.isIntersecting);
+          if (entry.isIntersecting) {
+            setHasBeenNearScreen(true);
+          }
         });
       },
-      { rootMargin: "800px" } 
+      { rootMargin: "1500px" } 
     );
     observer.observe(el);
     return () => observer.disconnect();
@@ -45,18 +49,16 @@ export function SequentialVideoBackground({
         }
       }
     });
-  }, [currentIndex, videos, isNearScreen]);
+  }, [currentIndex, videos, isNearScreen, hasBeenNearScreen]);
 
   return (
     <div ref={containerRef} className={`absolute inset-0 z-0 pointer-events-none overflow-hidden ${opacity}`}>
       {videos.map((src, idx) => {
         const isActive = idx === currentIndex;
-        // Massive Performance Optimization: 
-        // Only render the video if it's near the screen, AND it's either the currently playing video 
-        // or the NEXT video in the sequence. This prevents downloading 100MB of video on initial page load!
-        const shouldPreload = isNearScreen && (isActive || idx === (currentIndex + 1) % videos.length);
         
-        if (!shouldPreload) {
+        // If it hasn't even been approached yet, don't render it (saves initial bandwidth)
+        // But once it has been approached, keep it in the DOM permanently so scrolling back is INSTANT
+        if (!hasBeenNearScreen) {
             videoRefs.current[idx] = null;
             return null;
         }
