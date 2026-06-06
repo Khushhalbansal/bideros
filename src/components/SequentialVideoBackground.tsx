@@ -8,28 +8,59 @@ export function SequentialVideoBackground({
   opacity?: string;
 }) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isNearScreen, setIsNearScreen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
   useEffect(() => {
-    // Only the active video plays. Others are paused.
-    // They are all kept in the DOM to preload them and avoid lag.
+    const el = containerRef.current;
+    if (!el) return;
+
+    // Detect when this specific video background section is near the screen
+    // We trigger 800px before it comes into view to ensure it has time to preload
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          setIsNearScreen(entry.isIntersecting);
+        });
+      },
+      { rootMargin: "800px" } 
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
     videos.forEach((_, idx) => {
       const video = videoRefs.current[idx];
       if (!video) return;
 
-      if (idx === currentIndex) {
-        video.currentTime = 0; // Restart from beginning when it's its turn
-        video.play().catch(() => {});
+      if (isNearScreen && idx === currentIndex) {
+        if (video.paused) {
+            video.play().catch(() => {});
+        }
       } else {
-        video.pause();
+        if (!video.paused) {
+            video.pause();
+        }
       }
     });
-  }, [currentIndex, videos]);
+  }, [currentIndex, videos, isNearScreen]);
 
   return (
-    <div className={`absolute inset-0 z-0 pointer-events-none overflow-hidden ${opacity}`}>
+    <div ref={containerRef} className={`absolute inset-0 z-0 pointer-events-none overflow-hidden ${opacity}`}>
       {videos.map((src, idx) => {
         const isActive = idx === currentIndex;
+        // Massive Performance Optimization: 
+        // Only render the video if it's near the screen, AND it's either the currently playing video 
+        // or the NEXT video in the sequence. This prevents downloading 100MB of video on initial page load!
+        const shouldPreload = isNearScreen && (isActive || idx === (currentIndex + 1) % videos.length);
+        
+        if (!shouldPreload) {
+            videoRefs.current[idx] = null;
+            return null;
+        }
+
         return (
           <video
             key={src}
@@ -38,7 +69,7 @@ export function SequentialVideoBackground({
             playsInline
             loop={videos.length === 1}
             // Crossfade transitions to completely eliminate black flickers
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-in-out ${
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
               isActive ? "opacity-100 z-10" : "opacity-0 z-0"
             }`}
             onEnded={() => {
