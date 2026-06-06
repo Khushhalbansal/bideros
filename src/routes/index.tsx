@@ -264,7 +264,7 @@ export function Landing() {
       </main>
 
       <footer className="container mx-auto px-4 py-8 text-center text-xs text-muted-foreground border-t border-border">
-        BidArena — built for the love of the game.
+        Bideros — built for the love of the game.
       </footer>
     </div>
   );
