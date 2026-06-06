@@ -66,7 +66,7 @@ export function SequentialVideoBackground({
         return (
           <video
             key={src}
-            ref={(el) => (videoRefs.current[idx] = el)}
+            ref={(el) => { videoRefs.current[idx] = el; }}
             muted
             playsInline
             loop={videos.length === 1}
