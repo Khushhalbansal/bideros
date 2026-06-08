@@ -117,8 +117,9 @@ function Dashboard() {
 
   return (
     <div className="min-h-screen relative">
-      <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 z-0 pointer-events-none">
         <SequentialVideoBackground 
+          opacity="opacity-30 mix-blend-screen"
           videos={[
             "/videos/bg-5.mp4",
             "/videos/bg-7.mp4"

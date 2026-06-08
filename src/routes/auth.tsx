@@ -90,9 +90,11 @@ function AuthPage() {
       <div className="absolute inset-0 z-0 pointer-events-none opacity-30" style={{ background: "radial-gradient(circle at 20% 30%, hsl(var(--neon) / 0.25), transparent 50%), radial-gradient(circle at 80% 70%, hsl(var(--primary) / 0.2), transparent 50%)" }} />
       <div className="absolute inset-0 z-0 pointer-events-none">
         <SequentialVideoBackground 
+          opacity="opacity-30 mix-blend-screen"
           videos={[
-            "/videos/bg-9.mp4",
-            "/videos/bg-13.mp4"
+            "/videos/bg-2.mp4",
+            "/videos/bg-4.mp4",
+            "/videos/bg-6.mp4"
           ]}
         />
       </div>
