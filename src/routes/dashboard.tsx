@@ -38,6 +38,7 @@ function Dashboard() {
   const [timer, setTimer] = useState("15");
   const [creating, setCreating] = useState(false);
   const [open, setOpen] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   useEffect(() => { if (!loading && !user) navigate({ to: "/auth" }); }, [user, loading, navigate]);
 
@@ -81,7 +82,18 @@ function Dashboard() {
       status: "draft",
     }).select().single();
     setCreating(false);
-    if (error) return toast.error(error.message);
+    
+    if (error) {
+      const msg = String(error?.message || error).toLowerCase();
+      if (msg.includes("upgrade") || msg.includes("quota") || msg.includes("free")) {
+        setOpen(false);
+        setShowUpgradeModal(true);
+        load();
+        return;
+      }
+      return toast.error(error.message);
+    }
+    
     await supabase.from("auction_state").insert({ tournament_id: data.id });
     toast.success("Tournament created");
     setOpen(false);
@@ -133,6 +145,27 @@ function Dashboard() {
         <section>
           <ReferralProgram userId={user.id} />
         </section>
+
+        {/* Upgrade Required Modal */}
+        <Dialog open={showUpgradeModal} onOpenChange={setShowUpgradeModal}>
+          <DialogContent className="bg-glass border-neon shadow-[0_0_50px_-10px_rgba(50,255,150,0.3)] sm:max-w-md text-center p-8 animate-in zoom-in-95 duration-300">
+            <div className="mx-auto w-16 h-16 bg-hot/20 rounded-full flex items-center justify-center mb-6">
+              <Trophy className="h-8 w-8 text-hot animate-bounce" />
+            </div>
+            <DialogTitle className="text-2xl font-black mb-2 uppercase tracking-wide">You've hit the limit!</DialogTitle>
+            <div className="text-muted-foreground mb-8">
+              You have used all your free tournaments. Upgrade to Bideros Pro to unlock unlimited tournaments, premium projector views, and total freedom.
+            </div>
+            <div className="flex flex-col gap-3">
+              <Button asChild className="w-full h-14 text-lg font-black gradient-neon text-primary-foreground shadow-neon hover:scale-105 transition-transform">
+                <Link to="/pricing">Take Me There ⚡</Link>
+              </Button>
+              <Button variant="ghost" onClick={() => setShowUpgradeModal(false)} className="text-muted-foreground hover:text-foreground">
+                Maybe later
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         <section>
           <div className="flex items-center justify-between mb-6 flex-wrap gap-3">

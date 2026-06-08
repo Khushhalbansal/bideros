@@ -44,23 +44,22 @@ function AuthPage() {
   const signUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
-    // Send request to Supabase without making the user wait for the slow Gmail SMTP to finish
-    supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}${target}`,
         data: { full_name: fullName },
       },
-    }).then(({ error }) => {
-      if (error) toast.error(error.message);
     });
+    setBusy(false);
+    if (error) return toast.error(error.message);
     
-    // Instantly show success to the user so it feels lightning fast
-    setTimeout(() => {
-      setBusy(false);
-      toast.success("Account created! Check your email to confirm, then sign in.");
-    }, 400); 
+    if (data.session) {
+      toast.success("Account created successfully!");
+      navigate({ to: target });
+    } else {
+      toast.success("Account created! Check your email to confirm.");
+    }
   };
 
   const sendReset = async (e: React.FormEvent) => {
