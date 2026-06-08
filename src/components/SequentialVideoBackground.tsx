@@ -46,8 +46,11 @@ export function SequentialVideoBackground({
   }, []);
 
   useEffect(() => {
-    videos.forEach((_, idx) => {
-      const video = videoRefs.current[idx];
+    videos.forEach((src, idx) => {
+      const isGif = src.toLowerCase().endsWith('.gif');
+      if (isGif) return; // GIFs auto-play
+
+      const video = videoRefs.current[idx] as HTMLVideoElement | null;
       if (!video) return;
 
       // Only play if this section is ACTUALLY visible, and it's the current video in sequence
@@ -63,6 +66,19 @@ export function SequentialVideoBackground({
     });
   }, [currentIndex, videos, isPlaying, hasBeenNearScreen]);
 
+  useEffect(() => {
+    if (!isPlaying) return;
+    const currentSrc = videos[currentIndex];
+    if (currentSrc?.toLowerCase().endsWith('.gif')) {
+      const timer = setTimeout(() => {
+        if (videos.length > 1) {
+          setCurrentIndex((prev) => (prev + 1) % videos.length);
+        }
+      }, 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [currentIndex, videos, isPlaying]);
+
   return (
     <div ref={containerRef} className={`absolute inset-0 z-0 pointer-events-none overflow-hidden ${opacity}`}>
       {videos.map((src, idx) => {
@@ -73,6 +89,22 @@ export function SequentialVideoBackground({
         if (!hasBeenNearScreen) {
             videoRefs.current[idx] = null;
             return null;
+        }
+
+        const isGif = src.toLowerCase().endsWith('.gif');
+
+        if (isGif) {
+          return (
+            <img
+              key={src}
+              src={src}
+              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ease-in-out ${
+                isActive ? "opacity-100 z-10" : "opacity-0 z-0"
+              }`}
+              style={{ objectPosition: 'center center' }}
+              alt="background animation"
+            />
+          );
         }
 
         return (

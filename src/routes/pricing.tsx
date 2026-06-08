@@ -148,8 +148,8 @@ function PricingPage() {
         <SequentialVideoBackground 
           opacity="opacity-30 mix-blend-screen"
           videos={[
-            "/videos/bg-11.mp4",
-            "/videos/bg-12.mp4"
+            "/videos/pricing-1.mp4",
+            "/videos/pricing-2.gif"
           ]}
         />
       </div>
