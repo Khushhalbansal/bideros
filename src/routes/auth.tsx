@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
 import { SequentialVideoBackground } from "@/components/SequentialVideoBackground";
+import { Chrome } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -61,6 +62,18 @@ function AuthPage() {
     } else {
       toast.success("Account created! Check your email to confirm.");
     }
+  };
+
+  const signInWithGoogle = async () => {
+    setBusy(true);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}${target}`,
+      }
+    });
+    setBusy(false);
+    if (error) toast.error(error.message);
   };
 
   const sendReset = async (e: React.FormEvent) => {
@@ -134,7 +147,17 @@ function AuthPage() {
                   <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon hover:scale-[1.03] transition-transform duration-200 font-bold tracking-wide">
                     {busy ? "Signing in..." : (isFunky ? "Let's go" : "Sign in")}
                   </Button>
-                  <button type="button" onClick={() => setForgot(true)} className="w-full text-xs text-muted-foreground hover:text-neon hover:scale-110 transition-transform duration-200">Forgot password?</button>
+                  
+                  <div className="relative my-4">
+                    <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
+                    <div className="relative flex justify-center text-xs uppercase"><span className="bg-glass px-2 text-muted-foreground">Or continue with</span></div>
+                  </div>
+                  
+                  <Button type="button" variant="outline" disabled={busy} onClick={signInWithGoogle} className="w-full bg-background hover:bg-muted border-border hover:border-neon transition-all duration-200">
+                    <Chrome className="mr-2 h-4 w-4" /> Google
+                  </Button>
+                  
+                  <button type="button" onClick={() => setForgot(true)} className="w-full text-xs text-muted-foreground hover:text-neon hover:scale-110 transition-transform duration-200 mt-2">Forgot password?</button>
                 </form>
               </TabsContent>
               <TabsContent value="signup">
@@ -146,6 +169,15 @@ function AuthPage() {
                   <div><Label>Password</Label><Input type="password" value={password} onChange={e=>setPassword(e.target.value)} required minLength={6} className="hover:scale-[1.02] focus:scale-[1.02] hover:border-neon transition-all duration-200" /></div>
                   <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon hover:scale-[1.03] transition-transform duration-200 font-bold tracking-wide">
                     {busy ? "Creating..." : (isFunky ? "Sign up fr" : "Create account")}
+                  </Button>
+
+                  <div className="relative my-4">
+                    <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
+                    <div className="relative flex justify-center text-xs uppercase"><span className="bg-glass px-2 text-muted-foreground">Or continue with</span></div>
+                  </div>
+                  
+                  <Button type="button" variant="outline" disabled={busy} onClick={signInWithGoogle} className="w-full bg-background hover:bg-muted border-border hover:border-neon transition-all duration-200">
+                    <Chrome className="mr-2 h-4 w-4" /> Google
                   </Button>
                 </form>
               </TabsContent>
