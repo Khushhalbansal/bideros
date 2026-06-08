@@ -9,6 +9,7 @@ import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
+import { SequentialVideoBackground } from "@/components/SequentialVideoBackground";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -87,6 +88,14 @@ function AuthPage() {
     <div className="min-h-screen flex flex-col relative overflow-hidden bg-background">
       <div className="absolute inset-0 z-0 pointer-events-none bg-gradient-to-br from-background via-background to-neon/10" />
       <div className="absolute inset-0 z-0 pointer-events-none opacity-30" style={{ background: "radial-gradient(circle at 20% 30%, hsl(var(--neon) / 0.25), transparent 50%), radial-gradient(circle at 80% 70%, hsl(var(--primary) / 0.2), transparent 50%)" }} />
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <SequentialVideoBackground 
+          videos={[
+            "/videos/bg-9.mp4",
+            "/videos/bg-13.mp4"
+          ]}
+        />
+      </div>
       <div className="relative z-10 flex flex-col min-h-screen">
         <header className="container mx-auto py-6 px-4"><Logo /></header>
       <main className="flex-1 flex items-center justify-center px-4">

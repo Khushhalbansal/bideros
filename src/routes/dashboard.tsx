@@ -120,8 +120,8 @@ function Dashboard() {
       <div className="absolute inset-0 z-0">
         <SequentialVideoBackground 
           videos={[
-            "https://cdn.pixabay.com/video/2021/08/24/86093-592660091_large.mp4",
-            "https://cdn.pixabay.com/video/2019/11/10/28906-372551410_large.mp4"
+            "/videos/bg-5.mp4",
+            "/videos/bg-7.mp4"
           ]}
         />
       </div>
