@@ -673,6 +673,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_feedback: {
+        Row: {
+          id: string
+          user_id: string | null
+          page_url: string | null
+          feedback_type: 'issue' | 'suggestion' | 'review' | 'upgrade'
+          content: string | null
+          screenshot_url: string | null
+          rating: number | null
+          status: 'open' | 'resolved' | 'ignored'
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          page_url?: string | null
+          feedback_type: 'issue' | 'suggestion' | 'review' | 'upgrade'
+          content?: string | null
+          screenshot_url?: string | null
+          rating?: number | null
+          status?: 'open' | 'resolved' | 'ignored'
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          page_url?: string | null
+          feedback_type?: 'issue' | 'suggestion' | 'review' | 'upgrade'
+          content?: string | null
+          screenshot_url?: string | null
+          rating?: number | null
+          status?: 'open' | 'resolved' | 'ignored'
+          created_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string

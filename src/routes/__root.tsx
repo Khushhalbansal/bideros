@@ -11,6 +11,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { ClickRipple } from "@/components/ClickRipple";
+import { FeedbackWidget } from "@/components/FeedbackWidget";
 
 import appCss from "../styles.css?url";
 
@@ -155,6 +156,7 @@ function RootComponent() {
         <AuthProvider>
           <ClickRipple />
           <Outlet />
+          <FeedbackWidget />
           <Toaster theme="dark" position="top-right" />
         </AuthProvider>
       </ThemeProvider>

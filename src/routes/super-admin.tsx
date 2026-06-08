@@ -16,6 +16,7 @@ interface SaTournament { id: string; name: string; status: string; admin_id: str
 interface SaUser { id: string; email: string; full_name: string | null; created_at: string; roles: string[]; auctions_quota: number | null; }
 interface SaSuper { email: string; user_id: string | null; created_at: string; }
 interface AuditRow { id: string; actor_id: string | null; action: string; target: string | null; payload: unknown; created_at: string; }
+interface SaFeedback { id: string; user_id: string | null; user_email: string | null; page_url: string | null; feedback_type: string; content: string | null; screenshot_url: string | null; rating: number | null; status: string; created_at: string; }
 
 function SuperAdmin() {
   const { user, loading } = useAuth();
@@ -49,19 +50,22 @@ function SuperAdminPanel() {
   const [users, setUsers] = useState<SaUser[]>([]);
   const [supers, setSupers] = useState<SaSuper[]>([]);
   const [audit, setAudit] = useState<AuditRow[]>([]);
+  const [feedback, setFeedback] = useState<SaFeedback[]>([]);
   const [newEmail, setNewEmail] = useState("");
 
   const load = useCallback(async () => {
-    const [{ data: t }, { data: u }, { data: s }, { data: a }] = await Promise.all([
+    const [{ data: t }, { data: u }, { data: s }, { data: a }, { data: f }] = await Promise.all([
       supabase.rpc("sa_list_tournaments"),
       supabase.rpc("sa_list_users"),
       supabase.rpc("sa_list_super_admins"),
       supabase.from("super_admin_log").select("*").order("created_at", { ascending: false }).limit(100),
+      supabase.rpc("sa_list_feedback"),
     ]);
     setTournaments((t as SaTournament[]) || []);
     setUsers((u as SaUser[]) || []);
     setSupers((s as SaSuper[]) || []);
     setAudit((a as AuditRow[]) || []);
+    setFeedback((f as SaFeedback[]) || []);
   }, []);
   useEffect(() => { load(); }, [load]);
 
@@ -114,6 +118,12 @@ function SuperAdminPanel() {
     toast.success(`Quota updated to ${r.new_quota}`);
     setUsers(users.map(u => u.id === userId ? { ...u, auctions_quota: r.new_quota || 0 } : u));
   };
+  const updateFeedbackStatus = async (id: string, status: string) => {
+    const { error } = await supabase.rpc("sa_update_feedback_status", { p_feedback_id: id, p_status: status });
+    if (error) return toast.error(error.message);
+    setFeedback(feedback.map(f => f.id === id ? { ...f, status } : f));
+    toast.success("Status updated");
+  };
 
   return (
     <div className="min-h-screen">
@@ -134,6 +144,7 @@ function SuperAdminPanel() {
             <TabsTrigger value="tournaments">Tournaments ({tournaments.length})</TabsTrigger>
             <TabsTrigger value="users">Users ({users.length})</TabsTrigger>
             <TabsTrigger value="supers">Super admins ({supers.length})</TabsTrigger>
+            <TabsTrigger value="feedback">Feedback ({feedback.filter(f => f.status === 'open').length})</TabsTrigger>
             <TabsTrigger value="audit">Audit log</TabsTrigger>
             <TabsTrigger value="settings">Pricing & Settings</TabsTrigger>
           </TabsList>
@@ -216,6 +227,46 @@ function SuperAdminPanel() {
               </div>
             ))}
             {audit.length === 0 && <p className="text-sm text-muted-foreground">No actions yet.</p>}
+          </TabsContent>
+          <TabsContent value="feedback" className="mt-6 space-y-4">
+            {feedback.map(f => (
+              <div key={f.id} className={`bg-glass border rounded-xl p-4 flex flex-col gap-3 ${f.status === 'open' ? 'border-neon/50 shadow-[0_0_15px_rgba(var(--neon),0.1)]' : 'border-border opacity-70'}`}>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full ${
+                        f.feedback_type === 'issue' ? 'bg-hot/20 text-hot' :
+                        f.feedback_type === 'review' ? 'bg-yellow-500/20 text-yellow-500' :
+                        f.feedback_type === 'upgrade' ? 'bg-blue-500/20 text-blue-500' :
+                        'bg-neon/20 text-neon'
+                      }`}>{f.feedback_type}</span>
+                      <span className="text-xs text-muted-foreground">{new Date(f.created_at).toLocaleString()}</span>
+                      {f.rating && <span className="text-xs font-bold text-yellow-500">★ {f.rating}/5</span>}
+                    </div>
+                    <div className="font-medium text-sm text-foreground/80">{f.user_email || 'Anonymous'}</div>
+                    {f.page_url && <a href={f.page_url} target="_blank" rel="noreferrer" className="text-xs text-muted-foreground hover:underline hover:text-neon truncate max-w-[200px] block">{f.page_url}</a>}
+                  </div>
+                  <div className="flex gap-2">
+                    <select
+                      value={f.status}
+                      onChange={(e) => updateFeedbackStatus(f.id, e.target.value)}
+                      className="bg-background border border-border text-xs rounded-md px-2 py-1 outline-none focus:border-neon"
+                    >
+                      <option value="open">Open</option>
+                      <option value="resolved">Resolved</option>
+                      <option value="ignored">Ignored</option>
+                    </select>
+                  </div>
+                </div>
+                {f.content && <div className="text-sm bg-background/50 p-3 rounded-lg border border-border/50">{f.content}</div>}
+                {f.screenshot_url && (
+                  <a href={f.screenshot_url} target="_blank" rel="noreferrer" className="block max-w-[300px] mt-2 rounded-lg overflow-hidden border border-border hover:border-neon transition-colors">
+                    <img src={f.screenshot_url} alt="Screenshot" className="w-full h-auto object-cover" />
+                  </a>
+                )}
+              </div>
+            ))}
+            {feedback.length === 0 && <p className="text-sm text-muted-foreground">No feedback yet.</p>}
           </TabsContent>
           <TabsContent value="settings" className="mt-6">
             <PricingSettingsEditor />
