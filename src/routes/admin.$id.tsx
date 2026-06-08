@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import { formatINR, parseINR } from "@/lib/format";
-import { Play, Pause, SkipForward, Undo2, XCircle, Flag, Monitor, Gavel, ChevronRight, Eye, Copy, Trash2, Share2, Link as LinkIcon, Save, Users, Tag } from "lucide-react";
+import { Play, Pause, SkipForward, Undo2, XCircle, Flag, Monitor, Gavel, ChevronRight, Eye, Copy, Trash2, Share2, Link as LinkIcon, Save, Users, Tag, Download } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { uploadImage } from "@/lib/uploads";
@@ -148,6 +148,42 @@ function AuctionControl({ tournament, players, teams, state }:{
 
   const isPaused = currentPlayer && !state?.timer_ends_at;
 
+  const downloadSummary = () => {
+    const rows = [["Team Name", "Owner Name", "Player Name", "Role", "Sold Price (INR)"]];
+    teams.forEach(tm => {
+      const squad = players.filter(p => p.sold_to_team_id === tm.id);
+      if (squad.length === 0) {
+        rows.push([`"${tm.name}"`, `"${tm.owner_name || ""}"`, "No players", "", "0"]);
+      } else {
+        squad.forEach(p => {
+          rows.push([
+            `"${tm.name}"`,
+            `"${tm.owner_name || ""}"`,
+            `"${p.name}"`,
+            `"${p.role || ""}"`,
+            String(p.sold_price || 0)
+          ]);
+        });
+      }
+    });
+
+    const unsold = players.filter(p => p.status === "unsold");
+    if (unsold.length > 0) {
+      unsold.forEach(p => {
+        rows.push(["Unsold", "", `"${p.name}"`, `"${p.role || ""}"`, "0"]);
+      });
+    }
+
+    const csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Auction_Summary_${tournament.name.replace(/\s+/g, '_')}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="grid lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2 bg-glass border border-border rounded-xl p-6">
@@ -183,7 +219,14 @@ function AuctionControl({ tournament, players, teams, state }:{
               <Button onClick={() => callRpc("mark_unsold", {}, "Marked unsold")} variant="outline"><XCircle className="h-3 w-3 mr-1" />Unsold</Button>
               <Button onClick={() => { if (confirm("Undo last sale?")) callRpc("undo_last_sale", {}, "Sale undone"); }} variant="outline"><Undo2 className="h-3 w-3 mr-1" />Undo sale</Button>
             </div>
-            <p className="text-xs text-muted-foreground text-center">Lot closes automatically when the timer expires (every {tournament.bid_timer_seconds}s).</p>
+            <div className="pt-2 border-t border-border flex flex-wrap gap-2">
+              <Button onClick={() => { if (confirm("End the auction and mark tournament as completed?")) callRpc("end_auction", {}, "Auction ended"); }} variant="outline" size="sm" className="border-destructive/40 text-destructive hover:bg-destructive/10">
+                <Flag className="h-3 w-3 mr-1" />End auction
+              </Button>
+              <Button onClick={downloadSummary} variant="outline" size="sm" className="border-neon/40 text-neon hover:bg-neon/10">
+                <Download className="h-3 w-3 mr-1" />Download Summary (CSV)
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="space-y-4">
@@ -202,9 +245,12 @@ function AuctionControl({ tournament, players, teams, state }:{
               </Button>
             </div>
             {teams.length === 0 && <p className="text-xs text-destructive">Add teams before starting an auction.</p>}
-            <div className="pt-2 border-t border-border">
+            <div className="pt-2 border-t border-border flex flex-wrap gap-2">
               <Button onClick={() => { if (confirm("End the auction and mark tournament as completed?")) callRpc("end_auction", {}, "Auction ended"); }} variant="outline" size="sm" className="border-destructive/40 text-destructive hover:bg-destructive/10">
                 <Flag className="h-3 w-3 mr-1" />End auction
+              </Button>
+              <Button onClick={downloadSummary} variant="outline" size="sm" className="border-neon/40 text-neon hover:bg-neon/10">
+                <Download className="h-3 w-3 mr-1" />Download Summary (CSV)
               </Button>
             </div>
           </div>
