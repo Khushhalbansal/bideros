@@ -26,6 +26,19 @@ function PricingPage() {
   const { theme } = useTheme();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [redirecting, setRedirecting] = useState<string | null>(null);
+  const [config, setConfig] = useState<any>({
+    promo_text: "Newborn Special — 50% OFF!",
+    headline_highlight: "Champion",
+    single_price: "50",
+    single_price_strike: "80",
+    single_features: ["1 Active Tournament Credit", "Standard client & owner views", "No expiry on credit"],
+    monthly_price: "99",
+    monthly_price_strike: "199",
+    monthly_features: ["UNLIMITED tournaments", "UNLIMITED teams & players", "Stadium-grade projector view", "Custom logos & colors", "Priority live websocket syncing"],
+    yearly_price: "999",
+    yearly_price_strike: "1999",
+    yearly_features: ["Everything in Monthly Pro", "Lock in the Newborn Special price for a full year", "Priority support"]
+  });
 
   useEffect(() => {
     if (!loading && !user) {
@@ -42,6 +55,16 @@ function PricingPage() {
         .eq("id", user.id)
         .maybeSingle();
       setProfile(data as Profile);
+      
+      const { data: settingsData } = await supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", "pricing_config")
+        .maybeSingle();
+      
+      if (settingsData?.value) {
+        setConfig((prev: any) => ({ ...prev, ...(settingsData.value as object) }));
+      }
     })();
   }, [user]);
 
@@ -190,10 +213,10 @@ function PricingPage() {
           <div className={`absolute -top-10 left-1/2 -translate-x-1/2 w-40 h-40 bg-neon/20 blur-[80px] rounded-full ${isFunky ? 'animate-[crazyNeon_3s_infinite]' : ''}`}></div>
           
           <div className={`inline-flex items-center gap-2 rounded-full border px-5 py-2 text-sm font-black uppercase tracking-widest mb-8 shadow-xl ${isFunky ? 'bg-black text-white border-white animate-[crazyNeon_3s_infinite]' : 'bg-glass border-neon/40 text-neon'}`}>
-            <Sparkles className="h-4 w-4 animate-pulse" /> Newborn Special — 50% OFF!
+            <Sparkles className="h-4 w-4 animate-pulse" /> {config.promo_text}
           </div>
           <h1 className={`text-5xl md:text-7xl font-extrabold tracking-tight mb-6 ${isLight ? 'text-gray-900' : 'text-white'}`}>
-            Host like a <span className={`text-transparent bg-clip-text ${isFunky ? 'bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 animate-pulse' : 'bg-gradient-to-r from-neon to-primary'}`}>Champion</span>.
+            Host like a <span className={`text-transparent bg-clip-text ${isFunky ? 'bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 animate-pulse' : 'bg-gradient-to-r from-neon to-primary'}`}>{config.headline_highlight}</span>.
           </h1>
           <p className={`max-w-2xl mx-auto text-lg md:text-xl font-medium ${isLight ? 'text-gray-600' : 'text-gray-300'}`}>
             New users get <strong className="text-neon">3 Live + 1 Trial</strong> tournament absolutely free! After that, choose a plan to keep the momentum going.
@@ -209,9 +232,9 @@ function PricingPage() {
                 <Target className="w-5 h-5" /> Single Match
               </div>
               <div className="mb-6 relative">
-                <div className={`text-xl font-bold animate-cross-out inline-block mr-2 ${isFunky ? 'text-black/50' : 'text-muted-foreground/60'}`}>₹80</div>
+                <div className={`text-xl font-bold animate-cross-out inline-block mr-2 ${isFunky ? 'text-black/50' : 'text-muted-foreground/60'}`}>₹{config.single_price_strike}</div>
                 <div className="flex items-baseline gap-1 mt-2">
-                  <span className={`text-5xl font-black ${isFunky ? 'text-black' : ''}`}>₹50</span>
+                  <span className={`text-5xl font-black ${isFunky ? 'text-black' : ''}`}>₹{config.single_price}</span>
                   <span className={`font-semibold ${isFunky ? 'text-black/70' : 'text-muted-foreground'}`}>{isFunky ? '/ tourney' : '/ tournament'}</span>
                 </div>
                 <div className={`absolute -right-4 -top-8 text-white text-xs font-black px-3 py-1 rounded-full transform rotate-12 shadow-lg animate-bounce ${isFunky ? 'bg-black border-2 border-white' : 'bg-hot'}`}>
@@ -222,11 +245,7 @@ function PricingPage() {
                 Perfect for one-off tournaments. Grants +1 to your Free Auction quota.
               </p>
               <ul className="space-y-4 mb-8 font-medium">
-                {[
-                  "1 Active Tournament Credit",
-                  "Standard client & owner views",
-                  "No expiry on credit",
-                ].map((feature) => (
+                {config.single_features.map((feature: string) => (
                   <li key={feature} className="flex items-start gap-3 text-sm">
                     <Check className={`h-5 w-5 shrink-0 ${isFunky ? 'text-black' : 'text-neon'}`} />
                     <span>{feature}</span>
@@ -254,9 +273,9 @@ function PricingPage() {
                 <Zap className="w-5 h-5 animate-pulse" /> Monthly Pro
               </div>
               <div className="mb-6 relative">
-                <div className={`text-2xl font-bold animate-cross-out inline-block mr-2 ${isFunky ? 'text-black/50' : 'text-muted-foreground/50'}`}>₹199</div>
+                <div className={`text-2xl font-bold animate-cross-out inline-block mr-2 ${isFunky ? 'text-black/50' : 'text-muted-foreground/50'}`}>₹{config.monthly_price_strike}</div>
                 <div className="flex items-baseline gap-1 mt-2">
-                  <span className={`text-6xl font-black ${isFunky ? 'text-black' : 'text-foreground'}`}>₹99</span>
+                  <span className={`text-6xl font-black ${isFunky ? 'text-black' : 'text-foreground'}`}>₹{config.monthly_price}</span>
                   <span className={`font-bold ${isFunky ? 'text-black/70' : 'text-muted-foreground'}`}>/ mo</span>
                 </div>
                 <div className={`absolute -right-6 top-0 text-white text-xs font-black px-4 py-1.5 rounded-full transform rotate-6 animate-pulse ${isFunky ? 'bg-[#ff0055] genz-shadow' : 'bg-neon text-black shadow-xl'}`}>
@@ -267,13 +286,7 @@ function PricingPage() {
                 Unlock everything. Unlimited tournaments, premium projector views, and total freedom.
               </p>
               <ul className="space-y-4 mb-8 font-bold">
-                {[
-                  "UNLIMITED tournaments",
-                  "UNLIMITED teams & players",
-                  "Stadium-grade projector view",
-                  "Custom logos & colors",
-                  "Priority live websocket syncing",
-                ].map((feature) => (
+                {config.monthly_features.map((feature: string) => (
                   <li key={feature} className="flex items-start gap-3 text-sm">
                     <Check className={`h-5 w-5 shrink-0 ${isFunky ? 'text-black' : 'text-neon'}`} />
                     <span>{feature}</span>
@@ -303,9 +316,9 @@ function PricingPage() {
                 <Sparkles className="w-5 h-5" /> Yearly Pro
               </div>
               <div className="mb-6 relative">
-                <div className={`text-xl font-bold animate-cross-out inline-block mr-2 ${isFunky ? 'text-black/50' : 'text-muted-foreground/60'}`}>₹1999</div>
+                <div className={`text-xl font-bold animate-cross-out inline-block mr-2 ${isFunky ? 'text-black/50' : 'text-muted-foreground/60'}`}>₹{config.yearly_price_strike}</div>
                 <div className="flex items-baseline gap-1 mt-2">
-                  <span className={`text-5xl font-black ${isFunky ? 'text-black' : ''}`}>₹999</span>
+                  <span className={`text-5xl font-black ${isFunky ? 'text-black' : ''}`}>₹{config.yearly_price}</span>
                   <span className={`font-semibold ${isFunky ? 'text-black/70' : 'text-muted-foreground'}`}>/ yr</span>
                 </div>
                 <div className={`absolute -right-4 -top-8 text-xs font-black px-3 py-1 rounded-full transform -rotate-12 ${isFunky ? 'bg-white text-black border-2 border-black genz-shadow' : 'bg-primary text-primary-foreground shadow-lg animate-bounce'}`}>
@@ -316,11 +329,7 @@ function PricingPage() {
                 All the benefits of Monthly Pro, but you save an extra 16% over the year.
               </p>
               <ul className="space-y-4 mb-8 font-medium">
-                {[
-                  "Everything in Monthly Pro",
-                  "Lock in the Newborn Special price for a full year",
-                  "Priority support",
-                ].map((feature) => (
+                {config.yearly_features.map((feature: string) => (
                   <li key={feature} className="flex items-start gap-3 text-sm">
                     <Check className={`h-5 w-5 shrink-0 ${isFunky ? 'text-black' : 'text-neon'}`} />
                     <span>{feature}</span>

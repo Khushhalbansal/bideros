@@ -13,7 +13,7 @@ import { ShieldAlert, Trash2, Ban, CheckCircle2, Flag, Plus, ChevronRight } from
 export const Route = createFileRoute("/super-admin")({ component: SuperAdmin });
 
 interface SaTournament { id: string; name: string; status: string; admin_id: string; admin_email: string | null; blocked: boolean; created_at: string; team_count: number; player_count: number; }
-interface SaUser { id: string; email: string; full_name: string | null; created_at: string; roles: string[]; }
+interface SaUser { id: string; email: string; full_name: string | null; created_at: string; roles: string[]; auctions_quota: number | null; }
 interface SaSuper { email: string; user_id: string | null; created_at: string; }
 interface AuditRow { id: string; actor_id: string | null; action: string; target: string | null; payload: unknown; created_at: string; }
 
@@ -106,6 +106,14 @@ function SuperAdminPanel() {
     if (!r.ok) return toast.error(r.error || "Failed");
     toast.success("Removed"); load();
   };
+  const updateUserQuota = async (userId: string, change: number) => {
+    const { data, error } = await supabase.rpc("sa_update_user_quota", { p_user_id: userId, p_change: change });
+    if (error) return toast.error(error.message);
+    const r = data as { ok: boolean; error?: string; new_quota?: number };
+    if (!r.ok) return toast.error(r.error || "Failed");
+    toast.success(`Quota updated to ${r.new_quota}`);
+    setUsers(users.map(u => u.id === userId ? { ...u, auctions_quota: r.new_quota || 0 } : u));
+  };
 
   return (
     <div className="min-h-screen">
@@ -127,6 +135,7 @@ function SuperAdminPanel() {
             <TabsTrigger value="users">Users ({users.length})</TabsTrigger>
             <TabsTrigger value="supers">Super admins ({supers.length})</TabsTrigger>
             <TabsTrigger value="audit">Audit log</TabsTrigger>
+            <TabsTrigger value="settings">Pricing & Settings</TabsTrigger>
           </TabsList>
 
           <TabsContent value="tournaments" className="mt-6 space-y-2">
@@ -161,10 +170,16 @@ function SuperAdminPanel() {
                 <div>
                   <div className="font-semibold text-sm">{u.full_name || u.email}</div>
                   <div className="text-xs text-muted-foreground">{u.email}</div>
+                  <div className="flex gap-1 flex-wrap mt-1">
+                    {u.roles.length === 0 && <span className="text-[10px] text-muted-foreground">user</span>}
+                    {u.roles.map(r => <span key={r} className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/15 text-neon">{r}</span>)}
+                  </div>
                 </div>
-                <div className="flex gap-1 flex-wrap">
-                  {u.roles.length === 0 && <span className="text-[10px] text-muted-foreground">user</span>}
-                  {u.roles.map(r => <span key={r} className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/15 text-neon">{r}</span>)}
+                <div className="flex items-center gap-3 bg-background/50 rounded-lg p-2 border border-border/50">
+                  <div className="text-xs text-muted-foreground mr-2 font-medium">Free Tournaments:</div>
+                  <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => updateUserQuota(u.id, -1)}>-</Button>
+                  <span className="font-bold min-w-[20px] text-center">{u.auctions_quota ?? 0}</span>
+                  <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => updateUserQuota(u.id, 1)}>+</Button>
                 </div>
               </div>
             ))}
@@ -202,8 +217,131 @@ function SuperAdminPanel() {
             ))}
             {audit.length === 0 && <p className="text-sm text-muted-foreground">No actions yet.</p>}
           </TabsContent>
+          <TabsContent value="settings" className="mt-6">
+            <PricingSettingsEditor />
+          </TabsContent>
         </Tabs>
       </main>
+    </div>
+  );
+}
+
+function PricingSettingsEditor() {
+  const [config, setConfig] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  const loadConfig = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from("app_settings").select("value").eq("key", "pricing_config").single();
+    if (error && error.code !== "PGRST116") toast.error(error.message);
+    if (data) setConfig(data.value);
+    else setConfig({
+      promo_text: "Newborn Special — 50% OFF!",
+      headline_highlight: "Champion",
+      single_price: "50",
+      single_price_strike: "80",
+      single_features: ["1 Active Tournament Credit", "Standard client & owner views", "No expiry on credit"],
+      monthly_price: "99",
+      monthly_price_strike: "199",
+      monthly_features: ["UNLIMITED tournaments", "UNLIMITED teams & players", "Stadium-grade projector view", "Custom logos & colors", "Priority live websocket syncing"],
+      yearly_price: "999",
+      yearly_price_strike: "1999",
+      yearly_features: ["Everything in Monthly Pro", "Lock in the Newborn Special price for a full year", "Priority support"]
+    });
+    setLoading(false);
+  };
+  useEffect(() => { loadConfig(); }, []);
+
+  const saveConfig = async () => {
+    const { error } = await supabase.rpc("sa_update_setting", { p_key: "pricing_config", p_value: config });
+    if (error) return toast.error(error.message);
+    toast.success("Pricing configuration saved successfully!");
+  };
+
+  if (loading) return <div className="p-4">Loading settings...</div>;
+
+  return (
+    <div className="bg-glass border border-border rounded-xl p-6 space-y-6">
+      <h2 className="text-xl font-bold">Global Pricing & Features Configuration</h2>
+      <p className="text-sm text-muted-foreground">Changes here immediately reflect on the /pricing page for all users.</p>
+      
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="space-y-4">
+          <h3 className="font-semibold text-lg border-b border-border/50 pb-2">Hero Text</h3>
+          <div>
+            <Label>Promo Banner Text</Label>
+            <Input value={config.promo_text} onChange={e => setConfig({ ...config, promo_text: e.target.value })} />
+          </div>
+          <div>
+            <Label>Headline Highlight Word</Label>
+            <Input value={config.headline_highlight} onChange={e => setConfig({ ...config, headline_highlight: e.target.value })} />
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <h3 className="font-semibold text-lg border-b border-border/50 pb-2">Single Match</h3>
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <Label>Price (₹)</Label>
+              <Input value={config.single_price} onChange={e => setConfig({ ...config, single_price: e.target.value })} />
+            </div>
+            <div className="flex-1">
+              <Label>Strike Price (₹)</Label>
+              <Input value={config.single_price_strike} onChange={e => setConfig({ ...config, single_price_strike: e.target.value })} />
+            </div>
+          </div>
+          <div>
+            <Label>Features (comma separated)</Label>
+            <textarea className="w-full bg-background border border-border rounded-md p-2 text-sm" rows={4}
+              value={config.single_features.join("\n")}
+              onChange={e => setConfig({ ...config, single_features: e.target.value.split("\n") })} />
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <h3 className="font-semibold text-lg border-b border-border/50 pb-2">Monthly Pro</h3>
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <Label>Price (₹)</Label>
+              <Input value={config.monthly_price} onChange={e => setConfig({ ...config, monthly_price: e.target.value })} />
+            </div>
+            <div className="flex-1">
+              <Label>Strike Price (₹)</Label>
+              <Input value={config.monthly_price_strike} onChange={e => setConfig({ ...config, monthly_price_strike: e.target.value })} />
+            </div>
+          </div>
+          <div>
+            <Label>Features (comma separated)</Label>
+            <textarea className="w-full bg-background border border-border rounded-md p-2 text-sm" rows={4}
+              value={config.monthly_features.join("\n")}
+              onChange={e => setConfig({ ...config, monthly_features: e.target.value.split("\n") })} />
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <h3 className="font-semibold text-lg border-b border-border/50 pb-2">Yearly Pro</h3>
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <Label>Price (₹)</Label>
+              <Input value={config.yearly_price} onChange={e => setConfig({ ...config, yearly_price: e.target.value })} />
+            </div>
+            <div className="flex-1">
+              <Label>Strike Price (₹)</Label>
+              <Input value={config.yearly_price_strike} onChange={e => setConfig({ ...config, yearly_price_strike: e.target.value })} />
+            </div>
+          </div>
+          <div>
+            <Label>Features (comma separated)</Label>
+            <textarea className="w-full bg-background border border-border rounded-md p-2 text-sm" rows={4}
+              value={config.yearly_features.join("\n")}
+              onChange={e => setConfig({ ...config, yearly_features: e.target.value.split("\n") })} />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-end mt-8 border-t border-border/50 pt-4">
+        <Button onClick={saveConfig} className="gradient-neon text-primary-foreground">Save Configuration</Button>
+      </div>
     </div>
   );
 }

@@ -467,9 +467,25 @@ export type Database = {
           },
         ]
       }
+      app_settings: {
+        Row: {
+          key: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          value?: Json
+        }
+        Update: {
+          key?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           age: number | null
+          auctions_quota: number | null
           avatar_url: string | null
           bio: string | null
           created_at: string
@@ -479,9 +495,13 @@ export type Database = {
           phone: string | null
           stats: Json
           updated_at: string
+          points: number | null
+          referral_code: string | null
+          referred_by: string | null
         }
         Insert: {
           age?: number | null
+          auctions_quota?: number | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
@@ -491,9 +511,13 @@ export type Database = {
           phone?: string | null
           stats?: Json
           updated_at?: string
+          points?: number | null
+          referral_code?: string | null
+          referred_by?: string | null
         }
         Update: {
           age?: number | null
+          auctions_quota?: number | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
@@ -503,6 +527,9 @@ export type Database = {
           phone?: string | null
           stats?: Json
           updated_at?: string
+          points?: number | null
+          referral_code?: string | null
+          referred_by?: string | null
         }
         Relationships: []
       }
