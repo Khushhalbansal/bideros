@@ -141,6 +141,14 @@ function PricingPage() {
           transform: translateY(-15px) scale(1.03) rotate(-1deg);
           z-index: 50;
         }
+        .genz-shadow {
+          box-shadow: 6px 6px 0px 0px rgba(0,0,0,1);
+          border: 3px solid black;
+        }
+        .genz-shadow-hover:hover {
+          box-shadow: 10px 10px 0px 0px rgba(0,0,0,1);
+          transform: translate(-4px, -4px);
+        }
       `}</style>
 
       {/* Background decorations */}
@@ -195,22 +203,22 @@ function PricingPage() {
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto w-full items-stretch">
           
           {/* Pay-as-you-go Card */}
-          <div className={`bg-glass border rounded-[2rem] p-8 flex flex-col justify-between card-crazy-hover shadow-xl ${isLight ? 'bg-white border-gray-200' : 'border-border/80 hover:border-neon/50 hover:shadow-neon/20'} animate-[floatY_6s_ease-in-out_infinite]`}>
+          <div className={`flex flex-col justify-between card-crazy-hover ${isFunky ? 'bg-[#ff90e8] genz-shadow rounded-3xl p-8 animate-[floatY_6s_ease-in-out_infinite] text-black' : isLight ? 'bg-white border-gray-200 border rounded-[2rem] p-8 shadow-xl' : 'bg-glass border rounded-[2rem] p-8 border-border/80 hover:border-neon/50 hover:shadow-neon/20 animate-[floatY_6s_ease-in-out_infinite] text-white'}`}>
             <div>
-              <div className="flex items-center gap-2 text-sm font-black tracking-wider uppercase mb-4 text-muted-foreground">
+              <div className={`flex items-center gap-2 text-sm font-black tracking-wider uppercase mb-4 ${isFunky ? 'text-black/80' : 'text-muted-foreground'}`}>
                 <Target className="w-5 h-5" /> Single Match
               </div>
               <div className="mb-6 relative">
-                <div className="text-xl font-bold text-muted-foreground/60 animate-cross-out inline-block mr-2">₹80</div>
+                <div className={`text-xl font-bold animate-cross-out inline-block mr-2 ${isFunky ? 'text-black/50' : 'text-muted-foreground/60'}`}>₹80</div>
                 <div className="flex items-baseline gap-1 mt-2">
-                  <span className={`text-5xl font-black ${isFunky ? 'text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-orange-400' : ''}`}>₹50</span>
-                  <span className="text-muted-foreground font-semibold">/ tourney</span>
+                  <span className={`text-5xl font-black ${isFunky ? 'text-black' : ''}`}>₹50</span>
+                  <span className={`font-semibold ${isFunky ? 'text-black/70' : 'text-muted-foreground'}`}>/ tourney</span>
                 </div>
-                <div className="absolute -right-4 -top-8 bg-hot text-white text-xs font-black px-3 py-1 rounded-full transform rotate-12 shadow-lg animate-bounce">
+                <div className={`absolute -right-4 -top-8 text-white text-xs font-black px-3 py-1 rounded-full transform rotate-12 shadow-lg animate-bounce ${isFunky ? 'bg-black border-2 border-white' : 'bg-hot'}`}>
                   37.5% OFF
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground font-medium mb-8">
+              <p className={`text-sm font-medium mb-8 ${isFunky ? 'text-black/80' : 'text-muted-foreground'}`}>
                 Perfect for one-off tournaments. Grants +1 to your Free Auction quota.
               </p>
               <ul className="space-y-4 mb-8 font-medium">
@@ -220,7 +228,7 @@ function PricingPage() {
                   "No expiry on credit",
                 ].map((feature) => (
                   <li key={feature} className="flex items-start gap-3 text-sm">
-                    <Check className="h-5 w-5 text-neon shrink-0" />
+                    <Check className={`h-5 w-5 shrink-0 ${isFunky ? 'text-black' : 'text-neon'}`} />
                     <span>{feature}</span>
                   </li>
                 ))}
@@ -229,33 +237,33 @@ function PricingPage() {
             <Button 
               onClick={() => handleUpgrade(PRICE_SINGLE, 'single')}
               disabled={redirecting !== null}
-              className={`w-full rounded-2xl h-14 font-black text-lg shadow-xl transition-all ${isLight ? 'bg-gray-900 text-white hover:bg-gray-800' : 'bg-glass border-2 border-border hover:border-neon hover:text-neon'}`}
+              className={`w-full h-14 font-black text-lg transition-all ${isFunky ? 'bg-white text-black hover:bg-black hover:text-white rounded-xl genz-shadow genz-shadow-hover' : isLight ? 'bg-gray-900 text-white hover:bg-gray-800 rounded-2xl shadow-xl' : 'bg-glass border-2 border-border text-white hover:border-neon hover:text-neon rounded-2xl shadow-xl'}`}
             >
               {redirecting === 'single' ? <Loader2 className="w-6 h-6 animate-spin" /> : "Buy 1 Credit"}
             </Button>
           </div>
 
           {/* Monthly Pro Card - THE CRAZY ONE */}
-          <div className={`relative bg-glass border-2 rounded-[2.5rem] p-10 flex flex-col justify-between card-crazy-hover transform md:-translate-y-6 z-20 ${isFunky ? 'border-pink-500 bg-black/40 backdrop-blur-2xl animate-[floatZ_4s_ease-in-out_infinite]' : 'border-neon shadow-[0_0_50px_-10px_rgba(50,255,150,0.3)] animate-[pulseGlow_4s_infinite]'}`}>
-            <div className={`absolute -top-5 left-1/2 -translate-x-1/2 text-xs font-black uppercase tracking-widest px-6 py-2 rounded-full border-2 shadow-[0_0_20px_rgba(var(--neon),0.5)] ${isFunky ? 'bg-pink-500 text-white border-pink-300' : 'bg-neon text-black border-green-300'}`}>
+          <div className={`relative flex flex-col justify-between card-crazy-hover transform md:-translate-y-6 z-20 ${isFunky ? 'bg-[#00ffaa] genz-shadow rounded-3xl p-10 animate-[floatZ_4s_ease-in-out_infinite] text-black' : 'bg-glass border-2 rounded-[2.5rem] p-10 border-neon shadow-[0_0_50px_-10px_rgba(50,255,150,0.3)] animate-[pulseGlow_4s_infinite] text-white'}`}>
+            <div className={`absolute -top-5 left-1/2 -translate-x-1/2 text-xs font-black uppercase tracking-widest px-6 py-2 rounded-full border-2 ${isFunky ? 'bg-black text-white border-black genz-shadow' : 'bg-neon text-black border-green-300 shadow-[0_0_20px_rgba(var(--neon),0.5)]'}`}>
               Most Popular
             </div>
             
             <div>
-              <div className={`flex items-center gap-2 text-sm font-black tracking-wider uppercase mb-4 ${isFunky ? 'text-pink-400' : 'text-neon'}`}>
+              <div className={`flex items-center gap-2 text-sm font-black tracking-wider uppercase mb-4 ${isFunky ? 'text-black/80' : 'text-neon'}`}>
                 <Zap className="w-5 h-5 animate-pulse" /> Monthly Pro
               </div>
               <div className="mb-6 relative">
-                <div className="text-2xl font-bold text-muted-foreground/50 animate-cross-out inline-block mr-2">₹199</div>
+                <div className={`text-2xl font-bold animate-cross-out inline-block mr-2 ${isFunky ? 'text-black/50' : 'text-muted-foreground/50'}`}>₹199</div>
                 <div className="flex items-baseline gap-1 mt-2">
-                  <span className={`text-6xl font-black ${isFunky ? 'text-transparent bg-clip-text bg-gradient-to-r from-pink-300 via-purple-300 to-indigo-300' : 'text-foreground'}`}>₹99</span>
-                  <span className="text-muted-foreground font-bold">/ mo</span>
+                  <span className={`text-6xl font-black ${isFunky ? 'text-black' : 'text-foreground'}`}>₹99</span>
+                  <span className={`font-bold ${isFunky ? 'text-black/70' : 'text-muted-foreground'}`}>/ mo</span>
                 </div>
-                <div className={`absolute -right-6 top-0 text-white text-xs font-black px-4 py-1.5 rounded-full transform rotate-6 shadow-xl animate-pulse ${isFunky ? 'bg-purple-600' : 'bg-neon text-black'}`}>
+                <div className={`absolute -right-6 top-0 text-white text-xs font-black px-4 py-1.5 rounded-full transform rotate-6 animate-pulse ${isFunky ? 'bg-[#ff0055] genz-shadow' : 'bg-neon text-black shadow-xl'}`}>
                   50% OFF!
                 </div>
               </div>
-              <p className="text-sm font-medium mb-8 text-foreground/80">
+              <p className={`text-sm font-medium mb-8 ${isFunky ? 'text-black/80' : 'text-foreground/80'}`}>
                 Unlock everything. Unlimited tournaments, premium projector views, and total freedom.
               </p>
               <ul className="space-y-4 mb-8 font-bold">
@@ -267,21 +275,21 @@ function PricingPage() {
                   "Priority live websocket syncing",
                 ].map((feature) => (
                   <li key={feature} className="flex items-start gap-3 text-sm">
-                    <Check className={`h-5 w-5 shrink-0 ${isFunky ? 'text-pink-400' : 'text-neon'}`} />
+                    <Check className={`h-5 w-5 shrink-0 ${isFunky ? 'text-black' : 'text-neon'}`} />
                     <span>{feature}</span>
                   </li>
                 ))}
               </ul>
             </div>
             {isPremium ? (
-              <Button className={`w-full rounded-2xl h-14 font-black text-lg cursor-default opacity-80 ${isFunky ? 'bg-pink-900/50 text-pink-200 border-pink-500/50' : 'bg-neon/10 text-neon border border-neon/50'}`}>
+              <Button className={`w-full h-14 font-black text-lg cursor-default opacity-80 ${isFunky ? 'bg-black/10 text-black border-2 border-black rounded-xl genz-shadow' : 'bg-neon/10 text-neon border border-neon/50 rounded-2xl'}`}>
                 Your Current Plan
               </Button>
             ) : (
               <Button
                 onClick={() => handleUpgrade(PRICE_MONTHLY, 'monthly')}
                 disabled={redirecting !== null}
-                className={`w-full rounded-2xl h-16 font-black text-xl shadow-[0_0_30px_rgba(var(--neon),0.4)] hover:scale-105 transition-all ${isFunky ? 'bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white border-none' : 'gradient-neon text-primary-foreground'}`}
+                className={`w-full h-16 font-black text-xl hover:scale-105 transition-all ${isFunky ? 'bg-black text-white hover:bg-white hover:text-black border-2 border-black rounded-xl genz-shadow genz-shadow-hover' : 'gradient-neon text-primary-foreground rounded-2xl shadow-[0_0_30px_rgba(var(--neon),0.4)]'}`}
               >
                 {redirecting === 'monthly' ? <Loader2 className="w-6 h-6 animate-spin" /> : "Go Pro Monthly"}
               </Button>
@@ -289,22 +297,22 @@ function PricingPage() {
           </div>
 
           {/* Yearly Pro Card */}
-          <div className={`bg-glass border rounded-[2rem] p-8 flex flex-col justify-between card-crazy-hover shadow-xl ${isLight ? 'bg-white border-gray-200' : 'border-border/80 hover:border-neon/50 hover:shadow-neon/20'} animate-[floatY_6s_ease-in-out_infinite_1s]`}>
+          <div className={`flex flex-col justify-between card-crazy-hover ${isFunky ? 'bg-[#ffb000] genz-shadow rounded-3xl p-8 animate-[floatY_6s_ease-in-out_infinite_1s] text-black' : isLight ? 'bg-white border border-gray-200 rounded-[2rem] p-8 shadow-xl' : 'bg-glass border rounded-[2rem] p-8 border-border/80 hover:border-neon/50 hover:shadow-neon/20 animate-[floatY_6s_ease-in-out_infinite_1s] text-white'}`}>
             <div>
-              <div className="flex items-center gap-2 text-sm font-black tracking-wider uppercase mb-4 text-muted-foreground">
+              <div className={`flex items-center gap-2 text-sm font-black tracking-wider uppercase mb-4 ${isFunky ? 'text-black/80' : 'text-muted-foreground'}`}>
                 <Sparkles className="w-5 h-5" /> Yearly Pro
               </div>
               <div className="mb-6 relative">
-                <div className="text-xl font-bold text-muted-foreground/60 animate-cross-out inline-block mr-2">₹1999</div>
+                <div className={`text-xl font-bold animate-cross-out inline-block mr-2 ${isFunky ? 'text-black/50' : 'text-muted-foreground/60'}`}>₹1999</div>
                 <div className="flex items-baseline gap-1 mt-2">
-                  <span className={`text-5xl font-black ${isFunky ? 'text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400' : ''}`}>₹999</span>
-                  <span className="text-muted-foreground font-semibold">/ yr</span>
+                  <span className={`text-5xl font-black ${isFunky ? 'text-black' : ''}`}>₹999</span>
+                  <span className={`font-semibold ${isFunky ? 'text-black/70' : 'text-muted-foreground'}`}>/ yr</span>
                 </div>
-                <div className="absolute -right-4 -top-8 bg-primary text-primary-foreground text-xs font-black px-3 py-1 rounded-full transform -rotate-12 shadow-lg animate-bounce">
+                <div className={`absolute -right-4 -top-8 text-xs font-black px-3 py-1 rounded-full transform -rotate-12 ${isFunky ? 'bg-white text-black border-2 border-black genz-shadow' : 'bg-primary text-primary-foreground shadow-lg animate-bounce'}`}>
                   BEST VALUE
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground font-medium mb-8">
+              <p className={`text-sm font-medium mb-8 ${isFunky ? 'text-black/80' : 'text-muted-foreground'}`}>
                 All the benefits of Monthly Pro, but you save an extra 16% over the year.
               </p>
               <ul className="space-y-4 mb-8 font-medium">
@@ -314,21 +322,21 @@ function PricingPage() {
                   "Priority support",
                 ].map((feature) => (
                   <li key={feature} className="flex items-start gap-3 text-sm">
-                    <Check className="h-5 w-5 text-neon shrink-0" />
+                    <Check className={`h-5 w-5 shrink-0 ${isFunky ? 'text-black' : 'text-neon'}`} />
                     <span>{feature}</span>
                   </li>
                 ))}
               </ul>
             </div>
             {isPremium ? (
-              <Button variant="outline" className="w-full rounded-2xl h-14 font-black border-border/50 text-muted-foreground" disabled>
+              <Button variant="outline" className={`w-full h-14 font-black ${isFunky ? 'border-2 border-black bg-white/50 text-black/50 rounded-xl genz-shadow' : 'border-border/50 text-muted-foreground rounded-2xl'}`} disabled>
                 Pro Active
               </Button>
             ) : (
               <Button
                 onClick={() => handleUpgrade(PRICE_YEARLY, 'yearly')}
                 disabled={redirecting !== null}
-                className={`w-full rounded-2xl h-14 font-black text-lg shadow-xl transition-all ${isLight ? 'bg-gray-900 text-white hover:bg-gray-800' : 'bg-glass border-2 border-border hover:border-neon hover:text-neon'}`}
+                className={`w-full h-14 font-black text-lg transition-all ${isFunky ? 'bg-white text-black hover:bg-black hover:text-white rounded-xl genz-shadow genz-shadow-hover' : isLight ? 'bg-gray-900 text-white hover:bg-gray-800 rounded-2xl shadow-xl' : 'bg-glass border-2 border-border text-white hover:border-neon hover:text-neon rounded-2xl shadow-xl'}`}
               >
                 {redirecting === 'yearly' ? <Loader2 className="w-6 h-6 animate-spin" /> : "Go Pro Yearly"}
               </Button>
