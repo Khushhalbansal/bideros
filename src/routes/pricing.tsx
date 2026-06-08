@@ -212,7 +212,7 @@ function PricingPage() {
                 <div className={`text-xl font-bold animate-cross-out inline-block mr-2 ${isFunky ? 'text-black/50' : 'text-muted-foreground/60'}`}>₹80</div>
                 <div className="flex items-baseline gap-1 mt-2">
                   <span className={`text-5xl font-black ${isFunky ? 'text-black' : ''}`}>₹50</span>
-                  <span className={`font-semibold ${isFunky ? 'text-black/70' : 'text-muted-foreground'}`}>/ tourney</span>
+                  <span className={`font-semibold ${isFunky ? 'text-black/70' : 'text-muted-foreground'}`}>{isFunky ? '/ tourney' : '/ tournament'}</span>
                 </div>
                 <div className={`absolute -right-4 -top-8 text-white text-xs font-black px-3 py-1 rounded-full transform rotate-12 shadow-lg animate-bounce ${isFunky ? 'bg-black border-2 border-white' : 'bg-hot'}`}>
                   37.5% OFF
