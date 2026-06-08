@@ -3,7 +3,7 @@ import { createServerFn } from '@tanstack/react-start';
 import Stripe from 'stripe';
 
 export const createCheckoutSession = createServerFn({ method: 'POST' })
-  .validator((data: { userId: string; email: string; origin: string; priceId: string; planType: 'single' | 'monthly' | 'yearly' }) => data)
+  .inputValidator((data: { userId: string; email: string; origin: string; priceId: string; planType: 'single' | 'monthly' | 'yearly' }) => data)
   .handler(async ({ data }) => {
     const { userId, email, origin, priceId, planType } = data;
 
