@@ -6,8 +6,9 @@ import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
-import { Check, ShieldAlert, Sparkles, ArrowRight, Loader2, Zap, Gift, Target } from "lucide-react";
+import { Sparkles, ArrowRight, Loader2, Zap, Gift, Target, ShieldAlert, Check } from "lucide-react";
 import { createCheckoutSession } from "@/lib/checkout.server";
+import { SequentialVideoBackground } from "@/components/SequentialVideoBackground";
 
 export const Route = createFileRoute("/pricing")({ component: PricingPage });
 
@@ -143,6 +144,16 @@ function PricingPage() {
       `}</style>
 
       {/* Background decorations */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <SequentialVideoBackground 
+          opacity="opacity-30 mix-blend-screen"
+          videos={[
+            "/videos/bg-11.mp4",
+            "/videos/bg-12.mp4"
+          ]}
+        />
+      </div>
+
       {!isFunky && (
         <>
           <div className="pointer-events-none absolute -top-40 -left-40 h-[600px] w-[600px] rounded-full bg-primary/10 blur-[150px] animate-[pulse_8s_ease-in-out_infinite]" />
