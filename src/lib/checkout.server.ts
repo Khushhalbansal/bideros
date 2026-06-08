@@ -1,3 +1,4 @@
+"use server";
 import { createServerFn } from '@tanstack/react-start';
 import Stripe from 'stripe';
 
