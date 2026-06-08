@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import { formatINR } from "@/lib/format";
-import { Gavel, ChevronRight, Wallet, Hand } from "lucide-react";
+import { Gavel, ChevronRight, Wallet, Hand, Download } from "lucide-react";
 import { useAuctionTicker } from "@/hooks/use-auction-ticker";
 import { HammerStrikes } from "@/components/HammerStrikes";
 import { SoldBanner } from "@/components/SoldBanner";
@@ -130,6 +130,27 @@ interface InnerProps { team: Team; tournament: Tournament; state: AuctionState|n
 
 function TeamRoomInner({ team, tournament, state, allTeams, bids, currentPlayer, leadingTeam, minNext, isLeading, timeLeft, isLive, canBid, squad, bidding, placeBid, soldPlayer, soldTeam, soldPrice }: InnerProps) {
   useAuctionTicker(team.tournament_id, isLive);
+
+  const downloadSquadSummary = () => {
+    const rows = [["Player Name", "Role", "Sold Price (INR)"]];
+    squad.forEach(p => {
+      rows.push([
+        `"${p.name}"`,
+        `"${p.role || ""}"`,
+        String(p.sold_price || 0)
+      ]);
+    });
+
+    const csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Squad_${team.name.replace(/\s+/g, '_')}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="min-h-screen">
       {isLive && state?.strike_count ? <HammerStrikes count={state.strike_count} /> : null}
@@ -202,7 +223,14 @@ function TeamRoomInner({ team, tournament, state, allTeams, bids, currentPlayer,
 
         <aside className="space-y-6">
           <div className="bg-glass border border-border rounded-xl p-5">
-            <h3 className="font-bold mb-3">My squad ({squad.length})</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-bold">My squad ({squad.length})</h3>
+              {squad.length > 0 && (
+                <Button variant="ghost" size="sm" onClick={downloadSquadSummary} className="h-6 px-2 text-neon hover:text-neon hover:bg-neon/10" title="Download Squad (CSV)">
+                  <Download className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
             {squad.length === 0 ? <p className="text-xs text-muted-foreground">No players yet.</p> : (
               <ul className="space-y-1.5 text-sm">
                 {squad.map(p => (
