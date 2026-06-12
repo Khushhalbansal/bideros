@@ -223,6 +223,13 @@ function AuctionControl({ tournament, players, teams, state, categories }:{
               <Button onClick={() => { if (confirm("End the auction and mark tournament as completed?")) callRpc("end_auction", {}, "Auction ended"); }} variant="outline" size="sm" className="border-destructive/40 text-destructive hover:bg-destructive/10">
                 <Flag className="h-3 w-3 mr-1" />End auction
               </Button>
+              <Button onClick={() => { 
+                if (prompt("Type RESTART to completely reset the tournament and clear all bids. This CANNOT be undone.") === "RESTART") {
+                  callRpc("restart_tournament", {}, "Tournament restarted");
+                }
+              }} variant="outline" size="sm" className="border-destructive/40 text-destructive hover:bg-destructive/10">
+                <Undo2 className="h-3 w-3 mr-1" />Restart tournament
+              </Button>
               <Button onClick={downloadSummary} variant="outline" size="sm" className="border-neon/40 text-neon hover:bg-neon/10">
                 <Download className="h-3 w-3 mr-1" />Download Summary (CSV)
               </Button>
@@ -274,9 +281,23 @@ function AuctionControl({ tournament, players, teams, state, categories }:{
               </Button>
             </div>
             {teams.length === 0 && <p className="text-xs text-destructive">Add teams before starting an auction.</p>}
+            {state?.last_sold_player_id && (
+              <div className="pt-2">
+                <Button onClick={() => { if (confirm("Undo last sale? The player will be moved back to pending and the team will be refunded.")) callRpc("undo_last_sale", {}, "Sale undone"); }} variant="outline" size="sm">
+                  <Undo2 className="h-3 w-3 mr-1" />Undo Last Sale
+                </Button>
+              </div>
+            )}
             <div className="pt-2 border-t border-border flex flex-wrap gap-2">
               <Button onClick={() => { if (confirm("End the auction and mark tournament as completed?")) callRpc("end_auction", {}, "Auction ended"); }} variant="outline" size="sm" className="border-destructive/40 text-destructive hover:bg-destructive/10">
                 <Flag className="h-3 w-3 mr-1" />End auction
+              </Button>
+              <Button onClick={() => { 
+                if (prompt("Type RESTART to completely reset the tournament and clear all bids. This CANNOT be undone.") === "RESTART") {
+                  callRpc("restart_tournament", {}, "Tournament restarted");
+                }
+              }} variant="outline" size="sm" className="border-destructive/40 text-destructive hover:bg-destructive/10">
+                <Undo2 className="h-3 w-3 mr-1" />Restart tournament
               </Button>
               <Button onClick={downloadSummary} variant="outline" size="sm" className="border-neon/40 text-neon hover:bg-neon/10">
                 <Download className="h-3 w-3 mr-1" />Download Summary (CSV)
