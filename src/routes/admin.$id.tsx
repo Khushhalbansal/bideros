@@ -641,7 +641,20 @@ function PlayersTab({ tournament, players, teams, categories, onChange }:{ tourn
                 <div className="text-xs text-muted-foreground">
                   <span className={`uppercase tracking-wider font-bold ${p.status === "sold" ? "text-neon" : p.status === "unsold" ? "text-hot" : ""}`}>{p.status}</span>
                   {team && <div className="truncate">{team.name} — {formatINR(p.sold_price)}</div>}
-                  {isSold && <div className="text-[10px] text-muted-foreground/70">Use "Undo sale" in auction tab to refund.</div>}
+                  {isSold && (
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="h-6 text-[10px] px-2 py-0 border-neon/50 text-neon hover:bg-neon/10"
+                      onClick={() => {
+                        if (confirm(`Refund ${p.name} and move back to pending?`)) {
+                          callRpc("undo_sale_for_player", { p_player: p.id }, "Sale undone");
+                        }
+                      }}
+                    >
+                      <Undo2 className="h-3 w-3 mr-1" />Refund & Restart
+                    </Button>
+                  )}
                 </div>
               </div>
               <Button size="sm" variant="ghost" onClick={() => remove(p.id)} disabled={isSold} title={isSold ? "Undo the sale first" : "Delete"}><Trash2 className="h-3 w-3" /></Button>
