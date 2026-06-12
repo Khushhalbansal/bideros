@@ -11,7 +11,7 @@ interface InviteInfo { team_id: string; tournament_id: string; team_name: string
 function InvitePage() {
   const { token } = Route.useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [info, setInfo] = useState<InviteInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const joiningRef = useRef(false);
@@ -38,10 +38,10 @@ function InvitePage() {
   const accept = async () => {
     if (joiningRef.current) return;
     joiningRef.current = true;
-    // No login required — sign in anonymously if needed so the link "just works".
     if (!user) {
-      const { error: anonErr } = await supabase.auth.signInAnonymously();
-      if (anonErr) { joiningRef.current = false; return toast.error(anonErr.message); }
+      toast.error("Please sign in or create an account to join.");
+      navigate({ to: "/auth", search: { next: `/invite/${token}` } });
+      return;
     }
     const { data, error } = await supabase.rpc("accept_invite", { p_token: token });
     if (error) { joiningRef.current = false; return toast.error(error.message); }
@@ -56,11 +56,10 @@ function InvitePage() {
   };
 
   useEffect(() => {
-    if (info && !info.expired && !info.used) {
+    if (!authLoading && info && !info.expired && !info.used) {
       accept();
     }
-     
-  }, [user, info]);
+  }, [user, info, authLoading]);
 
   let content = <div className="text-muted-foreground">Joining your team…</div>;
   if (loading) content = <div className="text-muted-foreground">Loading…</div>;
