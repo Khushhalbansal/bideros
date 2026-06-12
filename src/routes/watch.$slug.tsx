@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatINR } from "@/lib/format";
-import { Gavel } from "lucide-react";
+import { Gavel, Loader2 } from "lucide-react";
 import { useAuctionTicker } from "@/hooks/use-auction-ticker";
 import { HammerStrikes } from "@/components/HammerStrikes";
 import { SoldBanner } from "@/components/SoldBanner";
@@ -23,41 +23,60 @@ function Spectator() {
   const [state, setState] = useState<AuctionState|null>(null);
   const [flash, setFlash] = useState(false);
   const [now, setNow] = useState(Date.now());
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => { const i = setInterval(() => setNow(Date.now()), 500); return () => clearInterval(i); }, []);
 
   const load = useCallback(async () => {
-    const { data: tt } = await supabase.from("tournaments").select("*").eq("id", slug).maybeSingle();
-    if (!tt) return;
-    setT(tt as Tournament);
-    const [{ data: tm }, { data: pl }, { data: st }] = await Promise.all([
-      supabase.from("teams_public").select("*").eq("tournament_id", slug),
-      supabase.from("players").select("*").eq("tournament_id", slug),
-      supabase.from("auction_state").select("*").eq("tournament_id", slug).maybeSingle(),
-    ]);
-    setTeams((tm as Team[]) || []);
-    setPlayers((pl as Player[]) || []);
-    setState(st as AuctionState | null);
+    try {
+      const [{ data: tt }, { data: tm }, { data: pl }, { data: st }] = await Promise.all([
+        supabase.from("tournaments").select("*").eq("id", slug).maybeSingle(),
+        supabase.from("teams_public").select("*").eq("tournament_id", slug),
+        supabase.from("players").select("*").eq("tournament_id", slug),
+        supabase.from("auction_state").select("*").eq("tournament_id", slug).maybeSingle(),
+      ]);
+      
+      if (!tt) {
+        setIsLoading(false);
+        return;
+      }
+      setT(tt as Tournament);
+      setTeams((tm as Team[]) || []);
+      setPlayers((pl as Player[]) || []);
+      setState(st as AuctionState | null);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoading(false);
+    }
   }, [slug]);
 
   useEffect(() => { load(); }, [load]);
 
   useEffect(() => {
-    if (!t) return;
-    const ch = supabase.channel(`watch:${t.id}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "auction_state", filter: `tournament_id=eq.${t.id}` }, (payload) => {
+    if (!slug) return;
+    let timeout: any;
+    const debouncedLoad = () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => load(), 200);
+    };
+
+    const ch = supabase.channel(`watch:${slug}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "auction_state", filter: `tournament_id=eq.${slug}` }, (payload) => {
         const ns = payload.new as AuctionState;
         setState(ns);
         if (ns?.current_highest_bid) { setFlash(true); setTimeout(()=>setFlash(false), 400); }
+        debouncedLoad();
       })
-      .on("postgres_changes", { event: "*", schema: "public", table: "teams", filter: `tournament_id=eq.${t.id}` }, () => load())
-      .on("postgres_changes", { event: "*", schema: "public", table: "players", filter: `tournament_id=eq.${t.id}` }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "teams", filter: `tournament_id=eq.${slug}` }, debouncedLoad)
+      .on("postgres_changes", { event: "*", schema: "public", table: "players", filter: `tournament_id=eq.${slug}` }, debouncedLoad)
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
-  }, [t, load]);
+    return () => { clearTimeout(timeout); supabase.removeChannel(ch); };
+  }, [slug, load]);
 
   useAuctionTicker(slug, t?.status === "live");
 
+  if (isLoading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   if (!t) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Tournament not found.</div>;
 
   const currentPlayer = players.find(p => p.id === state?.current_player_id) || null;
@@ -73,7 +92,7 @@ function Spectator() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {isLive && state?.strike_count ? <HammerStrikes count={state.strike_count} /> : null}
+      <HammerStrikes count={state?.strike_count} />
       <AnimatePresence>
         {soldPlayer && soldTeam && state?.last_sold_price != null && (
           <SoldBanner player={soldPlayer.name} team={soldTeam.name} price={Number(state.last_sold_price)} />
@@ -153,7 +172,7 @@ function Spectator() {
         <aside className="bg-glass border border-border rounded-xl p-4">
           <h3 className="font-bold mb-3 text-sm uppercase tracking-widest text-neon">Teams</h3>
           <div className="space-y-2">
-            {teams.sort((a,b)=>b.remaining_purse-a.remaining_purse).map(tm => {
+            {[...teams].sort((a,b)=>b.remaining_purse-a.remaining_purse).map(tm => {
               const isLead = tm.id === state?.current_highest_team_id;
               const squadCount = players.filter(p => p.sold_to_team_id === tm.id).length;
               return (
