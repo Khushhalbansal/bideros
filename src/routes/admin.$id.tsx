@@ -10,7 +10,7 @@ import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import { formatINR, parseINR } from "@/lib/format";
 import { Play, Pause, SkipForward, Undo2, XCircle, Flag, Monitor, Gavel, ChevronRight, Eye, Copy, Trash2, Share2, Link as LinkIcon, Save, Users, Tag, Download } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { uploadImage } from "@/lib/uploads";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
@@ -93,7 +93,7 @@ function AdminPanel() {
           </TabsList>
 
           <TabsContent value="auction" className="mt-6">
-            <AuctionControl tournament={t} players={players} teams={teams} state={state} />
+            <AuctionControl tournament={t} players={players} teams={teams} state={state} categories={categories} />
           </TabsContent>
           <TabsContent value="lobby" className="mt-6">
             <LobbyPanel tournamentId={t.id} />
@@ -117,8 +117,8 @@ function AdminPanel() {
 }
 
 // === AUCTION CONTROL ===
-function AuctionControl({ tournament, players, teams, state }:{
-  tournament: Tournament; players: Player[]; teams: Team[]; state: AuctionState | null;
+function AuctionControl({ tournament, players, teams, state, categories }:{
+  tournament: Tournament; players: Player[]; teams: Team[]; state: AuctionState | null; categories: Category[];
 }) {
   const pending = players.filter(p => p.status === "pending");
   const currentPlayer = players.find(p => p.id === state?.current_player_id) || null;
@@ -235,9 +235,38 @@ function AuctionControl({ tournament, players, teams, state }:{
               <Select value={selectedId} onValueChange={setSelectedId}>
                 <SelectTrigger className="flex-1"><SelectValue placeholder={`${pending.length} players pending`} /></SelectTrigger>
                 <SelectContent>
-                  {pending.map(p => (
-                    <SelectItem key={p.id} value={p.id}>{p.name} — {formatINR(p.base_price)}</SelectItem>
-                  ))}
+                  {categories.length > 0 ? (
+                    <>
+                      {categories.map(c => {
+                        const catPlayers = pending.filter(p => p.category_id === c.id);
+                        if (catPlayers.length === 0) return null;
+                        return (
+                          <SelectGroup key={c.id}>
+                            <SelectLabel className="text-neon">{c.name}</SelectLabel>
+                            {catPlayers.map(p => (
+                              <SelectItem key={p.id} value={p.id}>{p.name} — {formatINR(p.base_price)}</SelectItem>
+                            ))}
+                          </SelectGroup>
+                        );
+                      })}
+                      {(() => {
+                        const noCatPlayers = pending.filter(p => !p.category_id);
+                        if (noCatPlayers.length === 0) return null;
+                        return (
+                          <SelectGroup>
+                            <SelectLabel className="text-muted-foreground">Uncategorised</SelectLabel>
+                            {noCatPlayers.map(p => (
+                              <SelectItem key={p.id} value={p.id}>{p.name} — {formatINR(p.base_price)}</SelectItem>
+                            ))}
+                          </SelectGroup>
+                        );
+                      })()}
+                    </>
+                  ) : (
+                    pending.map(p => (
+                      <SelectItem key={p.id} value={p.id}>{p.name} — {formatINR(p.base_price)}</SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
               <Button onClick={startLot} disabled={!selectedId || teams.length === 0} className="gradient-neon text-primary-foreground shadow-neon">
