@@ -575,18 +575,18 @@ function PlayersTab({ tournament, players, teams, categories, onChange }:{ tourn
                     className="h-8 text-xs font-mono"
                   />
                 )}
-                {categories.length > 0 && (
-                  isSold ? (
-                    <div className="text-xs text-muted-foreground truncate">{categories.find(c => c.id === p.category_id)?.name || "—"}</div>
-                  ) : (
-                    <Select value={p.category_id ?? "__none__"} onValueChange={(v) => updateField(p.id, { category_id: v === "__none__" ? null : v })}>
-                      <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Category" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="__none__">— None —</SelectItem>
-                        {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  )
+                {isSold ? (
+                  <div className="text-xs text-muted-foreground truncate">{categories.find(c => c.id === p.category_id)?.name || "—"}</div>
+                ) : categories.length > 0 ? (
+                  <Select value={p.category_id ?? "__none__"} onValueChange={(v) => updateField(p.id, { category_id: v === "__none__" ? null : v })}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Category" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">— None —</SelectItem>
+                      {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="text-[10px] text-muted-foreground/50 truncate flex items-center h-8 px-3 border border-border/50 rounded-md bg-muted/10 cursor-not-allowed" title="Add categories in the Categories tab first">No categories</div>
                 )}
                 <div className="text-xs text-muted-foreground">
                   <span className={`uppercase tracking-wider font-bold ${p.status === "sold" ? "text-neon" : p.status === "unsold" ? "text-hot" : ""}`}>{p.status}</span>
