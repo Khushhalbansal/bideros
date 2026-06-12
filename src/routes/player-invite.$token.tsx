@@ -66,9 +66,17 @@ function PlayerInvitePage() {
     })();
   }, [user]);
 
+  const needsAuth = !user || user.is_anonymous;
+
+  useEffect(() => {
+    if (!authLoading && needsAuth) {
+      toast.error("Please sign in or create an account to join.");
+      navigate({ to: "/auth", search: { next: `/player-invite/${token}` } });
+    }
+  }, [user, authLoading, needsAuth, navigate, token]);
+
   const ensureSignedIn = (): boolean => {
-    if (!user || user.is_anonymous) {
-      toast.error("Please sign in or create an account first");
+    if (needsAuth) {
       navigate({ to: "/auth", search: { next: `/player-invite/${token}` } });
       return false;
     }
@@ -129,7 +137,6 @@ function PlayerInvitePage() {
   if (info.revoked) return <div className="min-h-screen flex items-center justify-center text-muted-foreground p-8 text-center">This invite has been revoked.</div>;
   if (info.expired) return <div className="min-h-screen flex items-center justify-center text-muted-foreground p-8 text-center">This invite has expired. Ask the tournament admin for a new one.</div>;
 
-  const needsAuth = !user || user.is_anonymous;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -140,12 +147,8 @@ function PlayerInvitePage() {
           <h1 className="text-2xl font-bold mb-2">Join {info.tournament_name}</h1>
 
           {needsAuth ? (
-            <div className="space-y-3 mt-4">
-              <p className="text-sm">You need an account to join this tournament.</p>
-              <Button asChild className="w-full gradient-neon text-primary-foreground shadow-neon">
-                <Link to="/auth" search={{ next: `/player-invite/${token}` }}>Sign in / Create account</Link>
-              </Button>
-              <p className="text-[11px] text-muted-foreground text-center">You'll come straight back here after signing in.</p>
+            <div className="space-y-3 mt-4 text-center">
+              <p className="text-sm text-muted-foreground">Redirecting to sign in...</p>
             </div>
           ) : (
             <>
