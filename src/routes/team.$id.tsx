@@ -20,6 +20,7 @@ interface Tournament { id:string; name:string; min_bid_increment:number; status:
 interface Player { id:string; name:string; role:string|null; base_price:number; status:string; sold_to_team_id:string|null; sold_price:number|null; photo_url?:string|null; }
 interface AuctionState { current_player_id:string|null; current_highest_bid:number|null; current_highest_team_id:string|null; timer_ends_at:string|null; strike_count?:number; last_sold_player_id?:string|null; last_sold_team_id?:string|null; last_sold_price?:number|null; last_sold_at?:string|null; }
 interface Bid { id:string; team_id:string; amount:number; created_at:string; }
+interface Category { id:string; name:string; min_bid_increment:number; }
 
 function TeamRoom() {
   const { id } = Route.useParams();
@@ -29,6 +30,7 @@ function TeamRoom() {
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [allTeams, setAllTeams] = useState<Team[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [state, setState] = useState<AuctionState | null>(null);
   const [bids, setBids] = useState<Bid[]>([]);
   const [bidding, setBidding] = useState(false);
@@ -49,16 +51,18 @@ function TeamRoom() {
       return;
     }
     setTeam(tm as Team);
-    const [{ data: tt }, { data: ats }, { data: pl }, { data: st }, { data: bd }] = await Promise.all([
+    const [{ data: tt }, { data: ats }, { data: pl }, { data: cats }, { data: st }, { data: bd }] = await Promise.all([
       supabase.from("tournaments").select("*").eq("id", tm.tournament_id).maybeSingle(),
       supabase.from("teams_public").select("*").eq("tournament_id", tm.tournament_id),
       supabase.from("players").select("*").eq("tournament_id", tm.tournament_id),
+      supabase.from("player_categories").select("*").eq("tournament_id", tm.tournament_id),
       supabase.from("auction_state").select("*").eq("tournament_id", tm.tournament_id).maybeSingle(),
       supabase.from("bids").select("*").eq("tournament_id", tm.tournament_id).order("created_at", { ascending: false }).limit(20),
     ]);
     setTournament(tt as Tournament | null);
     setAllTeams((ats as Team[]) || []);
     setPlayers((pl as Player[]) || []);
+    setCategories((cats as Category[]) || []);
     setState(st as AuctionState | null);
     setBids((bd as Bid[]) || []);
     setLoaded(true);
@@ -95,10 +99,12 @@ function TeamRoom() {
   );
 
   const currentPlayer = players.find(p => p.id === state?.current_player_id) || null;
+  const currentCategory = currentPlayer && (currentPlayer as any).category_id ? categories.find(c => c.id === (currentPlayer as any).category_id) : null;
+  const increment = currentCategory?.min_bid_increment || tournament.min_bid_increment;
   const leadingTeam = allTeams.find(t => t.id === state?.current_highest_team_id);
   const minNext = !state?.current_highest_bid
     ? (currentPlayer?.base_price ?? 0)
-    : Number(state.current_highest_bid) + Number(tournament.min_bid_increment);
+    : Number(state.current_highest_bid) + Number(increment);
   const isLeading = state?.current_highest_team_id === team.id;
   const timeLeft = state?.timer_ends_at ? Math.max(0, Math.ceil((new Date(state.timer_ends_at).getTime() - now) / 1000)) : 0;
   const isLive = currentPlayer && tournament.status === "live";
