@@ -455,6 +455,15 @@ function PlayersTab({ tournament, players, teams, categories, onChange }:{ tourn
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkCat, setBulkCat] = useState<string>("__none__");
 
+  const callRpc = async (fn: string, payload: Record<string, unknown> = {}, successMsg = "Done") => {
+    const { data, error } = await supabase.rpc(fn as never, { p_tournament: tournament.id, ...payload } as never);
+    if (error) return toast.error(error.message);
+    const r = data as { ok:boolean; error?:string };
+    if (!r.ok) return toast.error(r.error || "Failed");
+    toast.success(successMsg);
+    onChange();
+  };
+
   const toggleSel = (id: string) => {
     const next = new Set(selected);
     if (next.has(id)) next.delete(id); else next.add(id);
