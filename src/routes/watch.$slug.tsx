@@ -24,6 +24,15 @@ function Spectator() {
   const [flash, setFlash] = useState(false);
   const [now, setNow] = useState(Date.now());
   const [isLoading, setIsLoading] = useState(true);
+  const [showSold, setShowSold] = useState(false);
+
+  useEffect(() => {
+    if (state?.last_sold_at) {
+      setShowSold(true);
+      const timer = setTimeout(() => setShowSold(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [state?.last_sold_at]);
 
   useEffect(() => { const i = setInterval(() => setNow(Date.now()), 500); return () => clearInterval(i); }, []);
 
@@ -85,9 +94,8 @@ function Spectator() {
   const timeLeft = state?.timer_ends_at ? Math.max(0, Math.ceil((new Date(state.timer_ends_at).getTime() - now) / 1000)) : null;
   const isLive = currentPlayer && state?.timer_ends_at && timeLeft! > 0;
 
-  const soldRecent = state?.last_sold_at && Date.now() - new Date(state.last_sold_at).getTime() < 5000;
-  const soldPlayer = soldRecent ? players.find(p => p.id === state?.last_sold_player_id) : null;
-  const soldTeam = soldRecent ? teams.find(tm => tm.id === state?.last_sold_team_id) : null;
+  const soldPlayer = showSold ? players.find(p => p.id === state?.last_sold_player_id) : null;
+  const soldTeam = showSold ? teams.find(tm => tm.id === state?.last_sold_team_id) : null;
 
 
   return (
@@ -132,14 +140,14 @@ function Spectator() {
                     ⏱ {timeLeft}s
                   </div>
                 )}
-                <div className="grid grid-cols-2 gap-6 max-w-3xl mx-auto">
-                  <div className="rounded-xl gradient-neon p-8 text-primary-foreground shadow-neon">
-                    <div className="text-xs uppercase tracking-widest opacity-80">Current bid</div>
-                    <div className="text-5xl font-bold mt-1">{state?.current_highest_bid ? formatINR(state.current_highest_bid) : "—"}</div>
+                <div className="grid grid-cols-2 gap-4 md:gap-6 max-w-3xl mx-auto">
+                  <div className="rounded-xl gradient-neon p-4 md:p-8 text-primary-foreground shadow-neon min-w-0">
+                    <div className="text-xs uppercase tracking-widest opacity-80 truncate">Current bid</div>
+                    <div className="text-3xl md:text-5xl font-bold mt-1 truncate">{state?.current_highest_bid ? formatINR(state.current_highest_bid) : "—"}</div>
                   </div>
-                  <div className="rounded-xl gradient-hot p-8 shadow-hot">
-                    <div className="text-xs uppercase tracking-widest opacity-80">Leading</div>
-                    <div className="text-5xl font-bold mt-1">{leading?.name || "—"}</div>
+                  <div className="rounded-xl gradient-hot p-4 md:p-8 shadow-hot min-w-0">
+                    <div className="text-xs uppercase tracking-widest opacity-80 truncate">Leading</div>
+                    <div className="text-3xl md:text-5xl font-bold mt-1 truncate" title={leading?.name || "—"}>{leading?.name || "—"}</div>
                   </div>
                 </div>
               </div>

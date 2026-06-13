@@ -22,6 +22,15 @@ function Projector() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [state, setState] = useState<AuctionState|null>(null);
   const [now, setNow] = useState(Date.now());
+  const [showSold, setShowSold] = useState(false);
+
+  useEffect(() => {
+    if (state?.last_sold_at) {
+      setShowSold(true);
+      const timer = setTimeout(() => setShowSold(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [state?.last_sold_at]);
 
   useEffect(() => { const i = setInterval(() => setNow(Date.now()), 250); return () => clearInterval(i); }, []);
 
@@ -59,9 +68,8 @@ function Projector() {
   const timeLeft = state?.timer_ends_at ? Math.max(0, Math.ceil((new Date(state.timer_ends_at).getTime() - now) / 1000)) : null;
   const liveLot = currentPlayer && timeLeft != null && timeLeft > 0;
 
-  const soldRecent = state?.last_sold_at && Date.now() - new Date(state.last_sold_at).getTime() < 5000;
-  const soldPlayer = soldRecent ? players.find(p => p.id === state?.last_sold_player_id) : null;
-  const soldTeam = soldRecent ? teams.find(tm => tm.id === state?.last_sold_team_id) : null;
+  const soldPlayer = showSold ? players.find(p => p.id === state?.last_sold_player_id) : null;
+  const soldTeam = showSold ? teams.find(tm => tm.id === state?.last_sold_team_id) : null;
 
   return (
     <div className="min-h-screen flex flex-col bg-background overflow-hidden relative">

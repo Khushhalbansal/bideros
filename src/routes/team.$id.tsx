@@ -16,7 +16,7 @@ import { AnimatePresence } from "framer-motion";
 export const Route = createFileRoute("/team/$id")({ component: TeamRoom });
 
 interface Team { id:string; name:string; tournament_id:string; owner_id:string|null; remaining_purse:number; }
-interface Tournament { id:string; name:string; min_bid_increment:number; status:string; bid_timer_seconds:number; banner_url?:string|null; }
+interface Tournament { id:string; name:string; min_bid_increment:number; status:string; bid_timer_seconds:number; max_players_per_team:number; banner_url?:string|null; }
 interface Player { id:string; name:string; role:string|null; base_price:number; status:string; sold_to_team_id:string|null; sold_price:number|null; photo_url?:string|null; }
 interface AuctionState { current_player_id:string|null; current_highest_bid:number|null; current_highest_team_id:string|null; timer_ends_at:string|null; strike_count?:number; last_sold_player_id?:string|null; last_sold_team_id?:string|null; last_sold_price?:number|null; last_sold_at?:string|null; }
 interface Bid { id:string; team_id:string; amount:number; created_at:string; }
@@ -37,6 +37,15 @@ function TeamRoom() {
   const [now, setNow] = useState(Date.now());
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [showSold, setShowSold] = useState(false);
+
+  useEffect(() => {
+    if (state?.last_sold_at) {
+      setShowSold(true);
+      const timer = setTimeout(() => setShowSold(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [state?.last_sold_at]);
 
   useEffect(() => { const i = setInterval(() => setNow(Date.now()), 500); return () => clearInterval(i); }, []);
   useEffect(() => { if (!loading && !user) navigate({ to: "/auth" }); }, [user, loading, navigate]);
@@ -108,12 +117,12 @@ function TeamRoom() {
   const isLeading = state?.current_highest_team_id === team.id;
   const timeLeft = state?.timer_ends_at ? Math.max(0, Math.ceil((new Date(state.timer_ends_at).getTime() - now) / 1000)) : 0;
   const isLive = currentPlayer && tournament.status === "live";
-  // soldOverlay: show for 5s after last_sold_at changes
-  const soldRecent = state?.last_sold_at && Date.now() - new Date(state.last_sold_at).getTime() < 5000;
-  const soldPlayer = soldRecent ? players.find(p => p.id === state?.last_sold_player_id) : null;
-  const soldTeam = soldRecent ? allTeams.find(t => t.id === state?.last_sold_team_id) : null;
-  const canBid = isLive && !isLeading && minNext <= team.remaining_purse;
+  // soldOverlay: use showSold state
+  const soldPlayer = showSold ? players.find(p => p.id === state?.last_sold_player_id) : null;
+  const soldTeam = showSold ? allTeams.find(t => t.id === state?.last_sold_team_id) : null;
   const squad = players.filter(p => p.sold_to_team_id === team.id);
+  const isSquadFull = tournament.max_players_per_team > 0 && squad.length >= tournament.max_players_per_team;
+  const canBid = isLive && !isLeading && minNext <= team.remaining_purse && !isSquadFull;
 
   const placeBid = async (amount: number) => {
     if (!currentPlayer) return;
@@ -202,6 +211,11 @@ function TeamRoomInner({ team, tournament, state, allTeams, bids, currentPlayer,
                 <div className="text-center py-6 rounded-xl bg-primary/15 border border-neon/50 animate-pulse-neon">
                   <div className="text-neon font-bold text-lg">🔥 YOU ARE LEADING 🔥</div>
                 </div>
+              ) : (tournament.max_players_per_team > 0 && squad.length >= tournament.max_players_per_team) ? (
+                <div className="text-center py-6 rounded-xl bg-muted/20 border border-muted/50">
+                  <div className="text-muted-foreground font-bold text-lg">🛑 SQUAD FULL 🛑</div>
+                  <div className="text-xs text-muted-foreground mt-1">You reached the {tournament.max_players_per_team} player limit.</div>
+                </div>
               ) : (
                 <div className="space-y-3">
                   <Button
@@ -262,9 +276,9 @@ function TeamRoomInner({ team, tournament, state, allTeams, bids, currentPlayer,
 
 function Stat({ label, value, accent, highlight }: { label:string; value:string; accent:"neon"|"hot"; highlight?:boolean }) {
   return (
-    <div className={`bg-card/60 rounded-lg p-4 border ${highlight ? "border-neon ring-neon" : "border-border"}`}>
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className={`text-2xl font-bold text-${accent}`}>{value}</div>
+    <div className={`bg-card/60 rounded-lg p-4 border ${highlight ? "border-neon ring-neon" : "border-border"} min-w-0`}>
+      <div className="text-xs text-muted-foreground truncate">{label}</div>
+      <div className={`text-lg md:text-2xl font-bold text-${accent} truncate`} title={value}>{value}</div>
     </div>
   );
 }
