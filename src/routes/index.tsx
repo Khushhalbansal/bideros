@@ -260,10 +260,13 @@ export function Landing() {
       <footer className="container mx-auto px-4 py-12 text-center text-xs text-muted-foreground border-t border-border space-y-6">
         <div className="max-w-4xl mx-auto opacity-60 leading-relaxed text-[11px] space-y-2">
           <p>
-            Bideros is a premier <strong>online auction website</strong> and <strong>live bidding platform</strong> designed for sports drafts, fundraisers, and mock events. Whether you are running an <strong>IPL auction simulator</strong>, a <strong>fantasy cricket auction</strong>, a <strong>sports bidding website</strong>, or an <strong>e-auction</strong> for digital assets, Bideros provides a seamless real-time bidding experience.
+            Bideros is a premier <strong>online auction website</strong>, <strong>live bidding platform</strong>, and the best <strong>CricAuction alternative</strong> designed for sports drafts, fundraisers, and mock events. Whether you are running an <strong>IPL auction simulator</strong>, looking for an <strong>auction website for students</strong>, or need a robust <strong>sports bidding website</strong>, Bideros provides a seamless real-time <strong>e-auction</strong> experience.
           </p>
           <p>
-            Built as a next-generation <strong>auction portal</strong> and <strong>digital auction marketplace</strong>, the app supports <strong>smart bidding</strong>, <strong>live player auctions</strong>, <strong>silent auctions</strong>, and interactive team rooms. From casual cricket games to professional fundraising charity auctions, host your next virtual bidding event with full transparency and stadium-grade visual effects.
+            Built as a next-generation <strong>auction portal</strong> and <strong>digital auction marketplace</strong>, Bideros outshines traditional competitors like <strong>CricAuction</strong>, <strong>BidArena</strong>, and <strong>Bid Wars</strong> by offering <strong>smart bidding</strong>, <strong>live player auctions</strong>, <strong>silent auctions</strong>, and interactive team rooms. If you want to <strong>place bids online</strong> or host your next virtual <strong>cricket bid app</strong> event with full transparency and stadium-grade visual effects, you are in the right place.
+          </p>
+          <p className="pt-2 border-t border-border/50">
+            <em>Search terms covered: auction website india, live bidding app, best auction site, auction online, online bid website, auction platform india, automated bidding, transparent bidding platform, auction for cricket players.</em>
           </p>
         </div>
         <div>
