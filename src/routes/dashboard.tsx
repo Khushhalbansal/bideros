@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/Logo";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, LogOut, Trophy, Eye, Settings, Search } from "lucide-react";
+import { Plus, LogOut, Trophy, Eye, Settings, Search, ShieldAlert } from "lucide-react";
 import { formatINR, parseINR } from "@/lib/format";
 import { TournamentGroup } from "./index";
 import { SequentialVideoBackground } from "@/components/SequentialVideoBackground";
@@ -39,21 +39,24 @@ function Dashboard() {
   const [creating, setCreating] = useState(false);
   const [open, setOpen] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   useEffect(() => { if (!loading && !user) navigate({ to: "/auth" }); }, [user, loading, navigate]);
 
   const load = async () => {
     if (!user) return;
-    const [{ data: t }, { data: te }, { data: pt }, { data: p }] = await Promise.all([
+    const [{ data: t }, { data: te }, { data: pt }, { data: p }, { data: roles }] = await Promise.all([
       supabase.from("tournaments").select("*").eq("admin_id", user.id).order("created_at", { ascending: false }),
       supabase.from("teams").select("id,name,tournament_id,tournaments(name)").eq("owner_id", user.id),
       supabase.from("tournaments").select("id,name,status,purse_per_team,max_players_per_team,created_at,starts_at,admin_id,cover_photo_url").order("created_at", { ascending: false }),
       supabase.from("profiles").select("subscription_tier, auctions_quota").eq("id", user.id).maybeSingle(),
+      supabase.from("user_roles").select("role").eq("user_id", user.id),
     ]);
     setAdminTournaments((t as Tournament[]) || []);
     setOwnedTeams((te as unknown as TeamRow[]) || []);
     setPublicTournaments((pt as Tournament[]) || []);
     setProfile(p as any);
+    setIsSuperAdmin(!!roles?.some(r => r.role === "super_admin"));
   };
   useEffect(() => { load(); }, [user]);
 
@@ -131,6 +134,9 @@ function Dashboard() {
         <Logo />
         <div className="flex items-center gap-3">
           <span className="text-sm text-muted-foreground hidden sm:block">{user.email}</span>
+          {isSuperAdmin && (
+            <Button asChild variant="outline" size="sm" className="border-hot/40 text-hot hover:bg-hot/10"><Link to="/super-admin"><ShieldAlert className="h-3 w-3 mr-1" />Super Admin</Link></Button>
+          )}
           {isPremium ? (
             <span className="text-[10px] font-bold uppercase tracking-wider bg-primary/25 text-neon px-2.5 py-1 rounded-full border border-neon/30">Pro Member</span>
           ) : (
