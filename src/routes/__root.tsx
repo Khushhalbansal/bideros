@@ -89,8 +89,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Bideros | #1 Online Cricket Auction Platform & CricAuction Alternative" },
       { name: "twitter:description", content: "Looking for an online auction website, live bidding app, or CricAuction alternative? Run IPL-style live cricket auctions with real-time bidding." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/fb606192-eb0d-45f5-a079-e7c1df58228f" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/fb606192-eb0d-45f5-a079-e7c1df58228f" },
+      { property: "og:image", content: "https://bideros.vercel.app/logo.png" },
+      { name: "twitter:image", content: "https://bideros.vercel.app/logo.png" },
     ],
     links: [
       { rel: "icon", type: "image/png", href: "/logo.png" },
