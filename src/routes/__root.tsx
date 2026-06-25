@@ -100,6 +100,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Syne:wght@400..800&family=Permanent+Marker&display=swap" },
     ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: `{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Bideros","applicationCategory":"SportsApplication","operatingSystem":"Web","description":"Bideros is a premier online cricket auction platform and live bidding app.","url":"https://bideros.vercel.app"}`
+      }
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
