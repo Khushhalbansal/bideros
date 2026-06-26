@@ -4,7 +4,7 @@
 
 **The cinematic way to run your cricket auction.**
 
-BidArena is a modern, real-time web application designed to run cricket auctions with the energy and feel of the IPL. It provides a cinematic, stadium-grade experience for admins, team owners, and spectators.
+Bideros is a modern, real-time web application designed to run cricket auctions with the energy and feel of the IPL. It provides a cinematic, stadium-grade experience for admins, team owners, and spectators.
 
 ## ✨ Features
 
@@ -34,8 +34,8 @@ BidArena is a modern, real-time web application designed to run cricket auctions
 
 1. Clone the repository
 ```bash
-git clone https://github.com/Khushhalbansal/bidarena.git
-cd bidarena
+git clone https://github.com/Khushhalbansal/bideros.git
+cd bideros
 ```
 
 2. Install dependencies
