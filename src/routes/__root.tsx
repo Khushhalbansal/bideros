@@ -153,6 +153,13 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+import { usePresence } from "@/hooks/use-presence";
+
+function PresenceTracker() {
+  usePresence();
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
@@ -160,6 +167,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
+          <PresenceTracker />
           <ClickRipple />
           <Outlet />
           <FeedbackWidget />
