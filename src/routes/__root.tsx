@@ -12,7 +12,6 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { ClickRipple } from "@/components/ClickRipple";
 import { FeedbackWidget } from "@/components/FeedbackWidget";
-import { usePresence } from "@/hooks/use-presence";
 
 import appCss from "../styles.css?url";
 
@@ -154,11 +153,6 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function PresenceTracker() {
-  usePresence();
-  return null;
-}
-
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
@@ -166,7 +160,6 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
-          <PresenceTracker />
           <ClickRipple />
           <Outlet />
           <FeedbackWidget />
