@@ -13,7 +13,7 @@ import { ShieldAlert, Trash2, Ban, CheckCircle2, Flag, Plus, ChevronRight } from
 export const Route = createFileRoute("/super-admin")({ component: SuperAdmin });
 
 interface SaTournament { id: string; name: string; status: string; admin_id: string; admin_email: string | null; blocked: boolean; created_at: string; team_count: number; player_count: number; }
-interface SaUser { id: string; email: string; full_name: string | null; created_at: string; roles: string[]; auctions_quota: number | null; last_seen_at: string | null; total_online_seconds: number | null; }
+interface SaUser { id: string; email: string; full_name: string | null; created_at: string; roles: string[]; auctions_quota: number | null; }
 interface SaSuper { email: string; user_id: string | null; created_at: string; }
 interface AuditRow { id: string; actor_id: string | null; action: string; target: string | null; payload: unknown; created_at: string; }
 interface SaFeedback { id: string; user_id: string | null; user_email: string | null; page_url: string | null; feedback_type: string; content: string | null; screenshot_url: string | null; rating: number | null; status: string; created_at: string; }
@@ -181,13 +181,9 @@ function SuperAdminPanel() {
                 <div>
                   <div className="font-semibold text-sm">{u.full_name || u.email}</div>
                   <div className="text-xs text-muted-foreground">{u.email}</div>
-                  <div className="flex gap-1 flex-wrap mt-1 mb-2">
+                  <div className="flex gap-1 flex-wrap mt-1">
                     {u.roles.length === 0 && <span className="text-[10px] text-muted-foreground">user</span>}
                     {u.roles.map(r => <span key={r} className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/15 text-neon">{r}</span>)}
-                  </div>
-                  <div className="text-[10px] text-muted-foreground flex gap-3">
-                    <span><strong className="text-foreground/80">Last seen:</strong> {u.last_seen_at ? new Date(u.last_seen_at).toLocaleString() : 'Never'}</span>
-                    <span><strong className="text-foreground/80">Total time:</strong> {u.total_online_seconds ? `${Math.floor(u.total_online_seconds / 3600)}h ${Math.floor((u.total_online_seconds % 3600) / 60)}m` : '0m'}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 bg-background/50 rounded-lg p-2 border border-border/50">

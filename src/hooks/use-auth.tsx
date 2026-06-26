@@ -27,18 +27,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  // Presence Tracking
-  useEffect(() => {
-    if (!session?.user) return;
-    
-    supabase.rpc("update_presence").catch(() => {});
-    const interval = setInterval(() => {
-      supabase.rpc("update_presence").catch(() => {});
-    }, 60000);
-    
-    return () => clearInterval(interval);
-  }, [session?.user]);
-
   const signOut = async () => {
     await supabase.auth.signOut();
   };
