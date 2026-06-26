@@ -1,6 +1,6 @@
 # Bideros 🏏
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-bidarena.lovable.app-brightgreen?style=for-the-badge)](https://bideros.vercel.app/)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-https://bideros.vercel.app/-brightgreen?style=for-the-badge)](https://bideros.vercel.app/)
 
 **The cinematic way to run your cricket auction.**
 
