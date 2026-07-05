@@ -17,6 +17,7 @@ interface PublicTournament {
   id: string; name: string; status: string; purse_per_team: number;
   max_players_per_team: number; created_at: string; starts_at: string | null;
   cover_photo_url?: string | null; sport_id?: string | null;
+  sports?: { name: string; theme_color: string } | null;
 }
 
 interface Sport {
@@ -38,7 +39,7 @@ export function AuctionsBrowse({ initialSportName }: { initialSportName?: string
       .then(({ data }) => setSports((data as Sport[]) || []));
 
     supabase.from("tournaments")
-      .select("id,name,status,purse_per_team,max_players_per_team,created_at,starts_at,cover_photo_url,sport_id")
+      .select("id,name,status,purse_per_team,max_players_per_team,created_at,starts_at,cover_photo_url,sport_id,sports(name,theme_color)")
       .order("created_at", { ascending: false })
       .then(({ data }) => setTournaments((data as PublicTournament[]) || []));
   }, []);
@@ -242,7 +243,17 @@ export function TournamentGroup({ title, items, emptyText, accent }: { title: st
                 <div className="p-4">
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <h4 className="font-bold">{t.name}</h4>
-                    <span className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full ${accent === "hot" ? "bg-destructive/20 text-hot" : accent === "neon" ? "bg-primary/15 text-neon" : "bg-muted text-muted-foreground"}`}>{t.status}</span>
+                    <div className="flex flex-col items-end gap-1">
+                      <span className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full ${accent === "hot" ? "bg-destructive/20 text-hot" : accent === "neon" ? "bg-primary/15 text-neon" : "bg-muted text-muted-foreground"}`}>{t.status}</span>
+                      {t.sports && (
+                        <span
+                          className="text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full font-bold"
+                          style={{ background: `${t.sports.theme_color}25`, color: t.sports.theme_color }}
+                        >
+                          {t.sports.name}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="text-xs text-muted-foreground mb-3">Purse {formatINR(t.purse_per_team)} • Squad {t.max_players_per_team}</div>
                   <div className="flex items-center text-xs text-neon group-hover:translate-x-1 transition-transform"><Eye className="h-3 w-3 mr-1" />Watch live</div>

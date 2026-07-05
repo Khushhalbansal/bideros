@@ -30,8 +30,10 @@ function Dashboard() {
   const [ownedTeams, setOwnedTeams] = useState<TeamRow[]>([]);
   const [publicTournaments, setPublicTournaments] = useState<Tournament[]>([]);
   const [profile, setProfile] = useState<{ subscription_tier: string | null, auctions_quota: number } | null>(null);
+  const [sports, setSports] = useState<{ id: string; name: string; theme_color: string }[]>([]);
   const [q, setQ] = useState("");
   const [name, setName] = useState("");
+  const [sportId, setSportId] = useState("");
   const [purse, setPurse] = useState("8 Cr");
   const [squad, setSquad] = useState("15");
   const [increment, setIncrement] = useState("10 L");
@@ -45,18 +47,22 @@ function Dashboard() {
 
   const load = async () => {
     if (!user) return;
-    const [{ data: t }, { data: te }, { data: pt }, { data: p }, { data: roles }] = await Promise.all([
+    const [{ data: t }, { data: te }, { data: pt }, { data: p }, { data: roles }, { data: sp }] = await Promise.all([
       supabase.from("tournaments").select("*").eq("admin_id", user.id).order("created_at", { ascending: false }),
       supabase.from("teams").select("id,name,tournament_id,tournaments(name)").eq("owner_id", user.id),
       supabase.from("tournaments").select("id,name,status,purse_per_team,max_players_per_team,created_at,starts_at,admin_id,cover_photo_url").order("created_at", { ascending: false }),
       supabase.from("profiles").select("subscription_tier, auctions_quota").eq("id", user.id).maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", user.id),
+      supabase.from("sports").select("id, name, theme_color").order("name"),
     ]);
     setAdminTournaments((t as Tournament[]) || []);
     setOwnedTeams((te as unknown as TeamRow[]) || []);
     setPublicTournaments((pt as Tournament[]) || []);
     setProfile(p as any);
     setIsSuperAdmin(!!roles?.some(r => r.role === "super_admin"));
+    const spList = (sp as { id: string; name: string; theme_color: string }[]) || [];
+    setSports(spList);
+    if (spList.length && !sportId) setSportId(spList[0].id);
   };
   useEffect(() => { load(); }, [user]);
 
@@ -83,6 +89,7 @@ function Dashboard() {
       min_bid_increment: parseINR(increment),
       bid_timer_seconds: parseInt(timer) || 15,
       status: "draft",
+      ...(sportId ? { sport_id: sportId } : {}),
     }).select().single();
     setCreating(false);
     
@@ -193,6 +200,29 @@ function Dashboard() {
                     </div>
                   )}
                   <div><Label>Tournament name</Label><Input value={name} onChange={e=>setName(e.target.value)} required placeholder="Mumbai Premier League 2026" disabled={isBlocked} /></div>
+                  {/* Sport selector */}
+                  {sports.length > 0 && (
+                    <div>
+                      <Label>Sport</Label>
+                      <div className="grid grid-cols-2 gap-2 mt-2">
+                        {sports.map(s => (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() => setSportId(s.id)}
+                            disabled={isBlocked}
+                            className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-all ${
+                              sportId === s.id
+                                ? 'border-neon text-neon bg-neon/10 shadow-neon'
+                                : 'border-border text-muted-foreground hover:border-neon/40'
+                            }`}
+                          >
+                            {s.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <div className="grid grid-cols-2 gap-3">
                     <div><Label>Purse per team</Label><Input value={purse} onChange={e=>setPurse(e.target.value)} placeholder="8 Cr" disabled={isBlocked} /></div>
                     <div><Label>Max players / team</Label><Input value={squad} onChange={e=>setSquad(e.target.value)} type="number" disabled={isBlocked} /></div>

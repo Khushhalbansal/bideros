@@ -20,7 +20,7 @@ import { LobbyPanel } from "@/components/admin/LobbyPanel";
 
 export const Route = createFileRoute("/admin/$id")({ component: AdminPanel });
 
-interface Tournament { id:string; name:string; status:string; purse_per_team:number; max_players_per_team:number; min_bid_increment:number; bid_timer_seconds:number; admin_id:string; starts_at:string|null; banner_url?:string|null; cover_photo_url?:string|null; }
+interface Tournament { id:string; name:string; status:string; purse_per_team:number; max_players_per_team:number; min_bid_increment:number; bid_timer_seconds:number; admin_id:string; starts_at:string|null; banner_url?:string|null; cover_photo_url?:string|null; sport_id?:string|null; sports?: { name: string; theme_color: string } | null; }
 interface Team { id:string; name:string; owner_id:string|null; owner_email:string|null; owner_name:string|null; remaining_purse:number; logo_url:string|null; }
 interface Player { id:string; name:string; role:string|null; base_price:number; status:string; sold_to_team_id:string|null; sold_price:number|null; auction_order:number|null; photo_url?:string|null; category_id?:string|null; }
 interface AuctionState { tournament_id:string; current_player_id:string|null; current_highest_bid:number|null; current_highest_team_id:string|null; timer_ends_at:string|null; }
@@ -39,7 +39,7 @@ function AdminPanel() {
 
   const load = useCallback(async () => {
     const [{ data: tt }, { data: tm }, { data: pl }, { data: st }, { data: cats }] = await Promise.all([
-      supabase.from("tournaments").select("*").eq("id", id).single(),
+      supabase.from("tournaments").select("*, sports(name, theme_color)").eq("id", id).single(),
       supabase.rpc("admin_list_teams", { p_tournament: id }),
       supabase.from("players").select("*").eq("tournament_id", id).order("auction_order", { nullsFirst: false }).order("created_at"),
       supabase.from("auction_state").select("*").eq("tournament_id", id).maybeSingle(),
@@ -73,6 +73,14 @@ function AdminPanel() {
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
           <h1 className="font-display font-bold text-lg">{t.name}</h1>
           <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/15 text-neon">{t.status}</span>
+          {t.sports && (
+            <span
+              className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full font-bold"
+              style={{ background: `${t.sports.theme_color}25`, color: t.sports.theme_color, border: `1px solid ${t.sports.theme_color}50` }}
+            >
+              {t.sports.name}
+            </span>
+          )}
         </div>
         <div className="flex gap-2">
           <Button asChild variant="outline" size="sm"><Link to="/projector/$id" params={{ id: t.id }}><Monitor className="h-3 w-3 mr-1" />Projector</Link></Button>
