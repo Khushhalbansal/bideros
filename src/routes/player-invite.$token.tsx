@@ -99,7 +99,7 @@ function PlayerInvitePage() {
       const r = data as { ok: boolean; error?: string };
       if (!r.ok) throw new Error(r.error || "Failed to register");
       toast.success(`🎉🎉 Yay! You've joined ${info.tournament_name} as a player 🎉🎉`, { duration: 6000 });
-      navigate({ to: "/watch/$slug", params: { slug: info.tournament_id } });
+      navigate({ to: "/auction/$id", params: { id: info.tournament_id } });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed");
     } finally { setBusy(false); }

@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { toast } from "sonner";
 import { Plus, LogOut, Trophy, Eye, Settings, Search, ShieldAlert } from "lucide-react";
 import { formatINR, parseINR } from "@/lib/format";
-import { TournamentGroup } from "./index";
+import { TournamentGroup } from "@/components/AuctionsBrowse";
 import { SequentialVideoBackground } from "@/components/SequentialVideoBackground";
 import { ReferralProgram } from "@/components/ReferralProgram";
 
@@ -235,7 +235,7 @@ function Dashboard() {
                   </div>
                   <div className="flex gap-2">
                     <Button asChild size="sm" className="flex-1 gradient-neon text-primary-foreground"><Link to="/admin/$id" params={{ id: t.id }}><Settings className="h-3 w-3 mr-1" />Manage</Link></Button>
-                    <Button asChild size="sm" variant="outline"><Link to="/watch/$slug" params={{ slug: t.id }}><Eye className="h-3 w-3" /></Link></Button>
+                    <Button asChild size="sm" variant="outline"><Link to="/auction/$id" params={{ id: t.id }}><Eye className="h-3 w-3" /></Link></Button>
                   </div>
                 </div>
               ))}

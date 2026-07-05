@@ -236,7 +236,7 @@ function TeamRoomInner({ team, tournament, state, allTeams, bids, currentPlayer,
             <div className="text-center py-20 text-muted-foreground">
               <Gavel className="h-12 w-12 mx-auto mb-4 opacity-40" />
               <p>Waiting for the admin to put a player on the block…</p>
-              <Button asChild variant="ghost" size="sm" className="mt-4"><Link to="/watch/$slug" params={{ slug: tournament.id }}>Open spectator view</Link></Button>
+              <Button asChild variant="ghost" size="sm" className="mt-4"><Link to="/auction/$id" params={{ id: tournament.id }}>Open spectator view</Link></Button>
             </div>
           )}
         </section>

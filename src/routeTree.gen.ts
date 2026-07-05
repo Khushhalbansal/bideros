@@ -16,11 +16,14 @@ import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as WatchSlugRouteImport } from './routes/watch.$slug'
+import { Route as AuctionsIndexRouteImport } from './routes/auctions.index'
 import { Route as TeamIdRouteImport } from './routes/team.$id'
+import { Route as ResultsIdRouteImport } from './routes/results.$id'
 import { Route as ProjectorIdRouteImport } from './routes/projector.$id'
 import { Route as PlayerInviteTokenRouteImport } from './routes/player-invite.$token'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
+import { Route as AuctionsSportRouteImport } from './routes/auctions.$sport'
+import { Route as AuctionIdRouteImport } from './routes/auction.$id'
 import { Route as AdminRegisterRouteImport } from './routes/admin.register'
 import { Route as AdminIdRouteImport } from './routes/admin.$id'
 
@@ -59,14 +62,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const WatchSlugRoute = WatchSlugRouteImport.update({
-  id: '/watch/$slug',
-  path: '/watch/$slug',
+const AuctionsIndexRoute = AuctionsIndexRouteImport.update({
+  id: '/auctions/',
+  path: '/auctions/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TeamIdRoute = TeamIdRouteImport.update({
   id: '/team/$id',
   path: '/team/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResultsIdRoute = ResultsIdRouteImport.update({
+  id: '/results/$id',
+  path: '/results/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProjectorIdRoute = ProjectorIdRouteImport.update({
@@ -82,6 +90,16 @@ const PlayerInviteTokenRoute = PlayerInviteTokenRouteImport.update({
 const InviteTokenRoute = InviteTokenRouteImport.update({
   id: '/invite/$token',
   path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuctionsSportRoute = AuctionsSportRouteImport.update({
+  id: '/auctions/$sport',
+  path: '/auctions/$sport',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuctionIdRoute = AuctionIdRouteImport.update({
+  id: '/auction/$id',
+  path: '/auction/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRegisterRoute = AdminRegisterRouteImport.update({
@@ -105,11 +123,14 @@ export interface FileRoutesByFullPath {
   '/super-admin': typeof SuperAdminRoute
   '/admin/$id': typeof AdminIdRoute
   '/admin/register': typeof AdminRegisterRoute
+  '/auction/$id': typeof AuctionIdRoute
+  '/auctions/$sport': typeof AuctionsSportRoute
   '/invite/$token': typeof InviteTokenRoute
   '/player-invite/$token': typeof PlayerInviteTokenRoute
   '/projector/$id': typeof ProjectorIdRoute
+  '/results/$id': typeof ResultsIdRoute
   '/team/$id': typeof TeamIdRoute
-  '/watch/$slug': typeof WatchSlugRoute
+  '/auctions/': typeof AuctionsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -121,11 +142,14 @@ export interface FileRoutesByTo {
   '/super-admin': typeof SuperAdminRoute
   '/admin/$id': typeof AdminIdRoute
   '/admin/register': typeof AdminRegisterRoute
+  '/auction/$id': typeof AuctionIdRoute
+  '/auctions/$sport': typeof AuctionsSportRoute
   '/invite/$token': typeof InviteTokenRoute
   '/player-invite/$token': typeof PlayerInviteTokenRoute
   '/projector/$id': typeof ProjectorIdRoute
+  '/results/$id': typeof ResultsIdRoute
   '/team/$id': typeof TeamIdRoute
-  '/watch/$slug': typeof WatchSlugRoute
+  '/auctions': typeof AuctionsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -138,11 +162,14 @@ export interface FileRoutesById {
   '/super-admin': typeof SuperAdminRoute
   '/admin/$id': typeof AdminIdRoute
   '/admin/register': typeof AdminRegisterRoute
+  '/auction/$id': typeof AuctionIdRoute
+  '/auctions/$sport': typeof AuctionsSportRoute
   '/invite/$token': typeof InviteTokenRoute
   '/player-invite/$token': typeof PlayerInviteTokenRoute
   '/projector/$id': typeof ProjectorIdRoute
+  '/results/$id': typeof ResultsIdRoute
   '/team/$id': typeof TeamIdRoute
-  '/watch/$slug': typeof WatchSlugRoute
+  '/auctions/': typeof AuctionsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -156,11 +183,14 @@ export interface FileRouteTypes {
     | '/super-admin'
     | '/admin/$id'
     | '/admin/register'
+    | '/auction/$id'
+    | '/auctions/$sport'
     | '/invite/$token'
     | '/player-invite/$token'
     | '/projector/$id'
+    | '/results/$id'
     | '/team/$id'
-    | '/watch/$slug'
+    | '/auctions/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -172,11 +202,14 @@ export interface FileRouteTypes {
     | '/super-admin'
     | '/admin/$id'
     | '/admin/register'
+    | '/auction/$id'
+    | '/auctions/$sport'
     | '/invite/$token'
     | '/player-invite/$token'
     | '/projector/$id'
+    | '/results/$id'
     | '/team/$id'
-    | '/watch/$slug'
+    | '/auctions'
   id:
     | '__root__'
     | '/'
@@ -188,11 +221,14 @@ export interface FileRouteTypes {
     | '/super-admin'
     | '/admin/$id'
     | '/admin/register'
+    | '/auction/$id'
+    | '/auctions/$sport'
     | '/invite/$token'
     | '/player-invite/$token'
     | '/projector/$id'
+    | '/results/$id'
     | '/team/$id'
-    | '/watch/$slug'
+    | '/auctions/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -205,11 +241,14 @@ export interface RootRouteChildren {
   SuperAdminRoute: typeof SuperAdminRoute
   AdminIdRoute: typeof AdminIdRoute
   AdminRegisterRoute: typeof AdminRegisterRoute
+  AuctionIdRoute: typeof AuctionIdRoute
+  AuctionsSportRoute: typeof AuctionsSportRoute
   InviteTokenRoute: typeof InviteTokenRoute
   PlayerInviteTokenRoute: typeof PlayerInviteTokenRoute
   ProjectorIdRoute: typeof ProjectorIdRoute
+  ResultsIdRoute: typeof ResultsIdRoute
   TeamIdRoute: typeof TeamIdRoute
-  WatchSlugRoute: typeof WatchSlugRoute
+  AuctionsIndexRoute: typeof AuctionsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -263,11 +302,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/watch/$slug': {
-      id: '/watch/$slug'
-      path: '/watch/$slug'
-      fullPath: '/watch/$slug'
-      preLoaderRoute: typeof WatchSlugRouteImport
+    '/auctions/': {
+      id: '/auctions/'
+      path: '/auctions'
+      fullPath: '/auctions/'
+      preLoaderRoute: typeof AuctionsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/team/$id': {
@@ -275,6 +314,13 @@ declare module '@tanstack/react-router' {
       path: '/team/$id'
       fullPath: '/team/$id'
       preLoaderRoute: typeof TeamIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/results/$id': {
+      id: '/results/$id'
+      path: '/results/$id'
+      fullPath: '/results/$id'
+      preLoaderRoute: typeof ResultsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/projector/$id': {
@@ -296,6 +342,20 @@ declare module '@tanstack/react-router' {
       path: '/invite/$token'
       fullPath: '/invite/$token'
       preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auctions/$sport': {
+      id: '/auctions/$sport'
+      path: '/auctions/$sport'
+      fullPath: '/auctions/$sport'
+      preLoaderRoute: typeof AuctionsSportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auction/$id': {
+      id: '/auction/$id'
+      path: '/auction/$id'
+      fullPath: '/auction/$id'
+      preLoaderRoute: typeof AuctionIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/register': {
@@ -325,11 +385,14 @@ const rootRouteChildren: RootRouteChildren = {
   SuperAdminRoute: SuperAdminRoute,
   AdminIdRoute: AdminIdRoute,
   AdminRegisterRoute: AdminRegisterRoute,
+  AuctionIdRoute: AuctionIdRoute,
+  AuctionsSportRoute: AuctionsSportRoute,
   InviteTokenRoute: InviteTokenRoute,
   PlayerInviteTokenRoute: PlayerInviteTokenRoute,
   ProjectorIdRoute: ProjectorIdRoute,
+  ResultsIdRoute: ResultsIdRoute,
   TeamIdRoute: TeamIdRoute,
-  WatchSlugRoute: WatchSlugRoute,
+  AuctionsIndexRoute: AuctionsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -533,6 +533,33 @@ export type Database = {
         }
         Relationships: []
       }
+      sports: {
+        Row: {
+          id: string
+          name: string
+          theme_color: string
+          mascot_url: string | null
+          status: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          theme_color: string
+          mascot_url?: string | null
+          status?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          theme_color?: string
+          mascot_url?: string | null
+          status?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       super_admin_allowlist: {
         Row: {
           created_at: string
@@ -638,6 +665,7 @@ export type Database = {
           purse_per_team: number
           starts_at: string | null
           status: string
+          sport_id: string | null
         }
         Insert: {
           admin_id: string
@@ -654,6 +682,7 @@ export type Database = {
           purse_per_team?: number
           starts_at?: string | null
           status?: string
+          sport_id?: string | null
         }
         Update: {
           admin_id?: string
@@ -670,8 +699,17 @@ export type Database = {
           purse_per_team?: number
           starts_at?: string | null
           status?: string
+          sport_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tournaments_sport_id_fkey"
+            columns: ["sport_id"]
+            isOneToOne: false
+            referencedRelation: "sports"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       user_feedback: {
         Row: {

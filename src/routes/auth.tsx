@@ -11,9 +11,19 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
 import { SequentialVideoBackground } from "@/components/SequentialVideoBackground";
 
+const SPORT_THEMES: Record<string, { accent: string; bg: string; label: string }> = {
+  cricket:    { accent: "#00ffcc", bg: "rgba(84,140,90,0.15)",   label: "Cricket" },
+  football:   { accent: "#33ccff", bg: "rgba(62,108,153,0.15)",  label: "Football" },
+  badminton:  { accent: "#ff5500", bg: "rgba(189,83,83,0.15)",   label: "Badminton" },
+  pickleball: { accent: "#ff66ff", bg: "rgba(140,76,122,0.15)",  label: "Pickleball" },
+};
+
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
-  validateSearch: (s: Record<string, unknown>) => ({ next: typeof s.next === "string" ? s.next : undefined }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    next: typeof s.next === "string" ? s.next : undefined,
+    sport: typeof s.sport === "string" ? s.sport : undefined,
+  }),
 });
 
 function AuthPage() {
@@ -21,8 +31,9 @@ function AuthPage() {
   const { user, loading } = useAuth();
   const { theme } = useTheme();
   const isFunky = theme === "funky";
-  const { next } = Route.useSearch();
+  const { next, sport } = Route.useSearch();
   const target = next && next.startsWith("/") ? next : "/dashboard";
+  const sportTheme = sport ? SPORT_THEMES[sport.toLowerCase()] : null;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -88,7 +99,14 @@ function AuthPage() {
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden bg-background">
       <div className="absolute inset-0 z-0 pointer-events-none bg-gradient-to-br from-background via-background to-neon/10" />
-      <div className="absolute inset-0 z-0 pointer-events-none opacity-30" style={{ background: "radial-gradient(circle at 20% 30%, hsl(var(--neon) / 0.25), transparent 50%), radial-gradient(circle at 80% 70%, hsl(var(--primary) / 0.2), transparent 50%)" }} />
+      <div
+        className="absolute inset-0 z-0 pointer-events-none opacity-30"
+        style={{
+          background: sportTheme
+            ? `radial-gradient(circle at 20% 30%, ${sportTheme.accent}40, transparent 50%), radial-gradient(circle at 80% 70%, ${sportTheme.accent}25, transparent 50%)`
+            : "radial-gradient(circle at 20% 30%, hsl(var(--neon) / 0.25), transparent 50%), radial-gradient(circle at 80% 70%, hsl(var(--primary) / 0.2), transparent 50%)"
+        }}
+      />
       <div className="absolute inset-0 z-0 pointer-events-none">
         <SequentialVideoBackground 
           opacity="opacity-30 mix-blend-screen"
@@ -102,8 +120,22 @@ function AuthPage() {
       <div className="relative z-10 flex flex-col min-h-screen">
         <header className="container mx-auto py-6 px-4"><Logo /></header>
       <main className="flex-1 flex items-center justify-center px-4">
-        <div className="w-full max-w-md bg-glass border border-border rounded-2xl p-8 shadow-neon animate-slide-up">
-          {next && (
+        <div
+          className="w-full max-w-md bg-glass border border-border rounded-2xl p-8 animate-slide-up"
+          style={{
+            boxShadow: sportTheme ? `0 0 40px -5px ${sportTheme.accent}55` : undefined,
+            borderColor: sportTheme ? `${sportTheme.accent}40` : undefined,
+          }}
+        >
+          {sportTheme && (
+            <div
+              className="mb-4 text-xs font-bold tracking-widest uppercase rounded-md px-3 py-2 text-center"
+              style={{ background: `${sportTheme.accent}18`, color: sportTheme.accent, border: `1px solid ${sportTheme.accent}40` }}
+            >
+              🏆 {sportTheme.label} Auction Platform
+            </div>
+          )}
+          {next && !sportTheme && (
             <div className="mb-4 text-xs text-neon bg-neon/10 border border-neon/30 rounded-md px-3 py-2">
               {isFunky ? "Log in to secure your spot." : "Sign in to continue to your invite."}
             </div>

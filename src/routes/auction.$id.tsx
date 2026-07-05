@@ -8,7 +8,7 @@ import { HammerStrikes } from "@/components/HammerStrikes";
 import { SoldBanner } from "@/components/SoldBanner";
 import { AnimatePresence } from "framer-motion";
 
-export const Route = createFileRoute("/watch/$slug")({ component: Spectator });
+export const Route = createFileRoute("/auction/$id")({ component: Spectator });
 
 interface Tournament { id:string; name:string; min_bid_increment:number; status:string; banner_url?:string|null; cover_photo_url?:string|null; }
 interface Team { id:string; name:string; logo_url:string|null; remaining_purse:number; }
@@ -16,7 +16,7 @@ interface Player { id:string; name:string; role:string|null; base_price:number; 
 interface AuctionState { current_player_id:string|null; current_highest_bid:number|null; current_highest_team_id:string|null; timer_ends_at:string|null; updated_at:string; strike_count?:number; last_sold_player_id?:string|null; last_sold_team_id?:string|null; last_sold_price?:number|null; last_sold_at?:string|null; }
 
 function Spectator() {
-  const { slug } = Route.useParams(); // slug = tournament id
+  const { id } = Route.useParams(); // id = tournament id
   const [t, setT] = useState<Tournament|null>(null);
   const [teams, setTeams] = useState<Team[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
@@ -39,10 +39,10 @@ function Spectator() {
   const load = useCallback(async () => {
     try {
       const [{ data: tt }, { data: tm }, { data: pl }, { data: st }] = await Promise.all([
-        supabase.from("tournaments").select("*").eq("id", slug).maybeSingle(),
-        supabase.from("teams_public").select("*").eq("tournament_id", slug),
-        supabase.from("players").select("*").eq("tournament_id", slug),
-        supabase.from("auction_state").select("*").eq("tournament_id", slug).maybeSingle(),
+        supabase.from("tournaments").select("*").eq("id", id).maybeSingle(),
+        supabase.from("teams_public").select("*").eq("tournament_id", id),
+        supabase.from("players").select("*").eq("tournament_id", id),
+        supabase.from("auction_state").select("*").eq("tournament_id", id).maybeSingle(),
       ]);
       
       if (!tt) {
@@ -58,32 +58,32 @@ function Spectator() {
     } finally {
       setIsLoading(false);
     }
-  }, [slug]);
+  }, [id]);
 
   useEffect(() => { load(); }, [load]);
 
   useEffect(() => {
-    if (!slug) return;
+    if (!id) return;
     let timeout: any;
     const debouncedLoad = () => {
       clearTimeout(timeout);
       timeout = setTimeout(() => load(), 200);
     };
 
-    const ch = supabase.channel(`watch:${slug}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "auction_state", filter: `tournament_id=eq.${slug}` }, (payload) => {
+    const ch = supabase.channel(`watch:${id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "auction_state", filter: `tournament_id=eq.${id}` }, (payload) => {
         const ns = payload.new as AuctionState;
         setState(ns);
         if (ns?.current_highest_bid) { setFlash(true); setTimeout(()=>setFlash(false), 400); }
         debouncedLoad();
       })
-      .on("postgres_changes", { event: "*", schema: "public", table: "teams", filter: `tournament_id=eq.${slug}` }, debouncedLoad)
-      .on("postgres_changes", { event: "*", schema: "public", table: "players", filter: `tournament_id=eq.${slug}` }, debouncedLoad)
+      .on("postgres_changes", { event: "*", schema: "public", table: "teams", filter: `tournament_id=eq.${id}` }, debouncedLoad)
+      .on("postgres_changes", { event: "*", schema: "public", table: "players", filter: `tournament_id=eq.${id}` }, debouncedLoad)
       .subscribe();
     return () => { clearTimeout(timeout); supabase.removeChannel(ch); };
-  }, [slug, load]);
+  }, [id, load]);
 
-  useAuctionTicker(slug, t?.status === "live");
+  useAuctionTicker(id, t?.status === "live");
 
   if (isLoading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   if (!t) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Tournament not found.</div>;

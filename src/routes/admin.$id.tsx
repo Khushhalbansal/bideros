@@ -76,7 +76,7 @@ function AdminPanel() {
         </div>
         <div className="flex gap-2">
           <Button asChild variant="outline" size="sm"><Link to="/projector/$id" params={{ id: t.id }}><Monitor className="h-3 w-3 mr-1" />Projector</Link></Button>
-          <Button asChild variant="outline" size="sm"><Link to="/watch/$slug" params={{ slug: t.id }}><Eye className="h-3 w-3 mr-1" />Spectator</Link></Button>
+          <Button asChild variant="outline" size="sm"><Link to="/auction/$id" params={{ id: t.id }}><Eye className="h-3 w-3 mr-1" />Spectator</Link></Button>
           <Button asChild variant="ghost" size="sm"><Link to="/dashboard">← Dashboard</Link></Button>
         </div>
       </header>
@@ -713,7 +713,7 @@ function SettingsTab({ tournament, onChange }: { tournament: Tournament; onChang
     window.location.href = "/dashboard";
   };
 
-  const spectatorUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/watch/${tournament.id}`;
+  const spectatorUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/auction/${tournament.id}`;
 
   return (
     <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
