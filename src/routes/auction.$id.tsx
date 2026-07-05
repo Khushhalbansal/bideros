@@ -10,7 +10,7 @@ import { AnimatePresence } from "framer-motion";
 
 export const Route = createFileRoute("/auction/$id")({ component: Spectator });
 
-interface Tournament { id:string; name:string; min_bid_increment:number; status:string; banner_url?:string|null; cover_photo_url?:string|null; }
+interface Tournament { id:string; name:string; min_bid_increment:number; status:string; banner_url?:string|null; cover_photo_url?:string|null; sports?: { name: string; theme_color: string } | null; }
 interface Team { id:string; name:string; logo_url:string|null; remaining_purse:number; }
 interface Player { id:string; name:string; role:string|null; base_price:number; status:string; sold_to_team_id:string|null; sold_price:number|null; photo_url?:string|null; }
 interface AuctionState { current_player_id:string|null; current_highest_bid:number|null; current_highest_team_id:string|null; timer_ends_at:string|null; updated_at:string; strike_count?:number; last_sold_player_id?:string|null; last_sold_team_id?:string|null; last_sold_price?:number|null; last_sold_at?:string|null; }
@@ -39,7 +39,7 @@ function Spectator() {
   const load = useCallback(async () => {
     try {
       const [{ data: tt }, { data: tm }, { data: pl }, { data: st }] = await Promise.all([
-        supabase.from("tournaments").select("*").eq("id", id).maybeSingle(),
+        supabase.from("tournaments").select("*, sports(name, theme_color)").eq("id", id).maybeSingle(),
         supabase.from("teams_public").select("*").eq("tournament_id", id),
         supabase.from("players").select("*").eq("tournament_id", id),
         supabase.from("auction_state").select("*").eq("tournament_id", id).maybeSingle(),
@@ -98,8 +98,10 @@ function Spectator() {
   const soldTeam = showSold ? teams.find(tm => tm.id === state?.last_sold_team_id) : null;
 
 
+  const sportColor = t.sports?.theme_color || '#00ffcc';
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ '--sport-color': sportColor } as React.CSSProperties}>
       <HammerStrikes count={state?.strike_count} />
       <AnimatePresence>
         {soldPlayer && soldTeam && state?.last_sold_price != null && (
@@ -109,9 +111,13 @@ function Spectator() {
       {t.banner_url && <img src={t.banner_url} alt="" className="w-full h-28 md:h-40 object-cover" />}
       <header className="px-6 py-4 flex items-center justify-between border-b border-border bg-glass">
         <div className="flex items-center gap-3">
-          <span className="inline-block h-3 w-3 rounded-full bg-hot animate-pulse-neon" />
+          <span className="inline-block h-3 w-3 rounded-full animate-pulse-neon" style={{ backgroundColor: sportColor }} />
           <h1 className="font-display font-bold text-xl">{t.name}</h1>
-          <span className="text-xs uppercase tracking-widest text-muted-foreground">Live auction</span>
+          {t.sports ? (
+            <span className="text-xs uppercase tracking-widest font-bold px-2 py-0.5 rounded-full" style={{ color: sportColor, background: `${sportColor}20` }}>{t.sports.name} Auction</span>
+          ) : (
+            <span className="text-xs uppercase tracking-widest text-muted-foreground">Live auction</span>
+          )}
         </div>
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
           <Link to="/" className="px-3 py-1.5 rounded-md border border-border hover:text-neon hover:border-neon transition">← Home</Link>
@@ -124,7 +130,7 @@ function Spectator() {
           <div className={`flex-1 rounded-2xl border border-border bg-glass p-10 flex flex-col justify-center items-center text-center relative overflow-hidden ${flash ? "ring-neon" : ""} transition-all`}>
             {isLive && currentPlayer ? (
               <div className="animate-slide-up w-full">
-                <div className="text-xs uppercase tracking-[0.3em] text-neon mb-4">Now on the block</div>
+                <div className="text-xs uppercase tracking-[0.3em] mb-4" style={{ color: sportColor }}>Now on the block</div>
                 {currentPlayer.photo_url && (
                   <img src={currentPlayer.photo_url} alt={currentPlayer.name} className="mx-auto mb-4 h-32 w-32 md:h-40 md:w-40 rounded-full object-cover border-4 border-neon/60 shadow-neon" />
                 )}
@@ -141,7 +147,7 @@ function Spectator() {
                   </div>
                 )}
                 <div className="grid grid-cols-2 gap-4 md:gap-6 max-w-3xl mx-auto">
-                  <div className="rounded-xl gradient-neon p-4 md:p-8 text-primary-foreground shadow-neon min-w-0">
+                  <div className="rounded-xl p-4 md:p-8 text-white shadow-lg min-w-0" style={{ background: `linear-gradient(135deg, ${sportColor}cc, ${sportColor}88)`, boxShadow: `0 0 30px ${sportColor}44` }}>
                     <div className="text-xs uppercase tracking-widest opacity-80 truncate">Current bid</div>
                     <div className="text-3xl md:text-5xl font-bold mt-1 truncate">{state?.current_highest_bid ? formatINR(state.current_highest_bid) : "—"}</div>
                   </div>
@@ -160,7 +166,7 @@ function Spectator() {
           </div>
 
           <div className="bg-glass border border-border rounded-xl px-4 py-3 overflow-hidden">
-            <div className="text-xs uppercase tracking-widest text-neon mb-2">Recent sales</div>
+            <div className="text-xs uppercase tracking-widest mb-2 font-bold" style={{ color: sportColor }}>Recent sales</div>
             <div className="flex gap-3 overflow-x-auto">
               {soldHistory.length === 0 && <span className="text-xs text-muted-foreground">No sales yet.</span>}
               {soldHistory.map(p => {
@@ -178,18 +184,18 @@ function Spectator() {
         </section>
 
         <aside className="bg-glass border border-border rounded-xl p-4">
-          <h3 className="font-bold mb-3 text-sm uppercase tracking-widest text-neon">Teams</h3>
+          <h3 className="font-bold mb-3 text-sm uppercase tracking-widest" style={{ color: sportColor }}>Teams</h3>
           <div className="space-y-2">
             {[...teams].sort((a,b)=>b.remaining_purse-a.remaining_purse).map(tm => {
               const isLead = tm.id === state?.current_highest_team_id;
               const squadCount = players.filter(p => p.sold_to_team_id === tm.id).length;
               return (
-                <div key={tm.id} className={`rounded-lg p-3 border ${isLead ? "border-neon ring-neon bg-primary/10" : "border-border bg-card/40"} transition-all`}>
+                <div key={tm.id} className={`rounded-lg p-3 border transition-all ${isLead ? 'bg-primary/10' : 'border-border bg-card/40'}`} style={isLead ? { borderColor: sportColor, boxShadow: `0 0 12px ${sportColor}44` } : {}}>
                   <div className="flex justify-between items-center mb-1">
                     <div className="font-bold">{tm.name}</div>
                     <div className="text-xs text-muted-foreground">{squadCount} players</div>
                   </div>
-                  <div className="text-sm text-neon font-bold">{formatINR(tm.remaining_purse)}</div>
+                  <div className="text-sm font-bold" style={{ color: sportColor }}>{formatINR(tm.remaining_purse)}</div>
                 </div>
               );
             })}
