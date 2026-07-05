@@ -182,12 +182,7 @@
   box-shadow: 12px 12px 0px var(--primary) !important;
 }
 
-button:hover, 
-a:hover, 
-.group:hover {
-  transform: scale(1.15) !important;
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
+
 
 .high-contrast .text-shadow-strong {
   text-shadow: 2px 2px 0px #000, -2px -2px 0px #000, 2px -2px 0px #000, -2px 2px 0px #000, 0 4px 24px rgba(0,0,0,1) !important;

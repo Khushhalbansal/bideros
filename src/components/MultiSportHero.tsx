@@ -299,23 +299,7 @@ export function MultiSportHero({ onSportChange }: { onSportChange?: (sport: stri
         </div>
       </div>
 
-      {/* Dynamic CTA Link — navigates to auth with sport context */}
-      <div className="absolute right-4 top-[55%] z-20 md:top-1/2 md:-translate-y-24 md:right-10">
-        <Link
-          to="/auth"
-          search={{ sport: activeChar.sportKey }}
-          className="flex flex-col md:flex-row items-center gap-2 text-[9px] md:text-[11px] font-bold tracking-[0.25em] md:tracking-[0.35em] uppercase transition hover:opacity-70 xl:text-[13px]"
-          style={{ color: activeChar.accent }}
-        >
-          <span className="md:hidden" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-            {activeChar.cta}
-          </span>
-          <span className="hidden md:inline">
-            {activeChar.cta}
-          </span>
-          <ArrowUpRight className="h-4 w-4" />
-        </Link>
-      </div>
+
 
       {/* Multi-Character Carousel Container */}
       <div className="relative z-10 flex min-h-[70vh] items-end justify-center px-4 pb-10 w-full mx-auto">
@@ -415,8 +399,8 @@ export function MultiSportHero({ onSportChange }: { onSportChange?: (sport: stri
             transition={{ duration: 1.0, delay: 0.2, ease: [0.43, 0.13, 0.23, 0.96] }}
           >
             <p
-              className="text-[10px] md:text-[11px] font-bold tracking-[0.35em] uppercase drop-shadow-md xl:text-[14px]"
-              style={{ color: activeChar.accent }}
+              className="inline-block px-2 py-1 rounded bg-black/40 text-[10px] md:text-[11px] font-bold tracking-[0.35em] uppercase drop-shadow-md xl:text-[14px] mb-2"
+              style={{ color: activeChar.accent, border: `1px solid ${activeChar.accent}44` }}
             >
               {activeChar.tag}
             </p>
@@ -456,14 +440,16 @@ export function MultiSportHero({ onSportChange }: { onSportChange?: (sport: stri
         </div>
       </div>
 
-      {/* Footer badge */}
+      {/* Footer / CTA Area */}
       <footer className="absolute bottom-6 w-full z-20 flex justify-end px-6 text-[10px] sm:text-[11px] md:px-10 xl:px-20 xl:text-[14px]">
-        <span
-          className="rounded-full border px-3 py-1 xl:px-5 xl:py-2 backdrop-blur-sm bg-white/5 shadow-lg"
-          style={{ borderColor: `${activeChar.accent}55`, color: activeChar.accent }}
+        <Link
+          to="/auth"
+          search={{ sport: activeChar.sportKey }}
+          className="flex items-center gap-2 px-6 py-3 rounded-full font-bold tracking-widest uppercase transition-all hover:scale-105 shadow-xl backdrop-blur-md"
+          style={{ backgroundColor: `${activeChar.accent}22`, color: activeChar.accent, border: `1px solid ${activeChar.accent}` }}
         >
-          @bideros.sports
-        </span>
+          {activeChar.cta} <ArrowUpRight className="h-4 w-4" />
+        </Link>
       </footer>
     </section>
   );

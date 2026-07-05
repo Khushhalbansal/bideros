@@ -2,7 +2,6 @@ import React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/use-auth";
 import { MultiSportHero } from "@/components/MultiSportHero";
 
@@ -17,7 +16,6 @@ export function Landing() {
       <header className="absolute top-0 w-full flex items-center justify-between py-6 px-4 md:px-10 xl:px-20 z-50">
         <Logo withWordmark />
         <nav className="flex items-center gap-2 md:gap-3">
-          <ThemeToggle />
           <Button asChild variant="ghost" className="text-white hover:text-white hover:bg-white/10 hidden md:inline-flex">
             <Link to="/auctions">Browse Auctions</Link>
           </Button>
@@ -26,14 +24,9 @@ export function Landing() {
               <Link to="/dashboard">Dashboard</Link>
             </Button>
           ) : (
-            <>
-              <Button asChild variant="ghost" className="text-white hover:text-white hover:bg-white/10">
-                <Link to="/auth" search={{ sport: activeSport }}>Sign in</Link>
-              </Button>
-              <Button asChild className="gradient-neon text-primary-foreground shadow-neon hover:scale-105 transition-transform">
-                <Link to="/auth" search={{ sport: activeSport }}>Get started</Link>
-              </Button>
-            </>
+            <Button asChild className="gradient-neon text-primary-foreground shadow-neon hover:scale-105 transition-transform">
+              <Link to="/auth" search={{ sport: activeSport }}>Sign in</Link>
+            </Button>
           )}
         </nav>
       </header>

@@ -11,11 +11,11 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
 import { SequentialVideoBackground } from "@/components/SequentialVideoBackground";
 
-const SPORT_THEMES: Record<string, { accent: string; bg: string; label: string }> = {
-  cricket:    { accent: "#00ffcc", bg: "rgba(84,140,90,0.15)",   label: "Cricket" },
-  football:   { accent: "#33ccff", bg: "rgba(62,108,153,0.15)",  label: "Football" },
-  badminton:  { accent: "#ff5500", bg: "rgba(189,83,83,0.15)",   label: "Badminton" },
-  pickleball: { accent: "#ff66ff", bg: "rgba(140,76,122,0.15)",  label: "Pickleball" },
+const SPORT_THEMES: Record<string, { accent: string; bg: string; label: string; bgImage: string }> = {
+  cricket:    { accent: "#00ffcc", bg: "rgba(84,140,90,0.15)",   label: "Cricket", bgImage: "/assets/bg_cricket.png" },
+  football:   { accent: "#33ccff", bg: "rgba(62,108,153,0.15)",  label: "Football", bgImage: "/assets/bg_football.png" },
+  badminton:  { accent: "#ff5500", bg: "rgba(189,83,83,0.15)",   label: "Badminton", bgImage: "/assets/bg_badminton.png" },
+  pickleball: { accent: "#ff66ff", bg: "rgba(140,76,122,0.15)",  label: "Pickleball", bgImage: "/assets/bg_pickleball.png" },
 };
 
 export const Route = createFileRoute("/auth")({
@@ -98,25 +98,31 @@ function AuthPage() {
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden bg-background">
-      <div className="absolute inset-0 z-0 pointer-events-none bg-gradient-to-br from-background via-background to-neon/10" />
-      <div
-        className="absolute inset-0 z-0 pointer-events-none opacity-30"
-        style={{
-          background: sportTheme
-            ? `radial-gradient(circle at 20% 30%, ${sportTheme.accent}40, transparent 50%), radial-gradient(circle at 80% 70%, ${sportTheme.accent}25, transparent 50%)`
-            : "radial-gradient(circle at 20% 30%, hsl(var(--neon) / 0.25), transparent 50%), radial-gradient(circle at 80% 70%, hsl(var(--primary) / 0.2), transparent 50%)"
-        }}
-      />
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <SequentialVideoBackground 
-          opacity="opacity-30 mix-blend-screen"
-          videos={[
-            "/videos/bg-2.mp4",
-            "/videos/bg-4.mp4",
-            "/videos/bg-6.mp4"
-          ]}
-        />
-      </div>
+      {sportTheme ? (
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <img src={sportTheme.bgImage} alt="" className="w-full h-full object-cover opacity-30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
+        </div>
+      ) : (
+        <>
+          <div className="absolute inset-0 z-0 pointer-events-none bg-gradient-to-br from-background via-background to-neon/10" />
+          <div
+            className="absolute inset-0 z-0 pointer-events-none opacity-30"
+            style={{
+              background: "radial-gradient(circle at 20% 30%, hsl(var(--neon) / 0.25), transparent 50%), radial-gradient(circle at 80% 70%, hsl(var(--primary) / 0.2), transparent 50%)"
+            }}
+          />
+          <div className="absolute inset-0 z-0 pointer-events-none">
+            <SequentialVideoBackground 
+              opacity="opacity-30 mix-blend-screen"
+              videos={[
+                "/videos/bg-7.mp4",
+                "/videos/bg-5.mp4"
+              ]}
+            />
+          </div>
+        </>
+      )}
       <div className="relative z-10 flex flex-col min-h-screen">
         <header className="container mx-auto py-6 px-4"><Logo /></header>
       <main className="flex-1 flex items-center justify-center px-4">

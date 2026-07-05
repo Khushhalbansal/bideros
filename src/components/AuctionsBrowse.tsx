@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { useTheme } from "@/hooks/use-theme";
 import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/Logo";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/Reveal";
 import { Search, Eye, Bell } from "lucide-react";
@@ -78,7 +77,6 @@ export function AuctionsBrowse({ initialSportName }: { initialSportName?: string
       <header className="container mx-auto flex items-center justify-between py-6 px-4 relative z-20">
         <Logo withWordmark />
         <nav className="flex items-center gap-2 md:gap-3">
-          <ThemeToggle />
           {user ? (
             <Button asChild className="gradient-neon text-primary-foreground shadow-neon hover:scale-105 transition-transform">
               <Link to="/dashboard">Dashboard</Link>
