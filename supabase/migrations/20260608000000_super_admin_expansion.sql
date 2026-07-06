@@ -1,0 +1,73 @@
+CREATE TABLE IF NOT EXISTS public.app_settings (
+  key text PRIMARY KEY,
+  value jsonb NOT NULL DEFAULT '{}'::jsonb
+);
+
+GRANT SELECT ON public.app_settings TO authenticated;
+GRANT SELECT ON public.app_settings TO anon;
+ALTER TABLE public.app_settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS app_settings_read ON public.app_settings;
+CREATE POLICY app_settings_read ON public.app_settings FOR SELECT TO public USING (true);
+
+INSERT INTO public.app_settings (key, value) VALUES (
+  'pricing_config',
+  '{
+    "promo_text": "Newborn Special — 50% OFF!",
+    "headline_highlight": "Champion",
+    "single_price": "50",
+    "single_price_strike": "80",
+    "single_features": [
+      "1 Active Tournament Credit",
+      "Standard client & owner views",
+      "No expiry on credit"
+    ],
+    "monthly_price": "99",
+    "monthly_price_strike": "199",
+    "monthly_features": [
+      "UNLIMITED tournaments",
+      "UNLIMITED teams & players",
+      "Stadium-grade projector view",
+      "Custom logos & colors",
+      "Priority live websocket syncing"
+    ],
+    "yearly_price": "999",
+    "yearly_price_strike": "1999",
+    "yearly_features": [
+      "Everything in Monthly Pro",
+      "Lock in the Newborn Special price for a full year",
+      "Priority support"
+    ]
+  }'::jsonb
+) ON CONFLICT (key) DO NOTHING;
+
+CREATE OR REPLACE FUNCTION public.sa_update_setting(p_key text, p_value jsonb)
+RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  IF NOT has_role(auth.uid(), 'super_admin') THEN RETURN jsonb_build_object('ok',false,'error','Not authorized'); END IF;
+  INSERT INTO public.app_settings (key, value) VALUES (p_key, p_value) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
+  INSERT INTO public.super_admin_log(actor_id, action, target, payload) VALUES (auth.uid(), 'update_setting', p_key, p_value);
+  RETURN jsonb_build_object('ok',true);
+END; $$;
+
+DROP FUNCTION IF EXISTS public.sa_list_users();
+CREATE OR REPLACE FUNCTION public.sa_list_users()
+RETURNS TABLE(id uuid, email text, full_name text, created_at timestamptz, roles text[], auctions_quota integer)
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  IF NOT has_role(auth.uid(), 'super_admin') THEN RAISE EXCEPTION 'Not authorized'; END IF;
+  RETURN QUERY
+    SELECT p.id, p.email, p.full_name, p.created_at,
+      ARRAY(SELECT r.role::text FROM public.user_roles r WHERE r.user_id = p.id),
+      p.auctions_quota
+    FROM public.profiles p ORDER BY p.created_at DESC;
+END; $$;
+
+CREATE OR REPLACE FUNCTION public.sa_update_user_quota(p_user_id uuid, p_change integer)
+RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE v_new_quota integer;
+BEGIN
+  IF NOT has_role(auth.uid(), 'super_admin') THEN RETURN jsonb_build_object('ok',false,'error','Not authorized'); END IF;
+  UPDATE public.profiles SET auctions_quota = COALESCE(auctions_quota, 0) + p_change WHERE id = p_user_id RETURNING auctions_quota INTO v_new_quota;
+  INSERT INTO public.super_admin_log(actor_id, action, target, payload) VALUES (auth.uid(), 'update_quota', p_user_id::text, jsonb_build_object('change', p_change, 'new_quota', v_new_quota));
+  RETURN jsonb_build_object('ok',true, 'new_quota', v_new_quota);
+END; $$;

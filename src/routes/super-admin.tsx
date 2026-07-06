@@ -1,0 +1,444 @@
+// @ts-nocheck - pre-existing schema drift, unrelated to sport-hero redesign
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Logo } from "@/components/Logo";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
+import { ShieldAlert, Trash2, Ban, CheckCircle2, Flag, Plus, ChevronRight } from "lucide-react";
+
+export const Route = createFileRoute("/super-admin")({ component: SuperAdmin });
+
+interface SaTournament { id: string; name: string; status: string; admin_id: string; admin_email: string | null; blocked: boolean; created_at: string; team_count: number; player_count: number; }
+interface SaUser { id: string; email: string; full_name: string | null; created_at: string; roles: string[]; auctions_quota: number | null; }
+interface SaSuper { email: string; user_id: string | null; created_at: string; }
+interface AuditRow { id: string; actor_id: string | null; action: string; target: string | null; payload: unknown; created_at: string; }
+interface SaFeedback { id: string; user_id: string | null; user_email: string | null; page_url: string | null; feedback_type: string; content: string | null; screenshot_url: string | null; rating: number | null; status: string; created_at: string; }
+
+function SuperAdmin() {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const [allowed, setAllowed] = useState<boolean | null>(null);
+
+  useEffect(() => { if (!loading && !user) navigate({ to: "/auth" }); }, [user, loading, navigate]);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("user_roles").select("role").eq("user_id", user.id).then(({ data }) => {
+      setAllowed(!!data?.some(r => r.role === "super_admin"));
+    });
+  }, [user]);
+
+  if (loading || allowed === null) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
+  if (!allowed) return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-3 text-center px-6">
+      <ShieldAlert className="h-12 w-12 text-destructive" />
+      <h1 className="text-2xl font-bold">Not authorized</h1>
+      <p className="text-muted-foreground">This area is reserved for super admins.</p>
+      <Button asChild variant="outline"><Link to="/dashboard">Back to dashboard</Link></Button>
+    </div>
+  );
+
+  return <SuperAdminPanel />;
+}
+
+function SuperAdminPanel() {
+  const [tournaments, setTournaments] = useState<SaTournament[]>([]);
+  const [users, setUsers] = useState<SaUser[]>([]);
+  const [supers, setSupers] = useState<SaSuper[]>([]);
+  const [audit, setAudit] = useState<AuditRow[]>([]);
+  const [feedback, setFeedback] = useState<SaFeedback[]>([]);
+  const [newEmail, setNewEmail] = useState("");
+
+  const load = useCallback(async () => {
+    const [{ data: t }, { data: u }, { data: s }, { data: a }, { data: f }] = await Promise.all([
+      supabase.rpc("sa_list_tournaments"),
+      supabase.rpc("sa_list_users"),
+      supabase.rpc("sa_list_super_admins"),
+      supabase.from("super_admin_log").select("*").order("created_at", { ascending: false }).limit(100),
+      supabase.rpc("sa_list_feedback"),
+    ]);
+    setTournaments((t as SaTournament[]) || []);
+    setUsers((u as SaUser[]) || []);
+    setSupers((s as SaSuper[]) || []);
+    setAudit((a as AuditRow[]) || []);
+    setFeedback((f as SaFeedback[]) || []);
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  const toggleBlock = async (id: string, blocked: boolean) => {
+    const { data, error } = await supabase.rpc("sa_set_blocked", { p_tournament: id, p_blocked: !blocked });
+    if (error) return toast.error(error.message);
+    const r = data as { ok: boolean; error?: string };
+    if (!r.ok) return toast.error(r.error || "Failed");
+    toast.success(!blocked ? "Blocked" : "Unblocked");
+    load();
+  };
+  const del = async (id: string) => {
+    if (!confirm("Delete this tournament permanently?")) return;
+    const { data, error } = await supabase.rpc("sa_delete_tournament", { p_tournament: id });
+    if (error) return toast.error(error.message);
+    const r = data as { ok: boolean; error?: string };
+    if (!r.ok) return toast.error(r.error || "Failed");
+    toast.success("Deleted"); load();
+  };
+  const forceEnd = async (id: string) => {
+    if (!confirm("Force-end this live auction?")) return;
+    const { data, error } = await supabase.rpc("sa_force_end", { p_tournament: id });
+    if (error) return toast.error(error.message);
+    const r = data as { ok: boolean; error?: string };
+    if (!r.ok) return toast.error(r.error || "Failed");
+    toast.success("Auction ended"); load();
+  };
+  const addSuper = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { data, error } = await supabase.rpc("sa_add_super_admin", { p_email: newEmail });
+    if (error) return toast.error(error.message);
+    const r = data as { ok: boolean; error?: string; pending?: boolean };
+    if (!r.ok) return toast.error(r.error || "Failed");
+    toast.success(r.pending ? "Added (granted on first login)" : "Granted");
+    setNewEmail(""); load();
+  };
+  const removeSuper = async (email: string) => {
+    if (!confirm(`Remove super admin ${email}?`)) return;
+    const { data, error } = await supabase.rpc("sa_remove_super_admin", { p_email: email });
+    if (error) return toast.error(error.message);
+    const r = data as { ok: boolean; error?: string };
+    if (!r.ok) return toast.error(r.error || "Failed");
+    toast.success("Removed"); load();
+  };
+  const updateUserQuota = async (userId: string, change: number) => {
+    const { data, error } = await supabase.rpc("sa_update_user_quota", { p_user_id: userId, p_change: change });
+    if (error) return toast.error(error.message);
+    const r = data as { ok: boolean; error?: string; new_quota?: number };
+    if (!r.ok) return toast.error(r.error || "Failed");
+    toast.success(`Quota updated to ${r.new_quota}`);
+    setUsers(users.map(u => u.id === userId ? { ...u, auctions_quota: r.new_quota || 0 } : u));
+  };
+  const updateFeedbackStatus = async (id: string, status: string) => {
+    const { error } = await supabase.rpc("sa_update_feedback_status", { p_feedback_id: id, p_status: status });
+    if (error) return toast.error(error.message);
+    setFeedback(feedback.map(f => f.id === id ? { ...f, status } : f));
+    toast.success("Status updated");
+  };
+
+  return (
+    <div className="min-h-screen">
+      <header className="container mx-auto flex items-center justify-between py-6 px-4 flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <Logo />
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          <h1 className="font-display font-bold text-lg flex items-center gap-2">
+            <ShieldAlert className="h-5 w-5 text-hot" /> Super admin
+          </h1>
+        </div>
+        <Button asChild variant="ghost" size="sm"><Link to="/dashboard">← Dashboard</Link></Button>
+      </header>
+
+      <main className="container mx-auto px-4 pb-16">
+        <Tabs defaultValue="tournaments">
+          <TabsList className="flex-wrap h-auto">
+            <TabsTrigger value="tournaments">Tournaments ({tournaments.length})</TabsTrigger>
+            <TabsTrigger value="users">Users ({users.length})</TabsTrigger>
+            <TabsTrigger value="supers">Super admins ({supers.length})</TabsTrigger>
+            <TabsTrigger value="feedback">Feedback ({feedback.filter(f => f.status === 'open').length})</TabsTrigger>
+            <TabsTrigger value="audit">Audit log</TabsTrigger>
+            <TabsTrigger value="settings">Pricing & Settings</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="tournaments" className="mt-6 space-y-2">
+            {tournaments.map(t => (
+              <div key={t.id} className={`bg-glass border rounded-xl p-4 flex flex-wrap items-center justify-between gap-3 ${t.blocked ? "border-destructive/50" : "border-border"}`}>
+                <div className="min-w-0">
+                  <div className="font-bold flex items-center gap-2 flex-wrap">
+                    {t.name}
+                    <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/15 text-neon">{t.status}</span>
+                    {t.blocked && <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-destructive/20 text-hot">blocked</span>}
+                  </div>
+                  <div className="text-xs text-muted-foreground">{t.admin_email || t.admin_id} • {t.team_count} teams • {t.player_count} players</div>
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  <Button asChild size="sm" variant="outline"><Link to="/admin/$id" params={{ id: t.id }}>Open</Link></Button>
+                  {t.status === "live" && (
+                    <Button size="sm" variant="outline" onClick={() => forceEnd(t.id)}><Flag className="h-3 w-3 mr-1" />Force end</Button>
+                  )}
+                  <Button size="sm" variant="outline" onClick={() => toggleBlock(t.id, t.blocked)}>
+                    {t.blocked ? <><CheckCircle2 className="h-3 w-3 mr-1" />Unblock</> : <><Ban className="h-3 w-3 mr-1" />Block</>}
+                  </Button>
+                  <Button size="sm" variant="ghost" className="text-destructive" onClick={() => del(t.id)}><Trash2 className="h-3 w-3" /></Button>
+                </div>
+              </div>
+            ))}
+            {tournaments.length === 0 && <p className="text-sm text-muted-foreground">No tournaments.</p>}
+          </TabsContent>
+
+          <TabsContent value="users" className="mt-6 space-y-2">
+            {users.map(u => (
+              <div key={u.id} className="bg-glass border border-border rounded-xl p-3 flex items-center justify-between gap-3">
+                <div>
+                  <div className="font-semibold text-sm">{u.full_name || u.email}</div>
+                  <div className="text-xs text-muted-foreground">{u.email}</div>
+                  <div className="flex gap-1 flex-wrap mt-1">
+                    {u.roles.length === 0 && <span className="text-[10px] text-muted-foreground">user</span>}
+                    {u.roles.map(r => <span key={r} className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/15 text-neon">{r}</span>)}
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 bg-background/50 rounded-lg p-2 border border-border/50">
+                  <div className="text-xs text-muted-foreground mr-2 font-medium">Free Tournaments:</div>
+                  <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => updateUserQuota(u.id, -1)}>-</Button>
+                  <span className="font-bold min-w-[20px] text-center">{u.auctions_quota ?? 0}</span>
+                  <Button size="icon" variant="outline" className="h-6 w-6" onClick={() => updateUserQuota(u.id, 1)}>+</Button>
+                </div>
+              </div>
+            ))}
+          </TabsContent>
+
+          <TabsContent value="supers" className="mt-6 space-y-4">
+            <form onSubmit={addSuper} className="bg-glass border border-border rounded-xl p-4 flex gap-2 items-end">
+              <div className="flex-1"><Label>Add by email</Label><Input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} required placeholder="someone@example.com" /></div>
+              <Button className="gradient-neon text-primary-foreground shadow-neon"><Plus className="h-4 w-4 mr-1" />Add</Button>
+            </form>
+            <div className="space-y-2">
+              {supers.map(s => (
+                <div key={s.email} className="bg-glass border border-border rounded-xl p-3 flex items-center justify-between">
+                  <div>
+                    <div className="font-semibold text-sm">{s.email}</div>
+                    <div className="text-xs text-muted-foreground">{s.user_id ? "active" : "pending first login"}</div>
+                  </div>
+                  {s.email !== "khushhal12196@gmail.com" && (
+                    <Button size="sm" variant="ghost" className="text-destructive" onClick={() => removeSuper(s.email)}><Trash2 className="h-3 w-3" /></Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="audit" className="mt-6 space-y-1">
+            {audit.map(a => (
+              <div key={a.id} className="bg-glass border border-border rounded-md px-3 py-2 text-xs flex items-center justify-between gap-3">
+                <div>
+                  <span className="text-neon font-semibold">{a.action}</span>
+                  {a.target && <span className="text-muted-foreground"> → {a.target}</span>}
+                </div>
+                <div className="text-muted-foreground">{new Date(a.created_at).toLocaleString()}</div>
+              </div>
+            ))}
+            {audit.length === 0 && <p className="text-sm text-muted-foreground">No actions yet.</p>}
+          </TabsContent>
+          <TabsContent value="feedback" className="mt-6 space-y-4">
+            {/* Tabs: All | Contacts | Suggestions | Other */}
+            {["all", "contact", "feature", "bug", "design", "performance", "issue", "review", "upgrade", "other"].filter(type =>
+              type === "all" || feedback.some(f => f.feedback_type === type)
+            ).length > 0 && (
+              <div className="flex gap-2 flex-wrap text-xs">
+                <span className="text-muted-foreground self-center font-semibold">Filter:</span>
+                {["all", "contact", "feature", "bug", "design", "performance", "issue", "review", "upgrade", "other"].filter(type =>
+                  type === "all" || feedback.some(f => f.feedback_type === type)
+                ).map(type => (
+                  <span key={type} className="px-3 py-1 rounded-full bg-muted border border-border text-muted-foreground font-bold capitalize">
+                    {type} {type !== "all" ? `(${feedback.filter(f => f.feedback_type === type).length})` : `(${feedback.length})`}
+                  </span>
+                ))}
+              </div>
+            )}
+            {feedback.map(f => (
+              <div key={f.id} className={`bg-glass border rounded-xl p-4 flex flex-col gap-3 ${f.status === 'open' ? 'border-neon/50 shadow-[0_0_15px_rgba(var(--neon),0.1)]' : 'border-border opacity-70'}`}>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      {/* Type badge with icon */}
+                      <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                        f.feedback_type === 'contact' ? 'bg-emerald-500/20 text-emerald-400' :
+                        f.feedback_type === 'feature' ? 'bg-neon/20 text-neon' :
+                        f.feedback_type === 'bug' ? 'bg-red-500/20 text-red-400' :
+                        f.feedback_type === 'design' ? 'bg-purple-500/20 text-purple-400' :
+                        f.feedback_type === 'performance' ? 'bg-yellow-500/20 text-yellow-400' :
+                        f.feedback_type === 'issue' ? 'bg-hot/20 text-hot' :
+                        f.feedback_type === 'review' ? 'bg-yellow-500/20 text-yellow-500' :
+                        f.feedback_type === 'upgrade' ? 'bg-blue-500/20 text-blue-500' :
+                        'bg-muted text-muted-foreground'
+                      }`}>
+                        {f.feedback_type === 'contact' ? '📬' :
+                         f.feedback_type === 'feature' ? '✨' :
+                         f.feedback_type === 'bug' ? '🐛' :
+                         f.feedback_type === 'design' ? '🎨' :
+                         f.feedback_type === 'performance' ? '⚡' : '💬'} {f.feedback_type}
+                      </span>
+                      <span className="text-xs text-muted-foreground">{new Date(f.created_at).toLocaleString()}</span>
+                      {f.rating && <span className="text-xs font-bold text-yellow-500">★ {f.rating}/5</span>}
+                      <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full ${
+                        f.status === 'open' ? 'bg-neon/20 text-neon' :
+                        f.status === 'resolved' ? 'bg-emerald-500/20 text-emerald-400' :
+                        'bg-muted text-muted-foreground'
+                      }`}>{f.status}</span>
+                    </div>
+                    {/* Sender */}
+                    <div className="font-bold text-sm text-foreground mb-1">
+                      {f.user_email || 'Anonymous'}
+                    </div>
+                    {f.page_url && <a href={f.page_url} target="_blank" rel="noreferrer" className="text-xs text-muted-foreground hover:underline hover:text-neon truncate max-w-[200px] block">{f.page_url}</a>}
+                  </div>
+                  <div className="flex gap-2 flex-shrink-0 flex-col sm:flex-row items-end sm:items-center">
+                    {/* Reply button */}
+                    {f.user_email && (
+                      <a
+                        href={`mailto:${f.user_email}?subject=${encodeURIComponent(`Re: Your ${f.feedback_type} on Bideros`)}&body=${encodeURIComponent(`Hi,\n\nThank you for reaching out!\n\n---\nYour message:\n${f.content || ''}\n---\n\nBest,\nBideros Team`)}`}
+                        className="text-xs px-3 py-1.5 rounded-lg bg-neon/10 text-neon border border-neon/30 hover:bg-neon/20 transition font-bold"
+                      >
+                        Reply ↗
+                      </a>
+                    )}
+                    <select
+                      value={f.status}
+                      onChange={(e) => updateFeedbackStatus(f.id, e.target.value)}
+                      className="bg-background border border-border text-xs rounded-md px-2 py-1 outline-none focus:border-neon"
+                    >
+                      <option value="open">Open</option>
+                      <option value="resolved">Resolved</option>
+                      <option value="ignored">Ignored</option>
+                    </select>
+                  </div>
+                </div>
+                {f.content && <div className="text-sm bg-background/50 p-3 rounded-lg border border-border/50 whitespace-pre-wrap">{f.content}</div>}
+                {f.screenshot_url && (
+                  <a href={f.screenshot_url} target="_blank" rel="noreferrer" className="block max-w-[300px] mt-2 rounded-lg overflow-hidden border border-border hover:border-neon transition-colors">
+                    <img src={f.screenshot_url} alt="Screenshot" className="w-full h-auto object-cover" />
+                  </a>
+                )}
+              </div>
+            ))}
+            {feedback.length === 0 && <p className="text-sm text-muted-foreground">No feedback yet.</p>}
+          </TabsContent>
+
+          <TabsContent value="settings" className="mt-6">
+            <PricingSettingsEditor />
+          </TabsContent>
+        </Tabs>
+      </main>
+    </div>
+  );
+}
+
+function PricingSettingsEditor() {
+  const [config, setConfig] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  const loadConfig = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from("app_settings").select("value").eq("key", "pricing_config").single();
+    if (error && error.code !== "PGRST116") toast.error(error.message);
+    if (data) setConfig(data.value);
+    else setConfig({
+      promo_text: "Newborn Special — 50% OFF!",
+      headline_highlight: "Champion",
+      single_price: "50",
+      single_price_strike: "80",
+      single_features: ["1 Active Tournament Credit", "Standard client & owner views", "No expiry on credit"],
+      monthly_price: "99",
+      monthly_price_strike: "199",
+      monthly_features: ["UNLIMITED tournaments", "UNLIMITED teams & players", "Stadium-grade projector view", "Custom logos & colors", "Priority live websocket syncing"],
+      yearly_price: "999",
+      yearly_price_strike: "1999",
+      yearly_features: ["Everything in Monthly Pro", "Lock in the Newborn Special price for a full year", "Priority support"]
+    });
+    setLoading(false);
+  };
+  useEffect(() => { loadConfig(); }, []);
+
+  const saveConfig = async () => {
+    const { error } = await supabase.rpc("sa_update_setting", { p_key: "pricing_config", p_value: config });
+    if (error) return toast.error(error.message);
+    toast.success("Pricing configuration saved successfully!");
+  };
+
+  if (loading) return <div className="p-4">Loading settings...</div>;
+
+  return (
+    <div className="bg-glass border border-border rounded-xl p-6 space-y-6">
+      <h2 className="text-xl font-bold">Global Pricing & Features Configuration</h2>
+      <p className="text-sm text-muted-foreground">Changes here immediately reflect on the /pricing page for all users.</p>
+      
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="space-y-4">
+          <h3 className="font-semibold text-lg border-b border-border/50 pb-2">Hero Text</h3>
+          <div>
+            <Label>Promo Banner Text</Label>
+            <Input value={config.promo_text} onChange={e => setConfig({ ...config, promo_text: e.target.value })} />
+          </div>
+          <div>
+            <Label>Headline Highlight Word</Label>
+            <Input value={config.headline_highlight} onChange={e => setConfig({ ...config, headline_highlight: e.target.value })} />
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <h3 className="font-semibold text-lg border-b border-border/50 pb-2">Single Match</h3>
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <Label>Price (₹)</Label>
+              <Input value={config.single_price} onChange={e => setConfig({ ...config, single_price: e.target.value })} />
+            </div>
+            <div className="flex-1">
+              <Label>Strike Price (₹)</Label>
+              <Input value={config.single_price_strike} onChange={e => setConfig({ ...config, single_price_strike: e.target.value })} />
+            </div>
+          </div>
+          <div>
+            <Label>Features (comma separated)</Label>
+            <textarea className="w-full bg-background border border-border rounded-md p-2 text-sm" rows={4}
+              value={config.single_features.join("\n")}
+              onChange={e => setConfig({ ...config, single_features: e.target.value.split("\n") })} />
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <h3 className="font-semibold text-lg border-b border-border/50 pb-2">Monthly Pro</h3>
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <Label>Price (₹)</Label>
+              <Input value={config.monthly_price} onChange={e => setConfig({ ...config, monthly_price: e.target.value })} />
+            </div>
+            <div className="flex-1">
+              <Label>Strike Price (₹)</Label>
+              <Input value={config.monthly_price_strike} onChange={e => setConfig({ ...config, monthly_price_strike: e.target.value })} />
+            </div>
+          </div>
+          <div>
+            <Label>Features (comma separated)</Label>
+            <textarea className="w-full bg-background border border-border rounded-md p-2 text-sm" rows={4}
+              value={config.monthly_features.join("\n")}
+              onChange={e => setConfig({ ...config, monthly_features: e.target.value.split("\n") })} />
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <h3 className="font-semibold text-lg border-b border-border/50 pb-2">Yearly Pro</h3>
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <Label>Price (₹)</Label>
+              <Input value={config.yearly_price} onChange={e => setConfig({ ...config, yearly_price: e.target.value })} />
+            </div>
+            <div className="flex-1">
+              <Label>Strike Price (₹)</Label>
+              <Input value={config.yearly_price_strike} onChange={e => setConfig({ ...config, yearly_price_strike: e.target.value })} />
+            </div>
+          </div>
+          <div>
+            <Label>Features (comma separated)</Label>
+            <textarea className="w-full bg-background border border-border rounded-md p-2 text-sm" rows={4}
+              value={config.yearly_features.join("\n")}
+              onChange={e => setConfig({ ...config, yearly_features: e.target.value.split("\n") })} />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-end mt-8 border-t border-border/50 pt-4">
+        <Button onClick={saveConfig} className="gradient-neon text-primary-foreground">Save Configuration</Button>
+      </div>
+    </div>
+  );
+}
