@@ -1,1034 +1,1078 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
-  }
+    PostgrestVersion: "14.5";
+  };
   public: {
     Tables: {
       admin_allowlist: {
         Row: {
-          created_at: string | null
-          email: string
-          id: string
-          invited_by: string | null
-        }
+          created_at: string | null;
+          email: string;
+          id: string;
+          invited_by: string | null;
+        };
         Insert: {
-          created_at?: string | null
-          email: string
-          id?: string
-          invited_by?: string | null
-        }
+          created_at?: string | null;
+          email: string;
+          id?: string;
+          invited_by?: string | null;
+        };
         Update: {
-          created_at?: string | null
-          email?: string
-          id?: string
-          invited_by?: string | null
-        }
-        Relationships: []
-      }
+          created_at?: string | null;
+          email?: string;
+          id?: string;
+          invited_by?: string | null;
+        };
+        Relationships: [];
+      };
       admin_invite_tokens: {
         Row: {
-          created_at: string | null
-          created_by: string | null
-          email: string
-          expires_at: string | null
-          id: string
-          token: string
-          used: boolean | null
-          used_at: string | null
-          used_by: string | null
-        }
+          created_at: string | null;
+          created_by: string | null;
+          email: string;
+          expires_at: string | null;
+          id: string;
+          token: string;
+          used: boolean | null;
+          used_at: string | null;
+          used_by: string | null;
+        };
         Insert: {
-          created_at?: string | null
-          created_by?: string | null
-          email: string
-          expires_at?: string | null
-          id?: string
-          token?: string
-          used?: boolean | null
-          used_at?: string | null
-          used_by?: string | null
-        }
+          created_at?: string | null;
+          created_by?: string | null;
+          email: string;
+          expires_at?: string | null;
+          id?: string;
+          token?: string;
+          used?: boolean | null;
+          used_at?: string | null;
+          used_by?: string | null;
+        };
         Update: {
-          created_at?: string | null
-          created_by?: string | null
-          email?: string
-          expires_at?: string | null
-          id?: string
-          token?: string
-          used?: boolean | null
-          used_at?: string | null
-          used_by?: string | null
-        }
-        Relationships: []
-      }
-      auction_state: {
-        Row: {
-          current_highest_bid: number | null
-          current_highest_team_id: string | null
-          current_player_id: string | null
-          id: string
-          last_sold_at: string | null
-          last_sold_player_id: string | null
-          last_sold_price: number | null
-          last_sold_team_id: string | null
-          lot_number: number | null
-          strike_count: number
-          strike_resets_at: string | null
-          timer_ends_at: string | null
-          tournament_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          current_highest_bid?: number | null
-          current_highest_team_id?: string | null
-          current_player_id?: string | null
-          id?: string
-          last_sold_at?: string | null
-          last_sold_player_id?: string | null
-          last_sold_price?: number | null
-          last_sold_team_id?: string | null
-          lot_number?: number | null
-          strike_count?: number
-          strike_resets_at?: string | null
-          timer_ends_at?: string | null
-          tournament_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          current_highest_bid?: number | null
-          current_highest_team_id?: string | null
-          current_player_id?: string | null
-          id?: string
-          last_sold_at?: string | null
-          last_sold_player_id?: string | null
-          last_sold_price?: number | null
-          last_sold_team_id?: string | null
-          lot_number?: number | null
-          strike_count?: number
-          strike_resets_at?: string | null
-          timer_ends_at?: string | null
-          tournament_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "auction_state_current_highest_team_id_fkey"
-            columns: ["current_highest_team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "auction_state_current_highest_team_id_fkey"
-            columns: ["current_highest_team_id"]
-            isOneToOne: false
-            referencedRelation: "teams_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "auction_state_current_player_id_fkey"
-            columns: ["current_player_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "auction_state_tournament_id_fkey"
-            columns: ["tournament_id"]
-            isOneToOne: true
-            referencedRelation: "tournaments"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      audit_log: {
-        Row: {
-          action: string
-          actor_id: string | null
-          created_at: string | null
-          id: string
-          payload: Json | null
-          tournament_id: string | null
-        }
-        Insert: {
-          action: string
-          actor_id?: string | null
-          created_at?: string | null
-          id?: string
-          payload?: Json | null
-          tournament_id?: string | null
-        }
-        Update: {
-          action?: string
-          actor_id?: string | null
-          created_at?: string | null
-          id?: string
-          payload?: Json | null
-          tournament_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "audit_log_tournament_id_fkey"
-            columns: ["tournament_id"]
-            isOneToOne: false
-            referencedRelation: "tournaments"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      bid_rate_limit: {
-        Row: {
-          count: number
-          user_id: string
-          window_start: string
-        }
-        Insert: {
-          count?: number
-          user_id: string
-          window_start: string
-        }
-        Update: {
-          count?: number
-          user_id?: string
-          window_start?: string
-        }
-        Relationships: []
-      }
-      bids: {
-        Row: {
-          amount: number
-          created_at: string | null
-          id: string
-          is_winning: boolean | null
-          player_id: string
-          sequence_number: number
-          team_id: string
-          tournament_id: string
-        }
-        Insert: {
-          amount: number
-          created_at?: string | null
-          id?: string
-          is_winning?: boolean | null
-          player_id: string
-          sequence_number?: number
-          team_id: string
-          tournament_id: string
-        }
-        Update: {
-          amount?: number
-          created_at?: string | null
-          id?: string
-          is_winning?: boolean | null
-          player_id?: string
-          sequence_number?: number
-          team_id?: string
-          tournament_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bids_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bids_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bids_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "teams_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bids_tournament_id_fkey"
-            columns: ["tournament_id"]
-            isOneToOne: false
-            referencedRelation: "tournaments"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      invite_tokens: {
-        Row: {
-          created_at: string | null
-          email: string | null
-          expires_at: string | null
-          id: string
-          team_id: string
-          token: string
-          tournament_id: string
-          used: boolean | null
-          used_by: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          email?: string | null
-          expires_at?: string | null
-          id?: string
-          team_id: string
-          token?: string
-          tournament_id: string
-          used?: boolean | null
-          used_by?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          email?: string | null
-          expires_at?: string | null
-          id?: string
-          team_id?: string
-          token?: string
-          tournament_id?: string
-          used?: boolean | null
-          used_by?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "invite_tokens_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invite_tokens_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "teams_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invite_tokens_tournament_id_fkey"
-            columns: ["tournament_id"]
-            isOneToOne: false
-            referencedRelation: "tournaments"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      player_categories: {
-        Row: {
-          base_price: number
-          created_at: string
-          id: string
-          min_bid_increment: number
-          name: string
-          sort_order: number
-          tournament_id: string
-        }
-        Insert: {
-          base_price?: number
-          created_at?: string
-          id?: string
-          min_bid_increment?: number
-          name: string
-          sort_order?: number
-          tournament_id: string
-        }
-        Update: {
-          base_price?: number
-          created_at?: string
-          id?: string
-          min_bid_increment?: number
-          name?: string
-          sort_order?: number
-          tournament_id?: string
-        }
-        Relationships: []
-      }
-      player_invite_tokens: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          expires_at: string
-          id: string
-          revoked: boolean
-          token: string
-          tournament_id: string
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          expires_at?: string
-          id?: string
-          revoked?: boolean
-          token?: string
-          tournament_id: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          expires_at?: string
-          id?: string
-          revoked?: boolean
-          token?: string
-          tournament_id?: string
-        }
-        Relationships: []
-      }
-      players: {
-        Row: {
-          auction_order: number | null
-          base_price: number
-          category_id: string | null
-          created_at: string | null
-          id: string
-          name: string
-          photo_url: string | null
-          role: string | null
-          self_registered: boolean
-          sold_price: number | null
-          sold_to_team_id: string | null
-          stats: Json | null
-          status: string
-          tournament_id: string
-          user_id: string | null
-        }
-        Insert: {
-          auction_order?: number | null
-          base_price?: number
-          category_id?: string | null
-          created_at?: string | null
-          id?: string
-          name: string
-          photo_url?: string | null
-          role?: string | null
-          self_registered?: boolean
-          sold_price?: number | null
-          sold_to_team_id?: string | null
-          stats?: Json | null
-          status?: string
-          tournament_id: string
-          user_id?: string | null
-        }
-        Update: {
-          auction_order?: number | null
-          base_price?: number
-          category_id?: string | null
-          created_at?: string | null
-          id?: string
-          name?: string
-          photo_url?: string | null
-          role?: string | null
-          self_registered?: boolean
-          sold_price?: number | null
-          sold_to_team_id?: string | null
-          stats?: Json | null
-          status?: string
-          tournament_id?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "players_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "player_categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "players_sold_to_team_id_fkey"
-            columns: ["sold_to_team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "players_sold_to_team_id_fkey"
-            columns: ["sold_to_team_id"]
-            isOneToOne: false
-            referencedRelation: "teams_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "players_tournament_id_fkey"
-            columns: ["tournament_id"]
-            isOneToOne: false
-            referencedRelation: "tournaments"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+          created_at?: string | null;
+          created_by?: string | null;
+          email?: string;
+          expires_at?: string | null;
+          id?: string;
+          token?: string;
+          used?: boolean | null;
+          used_at?: string | null;
+          used_by?: string | null;
+        };
+        Relationships: [];
+      };
       app_settings: {
         Row: {
-          key: string
-          value: Json
-        }
+          key: string;
+          value: Json;
+        };
         Insert: {
-          key: string
-          value?: Json
-        }
+          key: string;
+          value?: Json;
+        };
         Update: {
-          key?: string
-          value?: Json
-        }
-        Relationships: []
-      }
-      profiles: {
+          key?: string;
+          value?: Json;
+        };
+        Relationships: [];
+      };
+      auction_state: {
         Row: {
-          age: number | null
-          auctions_quota: number | null
-          avatar_url: string | null
-          bio: string | null
-          created_at: string
-          email: string | null
-          full_name: string | null
-          id: string
-          phone: string | null
-          stats: Json
-          updated_at: string
-          points: number | null
-          referral_code: string | null
-          referred_by: string | null
-        }
+          current_highest_bid: number | null;
+          current_highest_team_id: string | null;
+          current_player_id: string | null;
+          id: string;
+          last_sold_at: string | null;
+          last_sold_player_id: string | null;
+          last_sold_price: number | null;
+          last_sold_team_id: string | null;
+          lot_number: number | null;
+          strike_count: number;
+          strike_resets_at: string | null;
+          timer_ends_at: string | null;
+          tournament_id: string;
+          updated_at: string | null;
+        };
         Insert: {
-          age?: number | null
-          auctions_quota?: number | null
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string
-          email?: string | null
-          full_name?: string | null
-          id: string
-          phone?: string | null
-          stats?: Json
-          updated_at?: string
-          points?: number | null
-          referral_code?: string | null
-          referred_by?: string | null
-        }
+          current_highest_bid?: number | null;
+          current_highest_team_id?: string | null;
+          current_player_id?: string | null;
+          id?: string;
+          last_sold_at?: string | null;
+          last_sold_player_id?: string | null;
+          last_sold_price?: number | null;
+          last_sold_team_id?: string | null;
+          lot_number?: number | null;
+          strike_count?: number;
+          strike_resets_at?: string | null;
+          timer_ends_at?: string | null;
+          tournament_id: string;
+          updated_at?: string | null;
+        };
         Update: {
-          age?: number | null
-          auctions_quota?: number | null
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string
-          email?: string | null
-          full_name?: string | null
-          id?: string
-          phone?: string | null
-          stats?: Json
-          updated_at?: string
-          points?: number | null
-          referral_code?: string | null
-          referred_by?: string | null
-        }
-        Relationships: []
-      }
-      super_admin_allowlist: {
-        Row: {
-          created_at: string
-          email: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-        }
-        Relationships: []
-      }
-      super_admin_log: {
-        Row: {
-          action: string
-          actor_id: string | null
-          created_at: string
-          id: string
-          payload: Json | null
-          target: string | null
-        }
-        Insert: {
-          action: string
-          actor_id?: string | null
-          created_at?: string
-          id?: string
-          payload?: Json | null
-          target?: string | null
-        }
-        Update: {
-          action?: string
-          actor_id?: string | null
-          created_at?: string
-          id?: string
-          payload?: Json | null
-          target?: string | null
-        }
-        Relationships: []
-      }
-      teams: {
-        Row: {
-          color: string | null
-          created_at: string | null
-          id: string
-          logo_url: string | null
-          name: string
-          owner_email: string | null
-          owner_id: string | null
-          owner_name: string | null
-          remaining_purse: number
-          tournament_id: string
-        }
-        Insert: {
-          color?: string | null
-          created_at?: string | null
-          id?: string
-          logo_url?: string | null
-          name: string
-          owner_email?: string | null
-          owner_id?: string | null
-          owner_name?: string | null
-          remaining_purse: number
-          tournament_id: string
-        }
-        Update: {
-          color?: string | null
-          created_at?: string | null
-          id?: string
-          logo_url?: string | null
-          name?: string
-          owner_email?: string | null
-          owner_id?: string | null
-          owner_name?: string | null
-          remaining_purse?: number
-          tournament_id?: string
-        }
+          current_highest_bid?: number | null;
+          current_highest_team_id?: string | null;
+          current_player_id?: string | null;
+          id?: string;
+          last_sold_at?: string | null;
+          last_sold_player_id?: string | null;
+          last_sold_price?: number | null;
+          last_sold_team_id?: string | null;
+          lot_number?: number | null;
+          strike_count?: number;
+          strike_resets_at?: string | null;
+          timer_ends_at?: string | null;
+          tournament_id?: string;
+          updated_at?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "teams_tournament_id_fkey"
-            columns: ["tournament_id"]
-            isOneToOne: false
-            referencedRelation: "tournaments"
-            referencedColumns: ["id"]
+            foreignKeyName: "auction_state_current_highest_team_id_fkey";
+            columns: ["current_highest_team_id"];
+            isOneToOne: false;
+            referencedRelation: "teams";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+          {
+            foreignKeyName: "auction_state_current_highest_team_id_fkey";
+            columns: ["current_highest_team_id"];
+            isOneToOne: false;
+            referencedRelation: "teams_public";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "auction_state_current_player_id_fkey";
+            columns: ["current_player_id"];
+            isOneToOne: false;
+            referencedRelation: "players";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "auction_state_tournament_id_fkey";
+            columns: ["tournament_id"];
+            isOneToOne: true;
+            referencedRelation: "tournaments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      audit_log: {
+        Row: {
+          action: string;
+          actor_id: string | null;
+          created_at: string | null;
+          id: string;
+          payload: Json | null;
+          tournament_id: string | null;
+        };
+        Insert: {
+          action: string;
+          actor_id?: string | null;
+          created_at?: string | null;
+          id?: string;
+          payload?: Json | null;
+          tournament_id?: string | null;
+        };
+        Update: {
+          action?: string;
+          actor_id?: string | null;
+          created_at?: string | null;
+          id?: string;
+          payload?: Json | null;
+          tournament_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "audit_log_tournament_id_fkey";
+            columns: ["tournament_id"];
+            isOneToOne: false;
+            referencedRelation: "tournaments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      bid_rate_limit: {
+        Row: {
+          count: number;
+          user_id: string;
+          window_start: string;
+        };
+        Insert: {
+          count?: number;
+          user_id: string;
+          window_start: string;
+        };
+        Update: {
+          count?: number;
+          user_id?: string;
+          window_start?: string;
+        };
+        Relationships: [];
+      };
+      bids: {
+        Row: {
+          amount: number;
+          created_at: string | null;
+          id: string;
+          is_winning: boolean | null;
+          player_id: string;
+          sequence_number: number;
+          team_id: string;
+          tournament_id: string;
+        };
+        Insert: {
+          amount: number;
+          created_at?: string | null;
+          id?: string;
+          is_winning?: boolean | null;
+          player_id: string;
+          sequence_number?: number;
+          team_id: string;
+          tournament_id: string;
+        };
+        Update: {
+          amount?: number;
+          created_at?: string | null;
+          id?: string;
+          is_winning?: boolean | null;
+          player_id?: string;
+          sequence_number?: number;
+          team_id?: string;
+          tournament_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "bids_player_id_fkey";
+            columns: ["player_id"];
+            isOneToOne: false;
+            referencedRelation: "players";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "bids_team_id_fkey";
+            columns: ["team_id"];
+            isOneToOne: false;
+            referencedRelation: "teams";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "bids_team_id_fkey";
+            columns: ["team_id"];
+            isOneToOne: false;
+            referencedRelation: "teams_public";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "bids_tournament_id_fkey";
+            columns: ["tournament_id"];
+            isOneToOne: false;
+            referencedRelation: "tournaments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      invite_tokens: {
+        Row: {
+          created_at: string | null;
+          email: string | null;
+          expires_at: string | null;
+          id: string;
+          team_id: string;
+          token: string;
+          tournament_id: string;
+          used: boolean | null;
+          used_by: string | null;
+        };
+        Insert: {
+          created_at?: string | null;
+          email?: string | null;
+          expires_at?: string | null;
+          id?: string;
+          team_id: string;
+          token?: string;
+          tournament_id: string;
+          used?: boolean | null;
+          used_by?: string | null;
+        };
+        Update: {
+          created_at?: string | null;
+          email?: string | null;
+          expires_at?: string | null;
+          id?: string;
+          team_id?: string;
+          token?: string;
+          tournament_id?: string;
+          used?: boolean | null;
+          used_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "invite_tokens_team_id_fkey";
+            columns: ["team_id"];
+            isOneToOne: false;
+            referencedRelation: "teams";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "invite_tokens_team_id_fkey";
+            columns: ["team_id"];
+            isOneToOne: false;
+            referencedRelation: "teams_public";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "invite_tokens_tournament_id_fkey";
+            columns: ["tournament_id"];
+            isOneToOne: false;
+            referencedRelation: "tournaments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      player_categories: {
+        Row: {
+          base_price: number;
+          created_at: string;
+          id: string;
+          min_bid_increment: number;
+          name: string;
+          sort_order: number;
+          tournament_id: string;
+        };
+        Insert: {
+          base_price?: number;
+          created_at?: string;
+          id?: string;
+          min_bid_increment?: number;
+          name: string;
+          sort_order?: number;
+          tournament_id: string;
+        };
+        Update: {
+          base_price?: number;
+          created_at?: string;
+          id?: string;
+          min_bid_increment?: number;
+          name?: string;
+          sort_order?: number;
+          tournament_id?: string;
+        };
+        Relationships: [];
+      };
+      player_invite_tokens: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          expires_at: string;
+          id: string;
+          revoked: boolean;
+          token: string;
+          tournament_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          expires_at?: string;
+          id?: string;
+          revoked?: boolean;
+          token?: string;
+          tournament_id: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          expires_at?: string;
+          id?: string;
+          revoked?: boolean;
+          token?: string;
+          tournament_id?: string;
+        };
+        Relationships: [];
+      };
+      players: {
+        Row: {
+          auction_order: number | null;
+          base_price: number;
+          category_id: string | null;
+          created_at: string | null;
+          id: string;
+          name: string;
+          photo_url: string | null;
+          role: string | null;
+          self_registered: boolean;
+          sold_price: number | null;
+          sold_to_team_id: string | null;
+          stats: Json | null;
+          status: string;
+          tournament_id: string;
+          user_id: string | null;
+        };
+        Insert: {
+          auction_order?: number | null;
+          base_price?: number;
+          category_id?: string | null;
+          created_at?: string | null;
+          id?: string;
+          name: string;
+          photo_url?: string | null;
+          role?: string | null;
+          self_registered?: boolean;
+          sold_price?: number | null;
+          sold_to_team_id?: string | null;
+          stats?: Json | null;
+          status?: string;
+          tournament_id: string;
+          user_id?: string | null;
+        };
+        Update: {
+          auction_order?: number | null;
+          base_price?: number;
+          category_id?: string | null;
+          created_at?: string | null;
+          id?: string;
+          name?: string;
+          photo_url?: string | null;
+          role?: string | null;
+          self_registered?: boolean;
+          sold_price?: number | null;
+          sold_to_team_id?: string | null;
+          stats?: Json | null;
+          status?: string;
+          tournament_id?: string;
+          user_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "players_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "player_categories";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "players_sold_to_team_id_fkey";
+            columns: ["sold_to_team_id"];
+            isOneToOne: false;
+            referencedRelation: "teams";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "players_sold_to_team_id_fkey";
+            columns: ["sold_to_team_id"];
+            isOneToOne: false;
+            referencedRelation: "teams_public";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "players_tournament_id_fkey";
+            columns: ["tournament_id"];
+            isOneToOne: false;
+            referencedRelation: "tournaments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      profiles: {
+        Row: {
+          age: number | null;
+          auctions_quota: number | null;
+          avatar_url: string | null;
+          bio: string | null;
+          created_at: string;
+          email: string | null;
+          full_name: string | null;
+          id: string;
+          phone: string | null;
+          points: number | null;
+          referral_code: string | null;
+          referred_by: string | null;
+          stats: Json;
+          stripe_customer_id: string | null;
+          stripe_subscription_id: string | null;
+          subscription_end_date: string | null;
+          subscription_tier: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          age?: number | null;
+          auctions_quota?: number | null;
+          avatar_url?: string | null;
+          bio?: string | null;
+          created_at?: string;
+          email?: string | null;
+          full_name?: string | null;
+          id: string;
+          phone?: string | null;
+          points?: number | null;
+          referral_code?: string | null;
+          referred_by?: string | null;
+          stats?: Json;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
+          subscription_end_date?: string | null;
+          subscription_tier?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          age?: number | null;
+          auctions_quota?: number | null;
+          avatar_url?: string | null;
+          bio?: string | null;
+          created_at?: string;
+          email?: string | null;
+          full_name?: string | null;
+          id?: string;
+          phone?: string | null;
+          points?: number | null;
+          referral_code?: string | null;
+          referred_by?: string | null;
+          stats?: Json;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
+          subscription_end_date?: string | null;
+          subscription_tier?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "profiles_referred_by_fkey";
+            columns: ["referred_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      super_admin_allowlist: {
+        Row: {
+          created_at: string;
+          email: string;
+        };
+        Insert: {
+          created_at?: string;
+          email: string;
+        };
+        Update: {
+          created_at?: string;
+          email?: string;
+        };
+        Relationships: [];
+      };
+      super_admin_log: {
+        Row: {
+          action: string;
+          actor_id: string | null;
+          created_at: string;
+          id: string;
+          payload: Json | null;
+          target: string | null;
+        };
+        Insert: {
+          action: string;
+          actor_id?: string | null;
+          created_at?: string;
+          id?: string;
+          payload?: Json | null;
+          target?: string | null;
+        };
+        Update: {
+          action?: string;
+          actor_id?: string | null;
+          created_at?: string;
+          id?: string;
+          payload?: Json | null;
+          target?: string | null;
+        };
+        Relationships: [];
+      };
+      teams: {
+        Row: {
+          color: string | null;
+          created_at: string | null;
+          id: string;
+          logo_url: string | null;
+          name: string;
+          owner_email: string | null;
+          owner_id: string | null;
+          owner_name: string | null;
+          remaining_purse: number;
+          tournament_id: string;
+        };
+        Insert: {
+          color?: string | null;
+          created_at?: string | null;
+          id?: string;
+          logo_url?: string | null;
+          name: string;
+          owner_email?: string | null;
+          owner_id?: string | null;
+          owner_name?: string | null;
+          remaining_purse: number;
+          tournament_id: string;
+        };
+        Update: {
+          color?: string | null;
+          created_at?: string | null;
+          id?: string;
+          logo_url?: string | null;
+          name?: string;
+          owner_email?: string | null;
+          owner_id?: string | null;
+          owner_name?: string | null;
+          remaining_purse?: number;
+          tournament_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "teams_tournament_id_fkey";
+            columns: ["tournament_id"];
+            isOneToOne: false;
+            referencedRelation: "tournaments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       tournaments: {
         Row: {
-          admin_id: string
-          banner_url: string | null
-          bid_timer_seconds: number
-          blocked: boolean
-          cover_photo_url: string | null
-          created_at: string | null
-          id: string
-          is_demo: boolean | null
-          max_players_per_team: number
-          min_bid_increment: number
-          name: string
-          purse_per_team: number
-          starts_at: string | null
-          status: string
-        }
+          admin_id: string;
+          banner_url: string | null;
+          bid_timer_seconds: number;
+          blocked: boolean;
+          cover_photo_url: string | null;
+          created_at: string | null;
+          id: string;
+          is_demo: boolean | null;
+          max_players_per_team: number;
+          min_bid_increment: number;
+          name: string;
+          purse_per_team: number;
+          starts_at: string | null;
+          status: string;
+        };
         Insert: {
-          admin_id: string
-          banner_url?: string | null
-          bid_timer_seconds?: number
-          blocked?: boolean
-          cover_photo_url?: string | null
-          created_at?: string | null
-          id?: string
-          is_demo?: boolean | null
-          max_players_per_team?: number
-          min_bid_increment?: number
-          name: string
-          purse_per_team?: number
-          starts_at?: string | null
-          status?: string
-        }
+          admin_id: string;
+          banner_url?: string | null;
+          bid_timer_seconds?: number;
+          blocked?: boolean;
+          cover_photo_url?: string | null;
+          created_at?: string | null;
+          id?: string;
+          is_demo?: boolean | null;
+          max_players_per_team?: number;
+          min_bid_increment?: number;
+          name: string;
+          purse_per_team?: number;
+          starts_at?: string | null;
+          status?: string;
+        };
         Update: {
-          admin_id?: string
-          banner_url?: string | null
-          bid_timer_seconds?: number
-          blocked?: boolean
-          cover_photo_url?: string | null
-          created_at?: string | null
-          id?: string
-          is_demo?: boolean | null
-          max_players_per_team?: number
-          min_bid_increment?: number
-          name?: string
-          purse_per_team?: number
-          starts_at?: string | null
-          status?: string
-        }
-        Relationships: []
-      }
+          admin_id?: string;
+          banner_url?: string | null;
+          bid_timer_seconds?: number;
+          blocked?: boolean;
+          cover_photo_url?: string | null;
+          created_at?: string | null;
+          id?: string;
+          is_demo?: boolean | null;
+          max_players_per_team?: number;
+          min_bid_increment?: number;
+          name?: string;
+          purse_per_team?: number;
+          starts_at?: string | null;
+          status?: string;
+        };
+        Relationships: [];
+      };
       user_feedback: {
         Row: {
-          id: string
-          user_id: string | null
-          page_url: string | null
-          feedback_type: 'issue' | 'suggestion' | 'review' | 'upgrade'
-          content: string | null
-          screenshot_url: string | null
-          rating: number | null
-          status: 'open' | 'resolved' | 'ignored'
-          created_at: string
-        }
+          content: string | null;
+          created_at: string | null;
+          feedback_type: string;
+          id: string;
+          page_url: string | null;
+          rating: number | null;
+          screenshot_url: string | null;
+          status: string | null;
+          user_id: string | null;
+        };
         Insert: {
-          id?: string
-          user_id?: string | null
-          page_url?: string | null
-          feedback_type: 'issue' | 'suggestion' | 'review' | 'upgrade'
-          content?: string | null
-          screenshot_url?: string | null
-          rating?: number | null
-          status?: 'open' | 'resolved' | 'ignored'
-          created_at?: string
-        }
+          content?: string | null;
+          created_at?: string | null;
+          feedback_type: string;
+          id?: string;
+          page_url?: string | null;
+          rating?: number | null;
+          screenshot_url?: string | null;
+          status?: string | null;
+          user_id?: string | null;
+        };
         Update: {
-          id?: string
-          user_id?: string | null
-          page_url?: string | null
-          feedback_type?: 'issue' | 'suggestion' | 'review' | 'upgrade'
-          content?: string | null
-          screenshot_url?: string | null
-          rating?: number | null
-          status?: 'open' | 'resolved' | 'ignored'
-          created_at?: string
-        }
-        Relationships: []
-      }
+          content?: string | null;
+          created_at?: string | null;
+          feedback_type?: string;
+          id?: string;
+          page_url?: string | null;
+          rating?: number | null;
+          screenshot_url?: string | null;
+          status?: string | null;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
       user_roles: {
         Row: {
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
+          id: string;
+          role: Database["public"]["Enums"]["app_role"];
+          user_id: string;
+        };
         Insert: {
-          id?: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
+          id?: string;
+          role: Database["public"]["Enums"]["app_role"];
+          user_id: string;
+        };
         Update: {
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
-        }
-        Relationships: []
-      }
-    }
+          id?: string;
+          role?: Database["public"]["Enums"]["app_role"];
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+    };
     Views: {
       teams_public: {
         Row: {
-          color: string | null
-          created_at: string | null
-          id: string | null
-          logo_url: string | null
-          name: string | null
-          owner_id: string | null
-          remaining_purse: number | null
-          tournament_id: string | null
-        }
+          color: string | null;
+          created_at: string | null;
+          id: string | null;
+          logo_url: string | null;
+          name: string | null;
+          owner_id: string | null;
+          remaining_purse: number | null;
+          tournament_id: string | null;
+        };
         Insert: {
-          color?: string | null
-          created_at?: string | null
-          id?: string | null
-          logo_url?: string | null
-          name?: string | null
-          owner_id?: string | null
-          remaining_purse?: number | null
-          tournament_id?: string | null
-        }
+          color?: string | null;
+          created_at?: string | null;
+          id?: string | null;
+          logo_url?: string | null;
+          name?: string | null;
+          owner_id?: string | null;
+          remaining_purse?: number | null;
+          tournament_id?: string | null;
+        };
         Update: {
-          color?: string | null
-          created_at?: string | null
-          id?: string | null
-          logo_url?: string | null
-          name?: string | null
-          owner_id?: string | null
-          remaining_purse?: number | null
-          tournament_id?: string | null
-        }
+          color?: string | null;
+          created_at?: string | null;
+          id?: string | null;
+          logo_url?: string | null;
+          name?: string | null;
+          owner_id?: string | null;
+          remaining_purse?: number | null;
+          tournament_id?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "teams_tournament_id_fkey"
-            columns: ["tournament_id"]
-            isOneToOne: false
-            referencedRelation: "tournaments"
-            referencedColumns: ["id"]
+            foreignKeyName: "teams_tournament_id_fkey";
+            columns: ["tournament_id"];
+            isOneToOne: false;
+            referencedRelation: "tournaments";
+            referencedColumns: ["id"];
           },
-        ]
-      }
-    }
+        ];
+      };
+    };
     Functions: {
-      accept_invite: { Args: { p_token: string }; Returns: Json }
+      accept_invite: { Args: { p_token: string }; Returns: Json };
       accept_player_invite: {
         Args: {
-          p_base_price?: number
-          p_name: string
-          p_photo_url?: string
-          p_role?: string
-          p_token: string
-        }
-        Returns: Json
-      }
+          p_base_price?: number;
+          p_name: string;
+          p_photo_url?: string;
+          p_role?: string;
+          p_token: string;
+        };
+        Returns: Json;
+      };
       accept_team_owner_invite: {
         Args: {
-          p_avatar_url?: string
-          p_banner_url?: string
-          p_logo_url?: string
-          p_owner_email?: string
-          p_owner_name: string
-          p_team_name: string
-          p_token: string
-        }
-        Returns: Json
-      }
+          p_avatar_url?: string;
+          p_banner_url?: string;
+          p_logo_url?: string;
+          p_owner_email?: string;
+          p_owner_name: string;
+          p_team_name: string;
+          p_token: string;
+        };
+        Returns: Json;
+      };
       admin_bulk_assign_category: {
         Args: {
-          p_category_id: string
-          p_player_ids: string[]
-          p_tournament: string
-        }
-        Returns: Json
-      }
-      admin_generate_invite: { Args: { p_team: string }; Returns: Json }
+          p_category_id: string;
+          p_player_ids: string[];
+          p_tournament: string;
+        };
+        Returns: Json;
+      };
+      admin_generate_invite: { Args: { p_team: string }; Returns: Json };
       admin_generate_player_invite: {
-        Args: { p_tournament: string }
-        Returns: Json
-      }
+        Args: { p_tournament: string };
+        Returns: Json;
+      };
       admin_list_teams: {
-        Args: { p_tournament: string }
+        Args: { p_tournament: string };
         Returns: {
-          color: string
-          created_at: string
-          id: string
-          logo_url: string
-          name: string
-          owner_email: string
-          owner_id: string
-          owner_name: string
-          remaining_purse: number
-          tournament_id: string
-        }[]
-      }
-      cleanup_old_tournaments: { Args: never; Returns: number }
-      close_expired_lots: { Args: never; Returns: number }
-      consume_admin_invite: { Args: { p_token: string }; Returns: Json }
-      end_auction: { Args: { p_tournament: string }; Returns: Json }
-      get_invite_info: { Args: { p_token: string }; Returns: Json }
-      get_player_invite_info: { Args: { p_token: string }; Returns: Json }
-      get_tournament_lobby: { Args: { p_tournament: string }; Returns: Json }
+          color: string;
+          created_at: string;
+          id: string;
+          logo_url: string;
+          name: string;
+          owner_email: string;
+          owner_id: string;
+          owner_name: string;
+          remaining_purse: number;
+          tournament_id: string;
+        }[];
+      };
+      apply_referral_code: {
+        Args: { p_code: string };
+        Returns: Json;
+      };
+      cleanup_old_tournaments: { Args: never; Returns: number };
+      close_expired_lots: { Args: never; Returns: number };
+      consume_admin_invite: { Args: { p_token: string }; Returns: Json };
+      end_auction: { Args: { p_tournament: string }; Returns: Json };
+      get_invite_info: { Args: { p_token: string }; Returns: Json };
+      get_player_invite_info: { Args: { p_token: string }; Returns: Json };
+      get_tournament_lobby: { Args: { p_tournament: string }; Returns: Json };
       has_role: {
         Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
-      is_team_owner: { Args: { _team: string }; Returns: boolean }
-      is_tournament_admin: { Args: { _tid: string }; Returns: boolean }
-      is_tournament_public: { Args: { _tid: string }; Returns: boolean }
-      mark_unsold: { Args: { p_tournament: string }; Returns: Json }
-      pause_lot: { Args: { p_tournament: string }; Returns: Json }
+          _role: Database["public"]["Enums"]["app_role"];
+          _user_id: string;
+        };
+        Returns: boolean;
+      };
+      is_team_owner: { Args: { _team: string }; Returns: boolean };
+      is_tournament_admin: { Args: { _tid: string }; Returns: boolean };
+      is_tournament_public: { Args: { _tid: string }; Returns: boolean };
+      mark_unsold: { Args: { p_tournament: string }; Returns: Json };
+      pause_lot: { Args: { p_tournament: string }; Returns: Json };
       place_bid: {
         Args: {
-          p_amount: number
-          p_player: string
-          p_team: string
-          p_tournament: string
-        }
-        Returns: Json
-      }
+          p_amount: number;
+          p_player: string;
+          p_team: string;
+          p_tournament: string;
+        };
+        Returns: Json;
+      };
       resume_lot: {
-        Args: { p_seconds?: number; p_tournament: string }
-        Returns: Json
-      }
-      sa_add_super_admin: { Args: { p_email: string }; Returns: Json }
-      sa_delete_tournament: { Args: { p_tournament: string }; Returns: Json }
-      sa_force_end: { Args: { p_tournament: string }; Returns: Json }
+        Args: { p_seconds?: number; p_tournament: string };
+        Returns: Json;
+      };
+      sa_add_super_admin: { Args: { p_email: string }; Returns: Json };
+      sa_delete_tournament: { Args: { p_tournament: string }; Returns: Json };
+      sa_force_end: { Args: { p_tournament: string }; Returns: Json };
+      sa_list_feedback: {
+        Args: never;
+        Returns: {
+          id: string;
+          user_id: string | null;
+          user_email: string | null;
+          page_url: string | null;
+          feedback_type: string;
+          content: string | null;
+          screenshot_url: string | null;
+          rating: number | null;
+          status: string;
+          created_at: string;
+        }[];
+      };
       sa_list_super_admins: {
-        Args: never
+        Args: never;
         Returns: {
-          created_at: string
-          email: string
-          user_id: string
-        }[]
-      }
+          created_at: string;
+          email: string;
+          user_id: string;
+        }[];
+      };
       sa_list_tournaments: {
-        Args: never
+        Args: never;
         Returns: {
-          admin_email: string
-          admin_id: string
-          blocked: boolean
-          created_at: string
-          id: string
-          name: string
-          player_count: number
-          status: string
-          team_count: number
-        }[]
-      }
+          admin_email: string;
+          admin_id: string;
+          blocked: boolean;
+          created_at: string;
+          id: string;
+          name: string;
+          player_count: number;
+          status: string;
+          team_count: number;
+        }[];
+      };
       sa_list_users: {
-        Args: never
+        Args: never;
         Returns: {
-          created_at: string
-          email: string
-          full_name: string
-          id: string
-          roles: string[]
-        }[]
-      }
-      sa_remove_super_admin: { Args: { p_email: string }; Returns: Json }
+          created_at: string;
+          email: string;
+          full_name: string;
+          id: string;
+          roles: string[];
+          auctions_quota: number | null;
+        }[];
+      };
+      sa_remove_super_admin: { Args: { p_email: string }; Returns: Json };
       sa_set_blocked: {
-        Args: { p_blocked: boolean; p_tournament: string }
-        Returns: Json
-      }
-      skip_lot: { Args: { p_tournament: string }; Returns: Json }
+        Args: { p_blocked: boolean; p_tournament: string };
+        Returns: Json;
+      };
+      sa_update_feedback_status: {
+        Args: { p_feedback_id: string; p_status: string };
+        Returns: Json;
+      };
+      sa_update_setting: {
+        Args: { p_key: string; p_value: Json };
+        Returns: Json;
+      };
+      sa_update_user_quota: {
+        Args: { p_user_id: string; p_change: number };
+        Returns: Json;
+      };
+      skip_lot: { Args: { p_tournament: string }; Returns: Json };
       start_lot: {
-        Args: { p_player: string; p_tournament: string }
-        Returns: Json
-      }
-      tick_auction: { Args: { p_tournament: string }; Returns: Json }
-      undo_last_sale: { Args: { p_tournament: string }; Returns: Json }
-      validate_admin_invite: { Args: { p_token: string }; Returns: Json }
-    }
+        Args: { p_player: string; p_tournament: string };
+        Returns: Json;
+      };
+      tick_auction: { Args: { p_tournament: string }; Returns: Json };
+      undo_last_sale: { Args: { p_tournament: string }; Returns: Json };
+      validate_admin_invite: { Args: { p_token: string }; Returns: Json };
+    };
     Enums: {
-      app_role: "super_admin" | "tournament_admin" | "team_owner"
-    }
+      app_role: "super_admin" | "tournament_admin" | "team_owner";
+    };
     CompositeTypes: {
-      [_ in never]: never
-    }
-  }
-}
+      [_ in never]: never;
+    };
+  };
+};
 
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">;
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">];
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
       DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
+      Row: infer R;
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] & DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R;
       }
       ? R
       : never
-    : never
+    : never;
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
+      Insert: infer I;
     }
     ? I
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
     ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
+        Insert: infer I;
       }
       ? I
       : never
-    : never
+    : never;
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
+      Update: infer U;
     }
     ? U
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
     ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
+        Update: infer U;
       }
       ? U
       : never
-    : never
+    : never;
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
+    : never;
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
+    : never;
 
 export const Constants = {
   public: {
@@ -1036,4 +1080,4 @@ export const Constants = {
       app_role: ["super_admin", "tournament_admin", "team_owner"],
     },
   },
-} as const
+} as const;

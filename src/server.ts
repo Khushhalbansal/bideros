@@ -14,7 +14,7 @@ let serverEntryPromise: Promise<ServerEntry> | undefined;
 async function getServerEntry(): Promise<ServerEntry> {
   if (!serverEntryPromise) {
     serverEntryPromise = import("@tanstack/react-start/server-entry").then(
-      (m) => ((m as { default?: ServerEntry }).default ?? (m as unknown as ServerEntry)),
+      (m) => (m as { default?: ServerEntry }).default ?? (m as unknown as ServerEntry),
     );
   }
   return serverEntryPromise;
@@ -107,15 +107,26 @@ async function handleStripeWebhook(request: Request): Promise<Response> {
         const customerId = session.customer as string;
 
         if (userId) {
-          if (planType === 'single') {
-            const { data: userProfile } = await supabaseAdmin.from('profiles').select('auctions_quota, referred_by').eq('id', userId).single();
+          if (planType === "single") {
+            const { data: userProfile } = await supabaseAdmin
+              .from("profiles")
+              .select("auctions_quota, referred_by")
+              .eq("id", userId)
+              .single();
             if (userProfile) {
-              await supabaseAdmin.from('profiles').update({
-                auctions_quota: (userProfile.auctions_quota || 0) + 1
-              }).eq('id', userId);
+              await supabaseAdmin
+                .from("profiles")
+                .update({
+                  auctions_quota: (userProfile.auctions_quota || 0) + 1,
+                })
+                .eq("id", userId);
 
               if (userProfile.referred_by) {
-                const { data: refProfile } = await supabaseAdmin.from('profiles').select('points, auctions_quota').eq('id', userProfile.referred_by).single();
+                const { data: refProfile } = await supabaseAdmin
+                  .from("profiles")
+                  .select("points, auctions_quota")
+                  .eq("id", userProfile.referred_by)
+                  .single();
                 if (refProfile) {
                   let newPoints = (refProfile.points || 0) + 20;
                   let newQuota = refProfile.auctions_quota || 0;
@@ -123,10 +134,13 @@ async function handleStripeWebhook(request: Request): Promise<Response> {
                     newQuota += 1;
                     newPoints -= 120;
                   }
-                  await supabaseAdmin.from('profiles').update({
-                    points: newPoints,
-                    auctions_quota: newQuota
-                  }).eq('id', userProfile.referred_by);
+                  await supabaseAdmin
+                    .from("profiles")
+                    .update({
+                      points: newPoints,
+                      auctions_quota: newQuota,
+                    })
+                    .eq("id", userProfile.referred_by);
                 }
               }
               console.log(`Successfully added 1 auction quota to user ${userId}`);
@@ -134,10 +148,14 @@ async function handleStripeWebhook(request: Request): Promise<Response> {
           } else {
             const subscriptionId = session.subscription as string;
             if (subscriptionId) {
-              const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+              const subscription = (await stripe.subscriptions.retrieve(subscriptionId)) as any;
               const endDate = new Date(subscription.current_period_end * 1000).toISOString();
 
-              const { data: userProfile } = await supabaseAdmin.from("profiles").select('referred_by').eq("id", userId).single();
+              const { data: userProfile } = await supabaseAdmin
+                .from("profiles")
+                .select("referred_by")
+                .eq("id", userId)
+                .single();
 
               const { error } = await supabaseAdmin
                 .from("profiles")
@@ -155,11 +173,18 @@ async function handleStripeWebhook(request: Request): Promise<Response> {
               }
 
               if (userProfile?.referred_by) {
-                const { data: refProfile } = await supabaseAdmin.from('profiles').select('auctions_quota').eq('id', userProfile.referred_by).single();
+                const { data: refProfile } = await supabaseAdmin
+                  .from("profiles")
+                  .select("auctions_quota")
+                  .eq("id", userProfile.referred_by)
+                  .single();
                 if (refProfile) {
-                  await supabaseAdmin.from('profiles').update({
-                    auctions_quota: (refProfile.auctions_quota || 0) + 1
-                  }).eq('id', userProfile.referred_by);
+                  await supabaseAdmin
+                    .from("profiles")
+                    .update({
+                      auctions_quota: (refProfile.auctions_quota || 0) + 1,
+                    })
+                    .eq("id", userProfile.referred_by);
                 }
               }
 
@@ -171,7 +196,7 @@ async function handleStripeWebhook(request: Request): Promise<Response> {
       }
 
       case "customer.subscription.updated": {
-        const subscription = event.data.object as Stripe.Subscription;
+        const subscription = event.data.object as any;
         const customerId = subscription.customer as string;
         const endDate = new Date(subscription.current_period_end * 1000).toISOString();
         const isCancelled = subscription.status === "canceled" || subscription.cancel_at_period_end;
@@ -179,7 +204,8 @@ async function handleStripeWebhook(request: Request): Promise<Response> {
         const { error } = await supabaseAdmin
           .from("profiles")
           .update({
-            subscription_tier: isCancelled && subscription.status === "canceled" ? "free" : "premium",
+            subscription_tier:
+              isCancelled && subscription.status === "canceled" ? "free" : "premium",
             subscription_end_date: endDate,
           })
           .eq("stripe_customer_id", customerId);
@@ -192,7 +218,7 @@ async function handleStripeWebhook(request: Request): Promise<Response> {
       }
 
       case "customer.subscription.deleted": {
-        const subscription = event.data.object as Stripe.Subscription;
+        const subscription = event.data.object as any;
         const customerId = subscription.customer as string;
 
         const { error } = await supabaseAdmin

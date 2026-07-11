@@ -3,7 +3,15 @@ import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import { formatINR } from "@/lib/format";
 
-export function SoldBanner({ player, team, price }: { player: string; team: string; price: number }) {
+export function SoldBanner({
+  player,
+  team,
+  price,
+}: {
+  player: string;
+  team: string;
+  price: number;
+}) {
   useEffect(() => {
     const end = Date.now() + 1500;
     const colors = ["#00ffa3", "#ff3d6e", "#ffd23f", "#3b82f6"];

@@ -38,24 +38,46 @@ export function ParallaxHero({ children }: { children: React.ReactNode }) {
 
   const icons = [
     { I: Gavel, top: "12%", left: "8%", size: 80, layer: y2, mx: tx1, my: ty1, color: "text-neon" },
-    { I: Trophy, top: "20%", right: "10%", size: 70, layer: y1, mx: tx2, my: ty2, color: "text-hot" },
+    {
+      I: Trophy,
+      top: "20%",
+      right: "10%",
+      size: 70,
+      layer: y1,
+      mx: tx2,
+      my: ty2,
+      color: "text-hot",
+    },
     { I: Zap, top: "55%", left: "5%", size: 60, layer: y3, mx: tx2, my: ty2, color: "text-neon" },
-    { I: Tv, bottom: "20%", right: "8%", size: 90, layer: y2, mx: tx1, my: ty1, color: "text-primary" },
+    {
+      I: Tv,
+      bottom: "20%",
+      right: "8%",
+      size: 90,
+      layer: y2,
+      mx: tx1,
+      my: ty1,
+      color: "text-primary",
+    },
     { I: Users, top: "70%", left: "45%", size: 50, layer: y1, mx: tx2, my: ty1, color: "text-hot" },
-    { I: ShieldCheck, top: "35%", right: "30%", size: 55, layer: y3, mx: tx1, my: ty2, color: "text-neon" },
+    {
+      I: ShieldCheck,
+      top: "35%",
+      right: "30%",
+      size: 55,
+      layer: y3,
+      mx: tx1,
+      my: ty2,
+      color: "text-neon",
+    },
   ];
 
   return (
     <div ref={ref} className="relative overflow-hidden">
       {/* Video Background */}
-      <SequentialVideoBackground 
+      <SequentialVideoBackground
         opacity="opacity-60"
-        videos={[
-          "/videos/bg-11.mp4",
-          "/videos/bg-10.mp4",
-          "/videos/bg-3.mp4",
-          "/videos/bg-7.mp4"
-        ]}
+        videos={["/videos/bg-11.mp4", "/videos/bg-10.mp4", "/videos/bg-3.mp4", "/videos/bg-7.mp4"]}
       />
 
       {/* Animated gradient orbs */}
@@ -82,7 +104,10 @@ export function ParallaxHero({ children }: { children: React.ReactNode }) {
           className="pointer-events-none absolute opacity-20"
         >
           <motion.div style={{ y: mmy }}>
-            <I className={`${color} drop-shadow-[0_0_20px_currentColor]`} style={{ width: size, height: size }} />
+            <I
+              className={`${color} drop-shadow-[0_0_20px_currentColor]`}
+              style={{ width: size, height: size }}
+            />
           </motion.div>
         </motion.div>
       ))}

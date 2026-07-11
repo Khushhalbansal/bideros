@@ -5,15 +5,28 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import { uploadImage } from "@/lib/uploads";
 import { parseINR } from "@/lib/format";
+import { motion, AnimatePresence } from "framer-motion";
+import { SPORTS, getSport } from "@/config/sports";
 
 export const Route = createFileRoute("/player-invite/$token")({ component: PlayerInvitePage });
 
-interface InviteInfo { tournament_id: string; tournament_name: string; expired: boolean; revoked: boolean; }
+interface InviteInfo {
+  tournament_id: string;
+  tournament_name: string;
+  expired: boolean;
+  revoked: boolean;
+}
 type Mode = "player" | "owner";
 
 function PlayerInvitePage() {
@@ -43,7 +56,13 @@ function PlayerInvitePage() {
     (async () => {
       const { data } = await supabase.rpc("get_player_invite_info", { p_token: token });
       setLoading(false);
-      const i = data as { found?: boolean; tournament_id?: string; tournament_name?: string; expired?: boolean; revoked?: boolean };
+      const i = data as {
+        found?: boolean;
+        tournament_id?: string;
+        tournament_name?: string;
+        expired?: boolean;
+        revoked?: boolean;
+      };
       if (!i?.found) return;
       setInfo({
         tournament_id: i.tournament_id!,
@@ -56,12 +75,16 @@ function PlayerInvitePage() {
 
   useEffect(() => {
     if (!user) return;
-    setOwnerEmail(prev => prev || user.email || "");
+    setOwnerEmail((prev) => prev || user.email || "");
     (async () => {
-      const { data } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .maybeSingle();
       if (data?.full_name) {
-        setName(prev => prev || data.full_name || "");
-        setOwnerName(prev => prev || data.full_name || "");
+        setName((prev) => prev || data.full_name || "");
+        setOwnerName((prev) => prev || data.full_name || "");
       }
     })();
   }, [user]);
@@ -91,18 +114,24 @@ function PlayerInvitePage() {
       let photo_url: string | null = null;
       if (photoFile) photo_url = await uploadImage("player-photos", photoFile, `self/${user!.id}`);
       const { data, error } = await supabase.rpc("accept_player_invite", {
-        p_token: token, p_name: name, p_role: role,
+        p_token: token,
+        p_name: name,
+        p_role: role,
         p_base_price: parseINR(base) || 100000,
         p_photo_url: photo_url ?? undefined,
       });
       if (error) throw error;
       const r = data as { ok: boolean; error?: string };
       if (!r.ok) throw new Error(r.error || "Failed to register");
-      toast.success(`🎉🎉 Yay! You've joined ${info.tournament_name} as a player 🎉🎉`, { duration: 6000 });
+      toast.success(`🎉🎉 Yay! You've joined ${info.tournament_name} as a player 🎉🎉`, {
+        duration: 6000,
+      });
       navigate({ to: "/watch/$slug", params: { slug: info.tournament_id } });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed");
-    } finally { setBusy(false); }
+    } finally {
+      setBusy(false);
+    }
   };
 
   const submitOwner = async (e: React.FormEvent) => {
@@ -111,12 +140,20 @@ function PlayerInvitePage() {
     setBusy(true);
     try {
       const [logo_url, banner_url, avatar_url] = await Promise.all([
-        logoFile ? uploadImage("tournament-assets", logoFile, `team-logo/${user!.id}`) : Promise.resolve(null),
-        bannerFile ? uploadImage("tournament-assets", bannerFile, `team-banner/${user!.id}`) : Promise.resolve(null),
-        avatarFile ? uploadImage("player-photos", avatarFile, `profiles/${user!.id}`) : Promise.resolve(null),
+        logoFile
+          ? uploadImage("tournament-assets", logoFile, `team-logo/${user!.id}`)
+          : Promise.resolve(null),
+        bannerFile
+          ? uploadImage("tournament-assets", bannerFile, `team-banner/${user!.id}`)
+          : Promise.resolve(null),
+        avatarFile
+          ? uploadImage("player-photos", avatarFile, `profiles/${user!.id}`)
+          : Promise.resolve(null),
       ]);
       const { data, error } = await supabase.rpc("accept_team_owner_invite", {
-        p_token: token, p_team_name: teamName, p_owner_name: ownerName,
+        p_token: token,
+        p_team_name: teamName,
+        p_owner_name: ownerName,
         p_owner_email: ownerEmail || undefined,
         p_logo_url: logo_url ?? undefined,
         p_banner_url: banner_url ?? undefined,
@@ -125,25 +162,89 @@ function PlayerInvitePage() {
       if (error) throw error;
       const r = data as { ok: boolean; error?: string; team_id?: string };
       if (!r.ok) throw new Error(r.error || "Failed");
-      toast.success(`🎉🎉 Yay! You've joined ${info.tournament_name} as owner of ${teamName} 🎉🎉`, { duration: 6000 });
+      toast.success(
+        `🎉🎉 Yay! You've joined ${info.tournament_name} as owner of ${teamName} 🎉🎉`,
+        { duration: 6000 },
+      );
       navigate({ to: "/team/$id", params: { id: r.team_id! } });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed");
-    } finally { setBusy(false); }
+    } finally {
+      setBusy(false);
+    }
   };
 
-  if (loading || authLoading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
-  if (!info) return <div className="min-h-screen flex items-center justify-center text-muted-foreground p-8 text-center">Invite not found.</div>;
-  if (info.revoked) return <div className="min-h-screen flex items-center justify-center text-muted-foreground p-8 text-center">This invite has been revoked.</div>;
-  if (info.expired) return <div className="min-h-screen flex items-center justify-center text-muted-foreground p-8 text-center">This invite has expired. Ask the tournament admin for a new one.</div>;
+  if (loading || authLoading)
+    return (
+      <div className="min-h-screen flex items-center justify-center text-muted-foreground">
+        Loading…
+      </div>
+    );
+  if (!info)
+    return (
+      <div className="min-h-screen flex items-center justify-center text-muted-foreground p-8 text-center">
+        Invite not found.
+      </div>
+    );
+  if (info.revoked)
+    return (
+      <div className="min-h-screen flex items-center justify-center text-muted-foreground p-8 text-center">
+        This invite has been revoked.
+      </div>
+    );
+  if (info.expired)
+    return (
+      <div className="min-h-screen flex items-center justify-center text-muted-foreground p-8 text-center">
+        This invite has expired. Ask the tournament admin for a new one.
+      </div>
+    );
 
+  const sportSlug =
+    SPORTS.find((s) => info.tournament_name.toLowerCase().includes(s.slug))?.slug || "cricket";
+  const sport = getSport(sportSlug);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="container mx-auto py-6 px-4"><Logo /></header>
-      <main className="flex-1 flex items-center justify-center px-4 pb-12">
-        <div className="w-full max-w-md bg-glass border border-border rounded-2xl p-8 shadow-neon animate-slide-up">
-          <div className="text-xs uppercase tracking-widest text-neon mb-1">Tournament invite</div>
+    <div
+      className="min-h-screen flex flex-col text-white relative overflow-hidden"
+      style={{ backgroundColor: sport.bg }}
+    >
+      <AnimatePresence mode="sync">
+        <motion.div
+          key={sport.slug}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.8 }}
+          className="fixed inset-0 -z-10"
+          style={{
+            backgroundImage: `url(${sport.bgImage})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundAttachment: "fixed",
+          }}
+        />
+      </AnimatePresence>
+      <div
+        className="fixed inset-0 -z-10"
+        style={{
+          background: `linear-gradient(180deg, ${sport.gradientFrom}ee 0%, ${sport.gradientTo}bb 40%, ${sport.gradientFrom}ff 100%)`,
+        }}
+      />
+
+      <header className="container mx-auto py-6 px-4 relative z-10">
+        <Logo />
+      </header>
+      <main className="flex-1 flex items-center justify-center px-4 pb-12 relative z-10">
+        <div
+          className="w-full max-w-md bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl animate-slide-up"
+          style={{ boxShadow: `0 0 80px -20px ${sport.accent}66` }}
+        >
+          <div
+            className="text-xs uppercase tracking-widest text-neon mb-1"
+            style={{ color: sport.accent }}
+          >
+            Tournament invite
+          </div>
           <h1 className="text-2xl font-bold mb-2">Join {info.tournament_name}</h1>
 
           {needsAuth ? (
@@ -155,7 +256,9 @@ function PlayerInvitePage() {
               <div className="mt-4 mb-5">
                 <Label>I want to join as</Label>
                 <Select value={mode} onValueChange={(v) => setMode(v as Mode)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="player">Player (get bid on in the auction)</SelectItem>
                     <SelectItem value="owner">Team owner (bid on players)</SelectItem>
@@ -165,49 +268,119 @@ function PlayerInvitePage() {
 
               {mode === "player" ? (
                 <form onSubmit={submitPlayer} className="space-y-4">
-                  <div><Label>Your name<span className="text-hot">*</span></Label><Input value={name} onChange={e=>setName(e.target.value)} required /></div>
+                  <div>
+                    <Label>
+                      Your name<span className="text-hot">*</span>
+                    </Label>
+                    <Input value={name} onChange={(e) => setName(e.target.value)} required />
+                  </div>
                   <div>
                     <Label>Role</Label>
                     <Select value={role} onValueChange={setRole}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
                       <SelectContent>
-                        {["Batter","Bowler","All-rounder","Wicket-keeper"].map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                        {["Batter", "Bowler", "All-rounder", "Wicket-keeper"].map((r) => (
+                          <SelectItem key={r} value={r}>
+                            {r}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
-                  <div><Label>Base price</Label><Input value={base} onChange={e=>setBase(e.target.value)} placeholder="1 L" /></div>
+                  <div>
+                    <Label>Base price</Label>
+                    <Input
+                      value={base}
+                      onChange={(e) => setBase(e.target.value)}
+                      placeholder="1 L"
+                    />
+                  </div>
                   <div>
                     <Label>Photo (optional, max 5MB)</Label>
-                    <Input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setPhotoFile(e.target.files?.[0] || null)} />
+                    <Input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
+                    />
                   </div>
-                  <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon">
+                  <Button
+                    disabled={busy}
+                    className="w-full gradient-neon text-primary-foreground shadow-neon"
+                  >
                     {busy ? "Registering…" : "Register as player"}
                   </Button>
                 </form>
               ) : (
                 <form onSubmit={submitOwner} className="space-y-4">
-                  <div><Label>Team name<span className="text-hot">*</span></Label><Input value={teamName} onChange={e=>setTeamName(e.target.value)} required /></div>
-                  <div><Label>Your name (team owner)<span className="text-hot">*</span></Label><Input value={ownerName} onChange={e=>setOwnerName(e.target.value)} required /></div>
-                  <div><Label>Email</Label><Input type="email" value={ownerEmail} onChange={e=>setOwnerEmail(e.target.value)} placeholder="owner@email.com" /></div>
+                  <div>
+                    <Label>
+                      Team name<span className="text-hot">*</span>
+                    </Label>
+                    <Input
+                      value={teamName}
+                      onChange={(e) => setTeamName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label>
+                      Your name (team owner)<span className="text-hot">*</span>
+                    </Label>
+                    <Input
+                      value={ownerName}
+                      onChange={(e) => setOwnerName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label>Email</Label>
+                    <Input
+                      type="email"
+                      value={ownerEmail}
+                      onChange={(e) => setOwnerEmail(e.target.value)}
+                      placeholder="owner@email.com"
+                    />
+                  </div>
                   <div>
                     <Label>Your photo (optional)</Label>
-                    <Input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setAvatarFile(e.target.files?.[0] || null)} />
+                    <Input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
+                    />
                   </div>
                   <div>
                     <Label>Team logo (optional)</Label>
-                    <Input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setLogoFile(e.target.files?.[0] || null)} />
+                    <Input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(e) => setLogoFile(e.target.files?.[0] || null)}
+                    />
                   </div>
                   <div>
                     <Label>Team banner (optional)</Label>
-                    <Input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setBannerFile(e.target.files?.[0] || null)} />
+                    <Input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(e) => setBannerFile(e.target.files?.[0] || null)}
+                    />
                   </div>
-                  <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon">
+                  <Button
+                    disabled={busy}
+                    className="w-full gradient-neon text-primary-foreground shadow-neon"
+                  >
                     {busy ? "Joining…" : "Join as team owner"}
                   </Button>
                 </form>
               )}
               <p className="text-[11px] text-muted-foreground text-center mt-4">
-                Update your profile anytime from <Link to="/profile" className="text-neon hover:underline">My profile</Link>.
+                Update your profile anytime from{" "}
+                <Link to="/profile" className="text-neon hover:underline">
+                  My profile
+                </Link>
+                .
               </p>
             </>
           )}

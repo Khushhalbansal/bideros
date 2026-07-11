@@ -18,6 +18,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WatchSlugRouteImport } from './routes/watch.$slug'
 import { Route as TeamIdRouteImport } from './routes/team.$id'
+import { Route as SportSlugRouteImport } from './routes/sport.$slug'
 import { Route as ProjectorIdRouteImport } from './routes/projector.$id'
 import { Route as PlayerInviteTokenRouteImport } from './routes/player-invite.$token'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
@@ -69,6 +70,11 @@ const TeamIdRoute = TeamIdRouteImport.update({
   path: '/team/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SportSlugRoute = SportSlugRouteImport.update({
+  id: '/sport/$slug',
+  path: '/sport/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProjectorIdRoute = ProjectorIdRouteImport.update({
   id: '/projector/$id',
   path: '/projector/$id',
@@ -108,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/invite/$token': typeof InviteTokenRoute
   '/player-invite/$token': typeof PlayerInviteTokenRoute
   '/projector/$id': typeof ProjectorIdRoute
+  '/sport/$slug': typeof SportSlugRoute
   '/team/$id': typeof TeamIdRoute
   '/watch/$slug': typeof WatchSlugRoute
 }
@@ -124,6 +131,7 @@ export interface FileRoutesByTo {
   '/invite/$token': typeof InviteTokenRoute
   '/player-invite/$token': typeof PlayerInviteTokenRoute
   '/projector/$id': typeof ProjectorIdRoute
+  '/sport/$slug': typeof SportSlugRoute
   '/team/$id': typeof TeamIdRoute
   '/watch/$slug': typeof WatchSlugRoute
 }
@@ -141,6 +149,7 @@ export interface FileRoutesById {
   '/invite/$token': typeof InviteTokenRoute
   '/player-invite/$token': typeof PlayerInviteTokenRoute
   '/projector/$id': typeof ProjectorIdRoute
+  '/sport/$slug': typeof SportSlugRoute
   '/team/$id': typeof TeamIdRoute
   '/watch/$slug': typeof WatchSlugRoute
 }
@@ -159,6 +168,7 @@ export interface FileRouteTypes {
     | '/invite/$token'
     | '/player-invite/$token'
     | '/projector/$id'
+    | '/sport/$slug'
     | '/team/$id'
     | '/watch/$slug'
   fileRoutesByTo: FileRoutesByTo
@@ -175,6 +185,7 @@ export interface FileRouteTypes {
     | '/invite/$token'
     | '/player-invite/$token'
     | '/projector/$id'
+    | '/sport/$slug'
     | '/team/$id'
     | '/watch/$slug'
   id:
@@ -191,6 +202,7 @@ export interface FileRouteTypes {
     | '/invite/$token'
     | '/player-invite/$token'
     | '/projector/$id'
+    | '/sport/$slug'
     | '/team/$id'
     | '/watch/$slug'
   fileRoutesById: FileRoutesById
@@ -208,6 +220,7 @@ export interface RootRouteChildren {
   InviteTokenRoute: typeof InviteTokenRoute
   PlayerInviteTokenRoute: typeof PlayerInviteTokenRoute
   ProjectorIdRoute: typeof ProjectorIdRoute
+  SportSlugRoute: typeof SportSlugRoute
   TeamIdRoute: typeof TeamIdRoute
   WatchSlugRoute: typeof WatchSlugRoute
 }
@@ -277,6 +290,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeamIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sport/$slug': {
+      id: '/sport/$slug'
+      path: '/sport/$slug'
+      fullPath: '/sport/$slug'
+      preLoaderRoute: typeof SportSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/projector/$id': {
       id: '/projector/$id'
       path: '/projector/$id'
@@ -328,6 +348,7 @@ const rootRouteChildren: RootRouteChildren = {
   InviteTokenRoute: InviteTokenRoute,
   PlayerInviteTokenRoute: PlayerInviteTokenRoute,
   ProjectorIdRoute: ProjectorIdRoute,
+  SportSlugRoute: SportSlugRoute,
   TeamIdRoute: TeamIdRoute,
   WatchSlugRoute: WatchSlugRoute,
 }

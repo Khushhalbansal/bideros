@@ -9,7 +9,12 @@ interface AuthCtx {
   signOut: () => Promise<void>;
 }
 
-const Ctx = createContext<AuthCtx>({ session: null, user: null, loading: true, signOut: async () => {} });
+const Ctx = createContext<AuthCtx>({
+  session: null,
+  user: null,
+  loading: true,
+  signOut: async () => {},
+});
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);

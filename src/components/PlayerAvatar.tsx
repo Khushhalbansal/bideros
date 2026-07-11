@@ -1,6 +1,14 @@
 import { User } from "lucide-react";
 
-export function PlayerAvatar({ url, name, size = 80 }: { url?: string | null; name?: string; size?: number }) {
+export function PlayerAvatar({
+  url,
+  name,
+  size = 80,
+}: {
+  url?: string | null;
+  name?: string;
+  size?: number;
+}) {
   if (url) {
     return (
       <img
