@@ -21,16 +21,27 @@ This document summarizes the fixes and audits applied to the `newbid` repository
 - **Fix**: Updated `types.ts` manually to include the exact table and RPC definitions from all database migration scripts. Removed all `@ts-nocheck` comments from the affected files (`src/server.ts`, `super-admin.tsx`, `watch.$slug.tsx`, `pricing.tsx`, `admin.$id.tsx`, `FeedbackWidget.tsx`). Fixed secondary type errors in `admin.$id.tsx` (`AuctionState` interface mapping) and `watch.$slug.tsx`.
 
 ### 4. Dev Scratch Files in Repository Root
+
 - **Issue**: Dev artifact scripts and snippets remained in the root.
 - **Fix**: Deleted all 9 scratch files (`merge.cjs`, `fix_arrow.cjs`, `fix_dashes.cjs`, `fix_encoding.cjs`, `fix_encoding.js`, `rename.cjs`, `contact_snippet.txt`, `contact_snippet2.txt`, `all_migrations.sql`).
 
-### 5. Game-Themed Free Subscription/Pricing Page
-- **Issue**: The pricing/subscription page was not accessible directly from the dashboard, and users hit hard database limits preventing them from creating tournaments once they ran out of free credits.
-- **Fix**: 
-  - Added a prominent, animated "Get Pro Free" navigation link in the dashboard header.
-  - Implemented an automatic database update hook that sets the user's `subscription_tier` to `premium` and `auctions_quota` to `9999` upon loading the dashboard. This completely bypasses the database trigger quota constraints, letting everyone create as many tournaments as they want.
-  - Completely redesigned `src/routes/pricing.tsx` to read the user's favorite sport from local storage, dynamically rendering themed background imagery, colors, and game character illustrations matching their active sport.
-  - Struck out all subscription plan prices to ₹0/FREE and wired up the card action buttons to directly activate the premium tier on their profile with a success toast and confetti effect instead of going through Stripe checkout.
+### 5. Proper, Reversible Free-Mode Toggle
+- **Context**: Bidding and auction apps face strict gateway validation rules in India. Bideros is temporarily run as a free-to-use platform until partner approvals are completed.
+- **Design Decisions**:
+  - Rather than hardcoding profile mutations on client page load, a global flag `free_mode_enabled` is seeded in the `app_settings` database table (seeded to `true` by default via migration `20260712000000_add_free_mode.sql`).
+  - **Database Quota Bypass**: The SQL trigger function `check_and_use_tournament_quota()` has been updated in the database migration. When `free_mode_enabled` is set to `true`, the trigger function immediately permits insertions to the `tournaments` table without decrementing any user's `auctions_quota`.
+  - **Dynamic client routes**:
+    - `src/routes/dashboard.tsx` loads the state of `free_mode_enabled` from `app_settings` and conditionally renders the header link as "Get Pro Free" (if true) or "Upgrade to Pro" (if false).
+    - `src/routes/pricing.tsx` dynamically displays prices based on the toggle. If `free_mode_enabled` is `true`, it strikes original prices, shows a banner ("Free during our India launch — no card needed"), and allows users to claim free access without Stripe. If `free_mode_enabled` is `false`, it falls back to real prices and redirects directly to Stripe Checkout. No database rows in `profiles` are mutated during free-mode actions.
+
+### 6. How to Re-enable Real Billing
+No code changes are needed to turn Stripe billing back on. Simply run the following SQL update statement in your Supabase SQL editor:
+```sql
+UPDATE public.app_settings 
+SET value = 'false'::jsonb 
+WHERE key = 'free_mode_enabled';
+```
+When set to `false`, the database trigger function will enforce user quotas based on their actual `profiles` column values, and the `/pricing` page will fall back to using the real Stripe Checkout redirect flow automatically.
 
 ---
 
