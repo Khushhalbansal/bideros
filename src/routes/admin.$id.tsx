@@ -719,43 +719,51 @@ function TeamsTab({
 
   return (
     <div className="grid md:grid-cols-3 gap-6">
-      <form
-        onSubmit={addTeam}
-        className="bg-glass border border-border rounded-xl p-5 space-y-3 h-fit"
-      >
-        <h3 className="font-bold">Add team</h3>
-        <div>
-          <Label>Team name</Label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} required />
-        </div>
-        <div>
-          <Label>Owner name</Label>
-          <Input
-            value={ownerName}
-            onChange={(e) => setOwnerName(e.target.value)}
-            placeholder="Jane Doe"
-          />
-        </div>
-        <div>
-          <Label>Owner email</Label>
-          <Input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="owner@team.com"
-          />
-        </div>
-        <Button
-          disabled={busy}
-          className="w-full gradient-neon text-primary-foreground shadow-neon"
+      <div className="space-y-3 h-fit">
+        <PlayerInviteCard
+          tournamentId={tournament.id}
+          tournamentName={tournament.name}
+          title="Team self registration link"
+          buttonText="Generate team self-registration link"
+        />
+        <form
+          onSubmit={addTeam}
+          className="bg-glass border border-border rounded-xl p-5 space-y-3 h-fit"
         >
-          Add team
-        </Button>
-        <p className="text-[10px] text-muted-foreground">
-          After adding, click <strong>Copy invite link</strong> on the team card to send them a
-          one-click join link.
-        </p>
-      </form>
+          <h3 className="font-bold">Add team</h3>
+          <div>
+            <Label>Team name</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} required />
+          </div>
+          <div>
+            <Label>Owner name</Label>
+            <Input
+              value={ownerName}
+              onChange={(e) => setOwnerName(e.target.value)}
+              placeholder="Jane Doe"
+            />
+          </div>
+          <div>
+            <Label>Owner email</Label>
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="owner@team.com"
+            />
+          </div>
+          <Button
+            disabled={busy}
+            className="w-full gradient-neon text-primary-foreground shadow-neon"
+          >
+            Add team
+          </Button>
+          <p className="text-[10px] text-muted-foreground">
+            After adding, click <strong>Copy invite link</strong> on the team card to send them a
+            one-click join link.
+          </p>
+        </form>
+      </div>
       <div className="md:col-span-2 space-y-3">
         {teams.map((tm) => {
           const squad = players.filter((p) => p.sold_to_team_id === tm.id);
@@ -1486,9 +1494,13 @@ function TournamentImages({
 function PlayerInviteCard({
   tournamentId,
   tournamentName,
+  title = "Player self-registration",
+  buttonText = "Generate player invite link",
 }: {
   tournamentId: string;
   tournamentName: string;
+  title?: string;
+  buttonText?: string;
 }) {
   const [url, setUrl] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -1506,18 +1518,18 @@ function PlayerInviteCard({
   };
 
   const waUrl = url
-    ? `https://wa.me/?text=${encodeURIComponent(`🏏 You're invited to register as a player in *${tournamentName}*!\n\nFill in your details and a photo here:\n${url}\n\nTeam owners will bid on you during the live auction.`)}`
+    ? `https://wa.me/?text=${encodeURIComponent(`🏏 You're invited to register in *${tournamentName}*!\n\nFill in details here:\n${url}`)}`
     : "";
 
   return (
     <div className="bg-glass border border-neon/40 rounded-xl p-5 space-y-3">
       <h3 className="font-bold text-sm flex items-center gap-2">
         <LinkIcon className="h-4 w-4 text-neon" />
-        Player self-registration
+        {title}
       </h3>
       <p className="text-xs text-muted-foreground">
-        Share one link with players so they can register themselves with name, role, base price and
-        photo. Valid 30 days.
+        Share one link so they can register themselves with name, role, base price and photo. Valid
+        30 days.
       </p>
       {url ? (
         <div className="space-y-2">
@@ -1558,7 +1570,7 @@ function PlayerInviteCard({
           onClick={generate}
           className="w-full gradient-neon text-primary-foreground shadow-neon"
         >
-          {busy ? "Generating…" : "Generate player invite link"}
+          {busy ? "Generating…" : buttonText}
         </Button>
       )}
     </div>

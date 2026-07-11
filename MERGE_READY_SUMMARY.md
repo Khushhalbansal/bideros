@@ -26,6 +26,7 @@ This document summarizes the fixes and audits applied to the `newbid` repository
 - **Fix**: Deleted all 9 scratch files (`merge.cjs`, `fix_arrow.cjs`, `fix_dashes.cjs`, `fix_encoding.cjs`, `fix_encoding.js`, `rename.cjs`, `contact_snippet.txt`, `contact_snippet2.txt`, `all_migrations.sql`).
 
 ### 5. Proper, Reversible Free-Mode Toggle
+
 - **Context**: Bidding and auction apps face strict gateway validation rules in India. Bideros is temporarily run as a free-to-use platform until partner approvals are completed.
 - **Design Decisions**:
   - Rather than hardcoding profile mutations on client page load, a global flag `free_mode_enabled` is seeded in the `app_settings` database table (seeded to `true` by default via migration `20260712000000_add_free_mode.sql`).
@@ -35,12 +36,15 @@ This document summarizes the fixes and audits applied to the `newbid` repository
     - `src/routes/pricing.tsx` dynamically displays prices based on the toggle. If `free_mode_enabled` is `true`, it strikes original prices, shows a banner ("Free during our India launch — no card needed"), and allows users to claim free access without Stripe. If `free_mode_enabled` is `false`, it falls back to real prices and redirects directly to Stripe Checkout. No database rows in `profiles` are mutated during free-mode actions.
 
 ### 6. How to Re-enable Real Billing
+
 No code changes are needed to turn Stripe billing back on. Simply run the following SQL update statement in your Supabase SQL editor:
+
 ```sql
-UPDATE public.app_settings 
-SET value = 'false'::jsonb 
+UPDATE public.app_settings
+SET value = 'false'::jsonb
 WHERE key = 'free_mode_enabled';
 ```
+
 When set to `false`, the database trigger function will enforce user quotas based on their actual `profiles` column values, and the `/pricing` page will fall back to using the real Stripe Checkout redirect flow automatically.
 
 ---
