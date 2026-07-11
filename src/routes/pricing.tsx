@@ -130,6 +130,10 @@ function PricingPage() {
         },
       });
 
+      if ("error" in data && data.error) {
+        throw new Error(data.error);
+      }
+
       if (data.url) {
         window.location.href = data.url; // Redirect to Stripe Checkout
       } else {

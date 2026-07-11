@@ -14,6 +14,11 @@ DECLARE
   v_tier text;
   v_free_mode jsonb;
 BEGIN
+  -- Super admins bypass quota checks
+  IF public.has_role(auth.uid(), 'super_admin') THEN
+    RETURN NEW;
+  END IF;
+
   -- Check if free mode is enabled in app_settings
   SELECT value INTO v_free_mode 
   FROM public.app_settings 
