@@ -30,8 +30,13 @@ export const Route = createFileRoute("/sport/$slug")({
 });
 
 interface T {
-  id: string; name: string; status: string; purse_per_team: number;
-  max_players_per_team: number; starts_at: string | null; cover_photo_url?: string | null;
+  id: string;
+  name: string;
+  status: string;
+  purse_per_team: number;
+  max_players_per_team: number;
+  starts_at: string | null;
+  cover_photo_url?: string | null;
   sport?: string | null;
 }
 
@@ -44,7 +49,8 @@ function SportPage() {
   const [q, setQ] = useState("");
 
   useEffect(() => {
-    supabase.from("tournaments")
+    supabase
+      .from("tournaments")
       .select("id,name,status,purse_per_team,max_players_per_team,starts_at,cover_photo_url")
       .order("created_at", { ascending: false })
       .then(({ data }) => {
@@ -115,11 +121,20 @@ function SportPage() {
 
       {/* Sport hero band */}
       <section className="container mx-auto px-4 pt-6 pb-16 grid md:grid-cols-2 gap-8 items-center">
-        <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}>
-          <p className="text-xs font-black uppercase tracking-[0.4em] mb-3" style={{ color: sport.accent }}>
+        <motion.div
+          initial={{ opacity: 0, x: -30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <p
+            className="text-xs font-black uppercase tracking-[0.4em] mb-3"
+            style={{ color: sport.accent }}
+          >
             {sport.tag}
           </p>
-          <h1 className="text-6xl md:text-8xl font-black leading-none mb-4 drop-shadow-lg">{sport.name}</h1>
+          <h1 className="text-6xl md:text-8xl font-black leading-none mb-4 drop-shadow-lg">
+            {sport.name}
+          </h1>
           <p className="text-white/85 text-lg mb-8 max-w-md">{sport.description}</p>
           <div className="flex flex-wrap gap-3">
             <Button
@@ -163,9 +178,14 @@ function SportPage() {
             { label: "Upcoming", value: upcoming.length, icon: Calendar, color: "#fff" },
             { label: "Past", value: past.length, icon: Trophy, color: "#fff" },
           ].map((s) => (
-            <div key={s.label} className="rounded-2xl bg-black/40 backdrop-blur border border-white/10 p-4 text-center">
+            <div
+              key={s.label}
+              className="rounded-2xl bg-black/40 backdrop-blur border border-white/10 p-4 text-center"
+            >
               <s.icon className="h-4 w-4 mx-auto mb-1" style={{ color: s.color }} />
-              <div className="text-3xl font-black" style={{ color: s.color }}>{s.value}</div>
+              <div className="text-3xl font-black" style={{ color: s.color }}>
+                {s.value}
+              </div>
               <div className="text-[10px] uppercase tracking-widest text-white/60">{s.label}</div>
             </div>
           ))}
@@ -186,22 +206,52 @@ function SportPage() {
 
         <Tabs defaultValue="live" className="max-w-5xl mx-auto">
           <TabsList className="grid grid-cols-3 bg-black/40 border border-white/10 mb-6">
-            <TabsTrigger value="live" className="data-[state=active]:text-black" style={{ ["--tw-active-bg" as any]: sport.accent }}>
+            <TabsTrigger
+              value="live"
+              className="data-[state=active]:text-black"
+              style={{ ["--tw-active-bg" as any]: sport.accent }}
+            >
               🔴 Live ({live.length})
             </TabsTrigger>
             <TabsTrigger value="upcoming">🗓 Upcoming ({upcoming.length})</TabsTrigger>
             <TabsTrigger value="past">🏆 Past ({past.length})</TabsTrigger>
           </TabsList>
-          <TabsContent value="live"><Grid items={live} sport={sport} onBid={gateBid} empty="No live auctions right now — check back soon." /></TabsContent>
-          <TabsContent value="upcoming"><Grid items={upcoming} sport={sport} onBid={gateBid} empty="Nothing scheduled yet. Be the first to host one." /></TabsContent>
-          <TabsContent value="past"><Grid items={past} sport={sport} onBid={gateBid} empty="No completed auctions yet." /></TabsContent>
+          <TabsContent value="live">
+            <Grid
+              items={live}
+              sport={sport}
+              onBid={gateBid}
+              empty="No live auctions right now — check back soon."
+            />
+          </TabsContent>
+          <TabsContent value="upcoming">
+            <Grid
+              items={upcoming}
+              sport={sport}
+              onBid={gateBid}
+              empty="Nothing scheduled yet. Be the first to host one."
+            />
+          </TabsContent>
+          <TabsContent value="past">
+            <Grid items={past} sport={sport} onBid={gateBid} empty="No completed auctions yet." />
+          </TabsContent>
         </Tabs>
       </section>
     </div>
   );
 }
 
-function Grid({ items, sport, onBid, empty }: { items: T[]; sport: ReturnType<typeof getSport>; onBid: () => void; empty: string }) {
+function Grid({
+  items,
+  sport,
+  onBid,
+  empty,
+}: {
+  items: T[];
+  sport: ReturnType<typeof getSport>;
+  onBid: () => void;
+  empty: string;
+}) {
   if (items.length === 0) {
     return (
       <div className="rounded-2xl bg-black/40 backdrop-blur border border-white/10 p-12 text-center text-white/60">
@@ -222,7 +272,12 @@ function Grid({ items, sport, onBid, empty }: { items: T[]; sport: ReturnType<ty
           style={{ boxShadow: `0 10px 40px -20px ${sport.accent}` }}
         >
           {t.cover_photo_url && (
-            <img src={t.cover_photo_url} alt="" className="w-full h-32 object-cover" loading="lazy" />
+            <img
+              src={t.cover_photo_url}
+              alt=""
+              className="w-full h-32 object-cover"
+              loading="lazy"
+            />
           )}
           <div className="p-5">
             <div className="flex items-start justify-between gap-2 mb-2">

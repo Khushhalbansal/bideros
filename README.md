@@ -33,12 +33,14 @@ Bideros is a modern, real-time web application designed to run cricket auctions 
 ### Installation
 
 1. Clone the repository
+
 ```bash
 git clone https://github.com/Khushhalbansal/bideros.git
 cd bideros
 ```
 
 2. Install dependencies
+
 ```bash
 bun install
 # or
@@ -46,9 +48,10 @@ npm install
 ```
 
 3. Set up environment variables
-Create a `.env` file based on the required Supabase credentials and other configuration needed for the app.
+   Create a `.env` file based on the required Supabase credentials and other configuration needed for the app.
 
 4. Start the development server
+
 ```bash
 npm run dev
 ```

@@ -15,7 +15,6 @@ import { FeedbackWidget } from "@/components/FeedbackWidget";
 
 import appCss from "../styles.css?url";
 
-
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -79,16 +78,38 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Bideros | #1 Online Cricket Auction Platform & CricAuction Alternative" },
-      { name: "description", content: "Looking for an online auction website, live bidding app, or CricAuction alternative? Run IPL-style live cricket auctions with real-time bidding." },
-      { name: "keywords", content: "auction website, online auction, bidding website, auction platform, online bidding, live auction, digital auction, auction marketplace, auction app, online marketplace auction, bid online, bidding platform, auction site, auction portal, e auction, cricket auction, IPL auction simulator, cricket bidding platform, fantasy cricket auction, player auction, sports auction platform, cricket team auction, online player auction, cricket marketplace, auction for cricket players, IPL style auction, cricket bid app, sports bidding website, BidArena, CricAuction, Bid Wars, Auction Arena, BidHub, BidZone, BidMarket, Auction House Online, Online Bidding Platform, LiveBid, BidMaster, bidding app, auction online, place bids online, buy through auction, online auction app, auction for items, best auction site, auction website india, live bidding app, online bid website, auction website free, auction website for students, auction game, auction platform india, silent auction platform, fundraiser auction website, charity auction platform, event auction software, virtual auction platform, online fundraising auction, AI auction, smart bidding, intelligent bidding, AI marketplace, real time auction, automated bidding, next generation auction, transparent bidding platform, Bideros, bideros app, cricket bideros" },
+      {
+        name: "description",
+        content:
+          "Looking for an online auction website, live bidding app, or CricAuction alternative? Run IPL-style live cricket auctions with real-time bidding.",
+      },
+      {
+        name: "keywords",
+        content:
+          "auction website, online auction, bidding website, auction platform, online bidding, live auction, digital auction, auction marketplace, auction app, online marketplace auction, bid online, bidding platform, auction site, auction portal, e auction, cricket auction, IPL auction simulator, cricket bidding platform, fantasy cricket auction, player auction, sports auction platform, cricket team auction, online player auction, cricket marketplace, auction for cricket players, IPL style auction, cricket bid app, sports bidding website, BidArena, CricAuction, Bid Wars, Auction Arena, BidHub, BidZone, BidMarket, Auction House Online, Online Bidding Platform, LiveBid, BidMaster, bidding app, auction online, place bids online, buy through auction, online auction app, auction for items, best auction site, auction website india, live bidding app, online bid website, auction website free, auction website for students, auction game, auction platform india, silent auction platform, fundraiser auction website, charity auction platform, event auction software, virtual auction platform, online fundraising auction, AI auction, smart bidding, intelligent bidding, AI marketplace, real time auction, automated bidding, next generation auction, transparent bidding platform, Bideros, bideros app, cricket bideros",
+      },
       { name: "robots", content: "index, follow" },
-      { property: "og:title", content: "Bideros | #1 Online Cricket Auction Platform & CricAuction Alternative" },
-      { property: "og:description", content: "Looking for an online auction website, live bidding app, or CricAuction alternative? Run IPL-style live cricket auctions with real-time bidding." },
+      {
+        property: "og:title",
+        content: "Bideros | #1 Online Cricket Auction Platform & CricAuction Alternative",
+      },
+      {
+        property: "og:description",
+        content:
+          "Looking for an online auction website, live bidding app, or CricAuction alternative? Run IPL-style live cricket auctions with real-time bidding.",
+      },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://bideros.vercel.app" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Bideros | #1 Online Cricket Auction Platform & CricAuction Alternative" },
-      { name: "twitter:description", content: "Looking for an online auction website, live bidding app, or CricAuction alternative? Run IPL-style live cricket auctions with real-time bidding." },
+      {
+        name: "twitter:title",
+        content: "Bideros | #1 Online Cricket Auction Platform & CricAuction Alternative",
+      },
+      {
+        name: "twitter:description",
+        content:
+          "Looking for an online auction website, live bidding app, or CricAuction alternative? Run IPL-style live cricket auctions with real-time bidding.",
+      },
       { property: "og:image", content: "https://bideros.vercel.app/logo.png" },
       { name: "twitter:image", content: "https://bideros.vercel.app/logo.png" },
     ],
@@ -98,7 +119,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Syne:wght@400..800&family=Permanent+Marker&display=swap" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Syne:wght@400..800&family=Permanent+Marker&display=swap",
+      },
     ],
     scripts: [],
   }),
@@ -119,24 +143,25 @@ function RootShell({ children }: { children: React.ReactNode }) {
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebApplication",
-              "name": "Bideros",
-              "url": "https://bideros.vercel.app",
-              "description": "Run IPL-style live cricket auctions with real-time bidding, team rooms, and a stadium-grade spectator view.",
-              "applicationCategory": "SportsApplication, EntertainmentApplication",
-              "operatingSystem": "All",
-              "offers": {
+              name: "Bideros",
+              url: "https://bideros.vercel.app",
+              description:
+                "Run IPL-style live cricket auctions with real-time bidding, team rooms, and a stadium-grade spectator view.",
+              applicationCategory: "SportsApplication, EntertainmentApplication",
+              operatingSystem: "All",
+              offers: {
                 "@type": "Offer",
-                "price": "0",
-                "priceCurrency": "USD"
+                price: "0",
+                priceCurrency: "USD",
               },
-              "featureList": [
+              featureList: [
                 "Real-time bidding engine with atomic locks",
                 "Stadium-grade projector & spectator view",
                 "Interactive team room with raising hand mechanism",
                 "Live player auction logs and team purse tracking",
-                "Multi-tournament support and simple WhatsApp invites"
-              ]
-            })
+                "Multi-tournament support and simple WhatsApp invites",
+              ],
+            }),
           }}
         />
       </head>
@@ -164,4 +189,3 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
-

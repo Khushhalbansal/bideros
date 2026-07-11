@@ -30,6 +30,7 @@ Check out our issues page for open tasks, especially the ones labeled `enhanceme
 ## UI/UX Goals
 
 We are specifically aiming to add:
+
 - **Parallax Effects**: Depth to the landing and dashboard pages.
 - **3D Elements**: To make the player cards and auction items pop.
 - **Water / Particle Effects**: Engaging background aesthetics.

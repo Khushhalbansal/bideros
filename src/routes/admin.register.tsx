@@ -40,11 +40,23 @@ function AdminRegisterPage() {
 
   useEffect(() => {
     (async () => {
-      if (!token) { setValidationError("Missing invite token"); setValidating(false); return; }
+      if (!token) {
+        setValidationError("Missing invite token");
+        setValidating(false);
+        return;
+      }
       const { data, error } = await supabase.rpc("validate_admin_invite", { p_token: token });
-      if (error) { setValidationError(error.message); setValidating(false); return; }
+      if (error) {
+        setValidationError(error.message);
+        setValidating(false);
+        return;
+      }
       const res = data as { ok: boolean; error?: string; email?: string };
-      if (!res.ok) { setValidationError(res.error ?? "Invalid invite"); setValidating(false); return; }
+      if (!res.ok) {
+        setValidationError(res.error ?? "Invalid invite");
+        setValidating(false);
+        return;
+      }
       setEmail(res.email ?? "");
       setValidating(false);
     })();
@@ -55,14 +67,24 @@ function AdminRegisterPage() {
     if (password.length < 12) return toast.error("Password must be at least 12 characters");
     setBusy(true);
     const { error: suErr } = await supabase.auth.signUp({
-      email, password,
-      options: { data: { full_name: name }, emailRedirectTo: `${window.location.origin}/dashboard` },
+      email,
+      password,
+      options: {
+        data: { full_name: name },
+        emailRedirectTo: `${window.location.origin}/dashboard`,
+      },
     });
-    if (suErr) { setBusy(false); return toast.error(suErr.message); }
+    if (suErr) {
+      setBusy(false);
+      return toast.error(suErr.message);
+    }
 
     // Sign in immediately so RPC has auth.uid()
     const { error: siErr } = await supabase.auth.signInWithPassword({ email, password });
-    if (siErr) { setBusy(false); return toast.error(siErr.message); }
+    if (siErr) {
+      setBusy(false);
+      return toast.error(siErr.message);
+    }
 
     const { data, error } = await supabase.rpc("consume_admin_invite", { p_token: token });
     setBusy(false);
@@ -84,12 +106,16 @@ function AdminRegisterPage() {
   if (validationError) {
     return (
       <div className="min-h-screen flex flex-col">
-        <header className="container mx-auto py-6 px-4"><Logo /></header>
+        <header className="container mx-auto py-6 px-4">
+          <Logo />
+        </header>
         <main className="flex-1 flex items-center justify-center px-4">
           <div className="w-full max-w-md bg-glass border border-border rounded-2xl p-8">
             <h1 className="text-xl font-bold mb-2">Invite invalid</h1>
             <p className="text-sm text-muted-foreground mb-6">{validationError}</p>
-            <Link to="/auth" className="text-sm text-neon hover:underline">← Back to sign in</Link>
+            <Link to="/auth" className="text-sm text-neon hover:underline">
+              ← Back to sign in
+            </Link>
           </div>
         </main>
       </div>
@@ -98,15 +124,19 @@ function AdminRegisterPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="container mx-auto py-6 px-4"><Logo /></header>
+      <header className="container mx-auto py-6 px-4">
+        <Logo />
+      </header>
       <main className="flex-1 flex items-center justify-center px-4">
         <div className="w-full max-w-md bg-glass border border-border rounded-2xl p-8 shadow-neon">
           <h1 className="text-2xl font-bold mb-1">Create admin account</h1>
-          <p className="text-sm text-muted-foreground mb-6">Invite verified for <span className="text-neon">{email}</span></p>
+          <p className="text-sm text-muted-foreground mb-6">
+            Invite verified for <span className="text-neon">{email}</span>
+          </p>
           <form onSubmit={submit} className="space-y-4">
             <div>
               <Label>Full name</Label>
-              <Input value={name} onChange={e=>setName(e.target.value)} required />
+              <Input value={name} onChange={(e) => setName(e.target.value)} required />
             </div>
             <div>
               <Label>Email</Label>
@@ -115,18 +145,29 @@ function AdminRegisterPage() {
             <div>
               <Label>Password</Label>
               <div className="relative">
-                <Input type={showPw ? "text" : "password"} value={password}
-                  onChange={e=>setPassword(e.target.value)} minLength={12} required />
-                <button type="button" onClick={() => setShowPw(s=>!s)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                  {showPw ? <EyeOff className="w-4 h-4"/> : <Eye className="w-4 h-4"/>}
+                <Input
+                  type={showPw ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  minLength={12}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPw((s) => !s)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
               {password.length > 0 && (
                 <div className="mt-2">
                   <div className="flex gap-1 h-1.5">
-                    {[1,2,3].map(i => (
-                      <div key={i} className={`flex-1 rounded ${i <= strength.score ? strength.color : "bg-muted"}`} />
+                    {[1, 2, 3].map((i) => (
+                      <div
+                        key={i}
+                        className={`flex-1 rounded ${i <= strength.score ? strength.color : "bg-muted"}`}
+                      />
                     ))}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -135,7 +176,10 @@ function AdminRegisterPage() {
                 </div>
               )}
             </div>
-            <Button disabled={busy || password.length < 12} className="w-full gradient-neon text-primary-foreground shadow-neon">
+            <Button
+              disabled={busy || password.length < 12}
+              className="w-full gradient-neon text-primary-foreground shadow-neon"
+            >
               {busy ? "Creating..." : "Create admin account"}
             </Button>
           </form>

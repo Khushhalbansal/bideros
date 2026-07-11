@@ -16,9 +16,15 @@ import { SPORTS } from "@/config/sports";
 export const Route = createFileRoute("/")({ component: Landing });
 
 interface PublicTournament {
-  id: string; name: string; status: string; purse_per_team: number;
-  max_players_per_team: number; created_at: string; starts_at: string | null;
-  cover_photo_url?: string | null; sport?: string | null;
+  id: string;
+  name: string;
+  status: string;
+  purse_per_team: number;
+  max_players_per_team: number;
+  created_at: string;
+  starts_at: string | null;
+  cover_photo_url?: string | null;
+  sport?: string | null;
 }
 
 function Landing() {
@@ -27,18 +33,20 @@ function Landing() {
   const [q, setQ] = useState("");
 
   useEffect(() => {
-    supabase.from("tournaments")
+    supabase
+      .from("tournaments")
       // sport column may not exist yet; fetch all and filter client-side by name heuristic if needed
-      .select("id,name,status,purse_per_team,max_players_per_team,created_at,starts_at,cover_photo_url")
+      .select(
+        "id,name,status,purse_per_team,max_players_per_team,created_at,starts_at,cover_photo_url",
+      )
       .order("created_at", { ascending: false })
       .then(({ data }) => setTournaments((data as PublicTournament[]) || []));
   }, []);
 
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
-    return s ? tournaments.filter(t => t.name.toLowerCase().includes(s)) : tournaments;
+    return s ? tournaments.filter((t) => t.name.toLowerCase().includes(s)) : tournaments;
   }, [q, tournaments]);
-
 
   return (
     <div className="min-h-screen bg-background">
@@ -53,23 +61,36 @@ function Landing() {
             </div>
             <ThemeToggle />
             {user ? (
-              <Button asChild className="rounded-full bg-gradient-to-r from-[oklch(0.85_0.22_165)] to-[oklch(0.75_0.25_320)] text-black hover:opacity-90 font-black uppercase tracking-wider text-xs px-4">
+              <Button
+                asChild
+                className="rounded-full bg-gradient-to-r from-[oklch(0.85_0.22_165)] to-[oklch(0.75_0.25_320)] text-black hover:opacity-90 font-black uppercase tracking-wider text-xs px-4"
+              >
                 <Link to="/dashboard">Dashboard</Link>
               </Button>
             ) : (
               <>
-                <Button asChild variant="ghost" className="rounded-full text-white hover:bg-white/10 uppercase tracking-wider text-xs font-bold">
-                  <Link to="/auth" search={{ tab: "signin" }}>Sign in</Link>
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="rounded-full text-white hover:bg-white/10 uppercase tracking-wider text-xs font-bold"
+                >
+                  <Link to="/auth" search={{ tab: "signin" }}>
+                    Sign in
+                  </Link>
                 </Button>
-                <Button asChild className="rounded-full bg-gradient-to-r from-[oklch(0.85_0.22_165)] to-[oklch(0.75_0.25_320)] text-black hover:opacity-90 font-black uppercase tracking-wider text-xs px-4">
-                  <Link to="/auth" search={{ tab: "signup" }}>Enter Arena</Link>
+                <Button
+                  asChild
+                  className="rounded-full bg-gradient-to-r from-[oklch(0.85_0.22_165)] to-[oklch(0.75_0.25_320)] text-black hover:opacity-90 font-black uppercase tracking-wider text-xs px-4"
+                >
+                  <Link to="/auth" search={{ tab: "signup" }}>
+                    Enter Arena
+                  </Link>
                 </Button>
               </>
             )}
           </nav>
         </div>
       </header>
-
 
       {/* Full-viewport cinematic sport swipe hero */}
       <SportSwipeHero />
@@ -79,17 +100,20 @@ function Landing() {
         <Reveal>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.4em] text-neon mb-2">Live · Upcoming · Past</p>
+              <p className="text-xs font-black uppercase tracking-[0.4em] text-neon mb-2">
+                Live · Upcoming · Past
+              </p>
               <h2 className="text-4xl md:text-6xl font-black">Every sport. Every auction.</h2>
               <p className="text-sm text-muted-foreground mt-2 max-w-xl">
-                No account needed. Tap any tournament to watch live — bid actions ask you to sign in.
+                No account needed. Tap any tournament to watch live — bid actions ask you to sign
+                in.
               </p>
             </div>
             <div className="relative w-full md:w-80">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 value={q}
-                onChange={e => setQ(e.target.value)}
+                onChange={(e) => setQ(e.target.value)}
                 placeholder="Search tournaments…"
                 className="pl-9"
               />
@@ -106,15 +130,11 @@ function Landing() {
             return t.name.toLowerCase().includes(sport.slug);
           });
           // For cricket (default) show all when sport column is absent
-          const items = sport.slug === "cricket" && !filtered.some(t => t.sport) ? filtered : matches;
-          return (
-            <SportRail key={sport.slug} sport={sport} items={items} />
-          );
+          const items =
+            sport.slug === "cricket" && !filtered.some((t) => t.sport) ? filtered : matches;
+          return <SportRail key={sport.slug} sport={sport} items={items} />;
         })}
-
       </main>
-
-
 
       <footer className="border-t border-border py-10 text-center text-xs text-muted-foreground">
         Bideros — one arena, every sport.
@@ -123,7 +143,13 @@ function Landing() {
   );
 }
 
-function SportRail({ sport, items }: { sport: typeof SPORTS[number]; items: PublicTournament[] }) {
+function SportRail({
+  sport,
+  items,
+}: {
+  sport: (typeof SPORTS)[number];
+  items: PublicTournament[];
+}) {
   return (
     <Reveal>
       <section
@@ -135,15 +161,24 @@ function SportRail({ sport, items }: { sport: typeof SPORTS[number]; items: Publ
       >
         <div
           className="absolute inset-0 opacity-20 pointer-events-none"
-          style={{ backgroundImage: `url(${sport.bgImage})`, backgroundSize: "cover", backgroundPosition: "center" }}
+          style={{
+            backgroundImage: `url(${sport.bgImage})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
         />
         <div className="relative z-10">
           <div className="flex items-end justify-between mb-6 flex-wrap gap-3">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.4em]" style={{ color: sport.accent }}>
+              <p
+                className="text-[10px] font-black uppercase tracking-[0.4em]"
+                style={{ color: sport.accent }}
+              >
                 {sport.tag}
               </p>
-              <h3 className="text-3xl md:text-5xl font-black text-white leading-none mt-1">{sport.name}</h3>
+              <h3 className="text-3xl md:text-5xl font-black text-white leading-none mt-1">
+                {sport.name}
+              </h3>
             </div>
             <Link
               to="/sport/$slug"
@@ -191,10 +226,23 @@ function SportRail({ sport, items }: { sport: typeof SPORTS[number]; items: Publ
   );
 }
 
-function TournamentBucket({ title, items, accent, empty }: {
-  title: string; items: PublicTournament[]; accent: "hot" | "neon" | "muted"; empty: string;
+function TournamentBucket({
+  title,
+  items,
+  accent,
+  empty,
+}: {
+  title: string;
+  items: PublicTournament[];
+  accent: "hot" | "neon" | "muted";
+  empty: string;
 }) {
-  const border = accent === "hot" ? "hover:border-hot/60" : accent === "neon" ? "hover:border-neon/60" : "hover:border-border";
+  const border =
+    accent === "hot"
+      ? "hover:border-hot/60"
+      : accent === "neon"
+        ? "hover:border-neon/60"
+        : "hover:border-border";
   return (
     <Reveal>
       <div>
@@ -202,7 +250,9 @@ function TournamentBucket({ title, items, accent, empty }: {
           {title} <span className="text-xs text-muted-foreground/60">({items.length})</span>
         </h3>
         {items.length === 0 ? (
-          <div className="bg-glass border border-border rounded-xl p-6 text-sm text-muted-foreground text-center">{empty}</div>
+          <div className="bg-glass border border-border rounded-xl p-6 text-sm text-muted-foreground text-center">
+            {empty}
+          </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {items.map((t, i) => (
@@ -213,12 +263,20 @@ function TournamentBucket({ title, items, accent, empty }: {
                 viewport={{ once: true, margin: "-40px" }}
                 transition={{ delay: i * 0.05 }}
               >
-                <Link to="/watch/$slug" params={{ slug: t.id }} className={`bg-glass border border-border rounded-xl p-4 block transition-all ${border}`}>
+                <Link
+                  to="/watch/$slug"
+                  params={{ slug: t.id }}
+                  className={`bg-glass border border-border rounded-xl p-4 block transition-all ${border}`}
+                >
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <h4 className="font-bold">{t.name}</h4>
-                    <span className="text-[10px] uppercase px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{t.status}</span>
+                    <span className="text-[10px] uppercase px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                      {t.status}
+                    </span>
                   </div>
-                  <div className="text-xs text-muted-foreground">Purse {formatINR(t.purse_per_team)} · Squad {t.max_players_per_team}</div>
+                  <div className="text-xs text-muted-foreground">
+                    Purse {formatINR(t.purse_per_team)} · Squad {t.max_players_per_team}
+                  </div>
                 </Link>
               </motion.div>
             ))}

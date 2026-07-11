@@ -34,10 +34,9 @@ export function SportSwipeHero() {
   useEffect(() => {
     const el = heroRef.current;
     if (!el) return;
-    const io = new IntersectionObserver(
-      ([entry]) => setHeroActive(entry.intersectionRatio > 0.6),
-      { threshold: [0, 0.3, 0.6, 1] }
-    );
+    const io = new IntersectionObserver(([entry]) => setHeroActive(entry.intersectionRatio > 0.6), {
+      threshold: [0, 0.3, 0.6, 1],
+    });
     io.observe(el);
     return () => io.disconnect();
   }, []);
@@ -143,7 +142,6 @@ export function SportSwipeHero() {
             }}
           >
             {active.textLeft}
-
           </motion.span>
         </AnimatePresence>
         <AnimatePresence mode="wait" custom={direction}>
@@ -165,7 +163,6 @@ export function SportSwipeHero() {
             }}
           >
             {active.textRight}
-
           </motion.span>
         </AnimatePresence>
       </div>
@@ -226,11 +223,9 @@ export function SportSwipeHero() {
               }}
               animate={{ x, y, rotate, scale, opacity, zIndex }}
               transition={{ duration: 1.1, ease: [0.43, 0.13, 0.23, 0.96] }}
-
               style={{ pointerEvents: pointer, transformOrigin: "bottom center" }}
               className="absolute bottom-0 focus:outline-none no-hover-transform"
               aria-label={`Show ${char.name}`}
-
             >
               <img
                 src={char.image}
@@ -268,9 +263,7 @@ export function SportSwipeHero() {
               {active.description}
             </p>
             <button
-              onClick={() =>
-                navigate({ to: "/sport/$slug", params: { slug: active.slug } })
-              }
+              onClick={() => navigate({ to: "/sport/$slug", params: { slug: active.slug } })}
               className="group inline-flex items-center gap-2 sm:gap-3 rounded-full bg-white text-black px-4 sm:px-6 py-2.5 sm:py-3 font-black uppercase tracking-wider text-xs sm:text-sm hover:scale-105 transition-transform shadow-2xl"
               style={{ boxShadow: `0 10px 30px -5px ${active.accent}66` }}
             >
@@ -283,7 +276,6 @@ export function SportSwipeHero() {
 
       {/* Dots — bottom center on mobile, right side on desktop */}
       <div className="absolute left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:right-[4vw] bottom-3 sm:bottom-[8vh] flex flex-row sm:flex-col gap-2 sm:gap-3 z-30">
-
         {SPORTS.map((s, i) => (
           <button
             key={s.slug}
@@ -321,7 +313,6 @@ export function SportSwipeHero() {
       <div className="hidden sm:block absolute left-1/2 -translate-x-1/2 bottom-4 text-white/60 text-[10px] uppercase tracking-[0.4em] z-30">
         Scroll ↓ Sports · Scroll past for auctions
       </div>
-
     </div>
   );
 }

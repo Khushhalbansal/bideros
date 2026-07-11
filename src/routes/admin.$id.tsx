@@ -1,4 +1,3 @@
-// @ts-nocheck - pre-existing schema drift, unrelated to sport-hero redesign
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,9 +9,42 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import { formatINR, parseINR } from "@/lib/format";
-import { Play, Pause, SkipForward, Undo2, XCircle, Flag, Monitor, Gavel, ChevronRight, Eye, Copy, Trash2, Share2, Link as LinkIcon, Save, Users, Tag, Download } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Play,
+  Pause,
+  SkipForward,
+  Undo2,
+  XCircle,
+  Flag,
+  Monitor,
+  Gavel,
+  ChevronRight,
+  Eye,
+  Copy,
+  Trash2,
+  Share2,
+  Link as LinkIcon,
+  Save,
+  Users,
+  Tag,
+  Download,
+} from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  SelectGroup,
+  SelectLabel,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { uploadImage } from "@/lib/uploads";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { BulkImportPlayers } from "@/components/admin/BulkImportPlayers";
@@ -20,65 +52,145 @@ import { CategoriesTab, type Category } from "@/components/admin/CategoriesTab";
 import { LobbyPanel } from "@/components/admin/LobbyPanel";
 import { SPORTS, getSport } from "@/config/sports";
 
-
 export const Route = createFileRoute("/admin/$id")({ component: AdminPanel });
 
-interface Tournament { id:string; name:string; status:string; purse_per_team:number; max_players_per_team:number; min_bid_increment:number; bid_timer_seconds:number; admin_id:string; starts_at:string|null; banner_url?:string|null; cover_photo_url?:string|null; }
-interface Team { id:string; name:string; owner_id:string|null; owner_email:string|null; owner_name:string|null; remaining_purse:number; logo_url:string|null; }
-interface Player { id:string; name:string; role:string|null; base_price:number; status:string; sold_to_team_id:string|null; sold_price:number|null; auction_order:number|null; photo_url?:string|null; category_id?:string|null; }
-interface AuctionState { tournament_id:string; current_player_id:string|null; current_highest_bid:number|null; current_highest_team_id:string|null; timer_ends_at:string|null; }
+interface Tournament {
+  id: string;
+  name: string;
+  status: string;
+  purse_per_team: number;
+  max_players_per_team: number;
+  min_bid_increment: number;
+  bid_timer_seconds: number;
+  admin_id: string;
+  starts_at: string | null;
+  banner_url?: string | null;
+  cover_photo_url?: string | null;
+}
+interface Team {
+  id: string;
+  name: string;
+  owner_id: string | null;
+  owner_email: string | null;
+  owner_name: string | null;
+  remaining_purse: number;
+  logo_url: string | null;
+}
+interface Player {
+  id: string;
+  name: string;
+  role: string | null;
+  base_price: number;
+  status: string;
+  sold_to_team_id: string | null;
+  sold_price: number | null;
+  auction_order: number | null;
+  photo_url?: string | null;
+  category_id?: string | null;
+}
+interface AuctionState {
+  tournament_id: string;
+  current_player_id: string | null;
+  current_highest_bid: number | null;
+  current_highest_team_id: string | null;
+  timer_ends_at: string | null;
+  strike_count?: number;
+  last_sold_player_id?: string | null;
+  last_sold_team_id?: string | null;
+  last_sold_price?: number | null;
+  last_sold_at?: string | null;
+}
 
 function AdminPanel() {
   const { id } = Route.useParams();
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-  const [t, setT] = useState<Tournament|null>(null);
+  const [t, setT] = useState<Tournament | null>(null);
   const [teams, setTeams] = useState<Team[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
-  const [state, setState] = useState<AuctionState|null>(null);
+  const [state, setState] = useState<AuctionState | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
 
-  useEffect(() => { if (!loading && !user) navigate({ to: "/auth" }); }, [user, loading, navigate]);
+  useEffect(() => {
+    if (!loading && !user) navigate({ to: "/auth" });
+  }, [user, loading, navigate]);
 
   const load = useCallback(async () => {
-    const [{ data: tt }, { data: tm }, { data: pl }, { data: st }, { data: cats }] = await Promise.all([
-      supabase.from("tournaments").select("*").eq("id", id).single(),
-      supabase.rpc("admin_list_teams", { p_tournament: id }),
-      supabase.from("players").select("*").eq("tournament_id", id).order("auction_order", { nullsFirst: false }).order("created_at"),
-      supabase.from("auction_state").select("*").eq("tournament_id", id).maybeSingle(),
-      supabase.from("player_categories").select("*").eq("tournament_id", id).order("sort_order"),
-    ]);
-    setT(tt as Tournament); setTeams((tm as Team[]) || []); setPlayers((pl as Player[]) || []);
+    const [{ data: tt }, { data: tm }, { data: pl }, { data: st }, { data: cats }] =
+      await Promise.all([
+        supabase.from("tournaments").select("*").eq("id", id).single(),
+        supabase.rpc("admin_list_teams", { p_tournament: id }),
+        supabase
+          .from("players")
+          .select("*")
+          .eq("tournament_id", id)
+          .order("auction_order", { nullsFirst: false })
+          .order("created_at"),
+        supabase.from("auction_state").select("*").eq("tournament_id", id).maybeSingle(),
+        supabase.from("player_categories").select("*").eq("tournament_id", id).order("sort_order"),
+      ]);
+    setT(tt as Tournament);
+    setTeams((tm as Team[]) || []);
+    setPlayers((pl as Player[]) || []);
     setState(st as AuctionState | null);
     setCategories((cats as Category[]) || []);
   }, [id]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   useEffect(() => {
-    const ch = supabase.channel(`admin:${id}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "auction_state", filter: `tournament_id=eq.${id}` }, () => load())
-      .on("postgres_changes", { event: "*", schema: "public", table: "players", filter: `tournament_id=eq.${id}` }, () => load())
-      .on("postgres_changes", { event: "*", schema: "public", table: "teams", filter: `tournament_id=eq.${id}` }, () => load())
-      .on("postgres_changes", { event: "*", schema: "public", table: "bids", filter: `tournament_id=eq.${id}` }, () => load())
+    const ch = supabase
+      .channel(`admin:${id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "auction_state", filter: `tournament_id=eq.${id}` },
+        () => load(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "players", filter: `tournament_id=eq.${id}` },
+        () => load(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "teams", filter: `tournament_id=eq.${id}` },
+        () => load(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "bids", filter: `tournament_id=eq.${id}` },
+        () => load(),
+      )
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    return () => {
+      supabase.removeChannel(ch);
+    };
   }, [id, load]);
 
-  if (loading || !t) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
-  if (user && t.admin_id !== user.id) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Not authorized.</div>;
+  if (loading || !t)
+    return (
+      <div className="min-h-screen flex items-center justify-center text-muted-foreground">
+        Loading…
+      </div>
+    );
+  if (user && t.admin_id !== user.id)
+    return (
+      <div className="min-h-screen flex items-center justify-center text-muted-foreground">
+        Not authorized.
+      </div>
+    );
 
   // Detect sport from tournament: prefer explicit t.sport, else fuzzy-match name against known slugs
-  const detectedSlug = (t as any).sport
-    || SPORTS.find(s => t.name?.toLowerCase().includes(s.slug))?.slug
-    || "cricket";
+  const detectedSlug =
+    (t as any).sport ||
+    SPORTS.find((s) => t.name?.toLowerCase().includes(s.slug))?.slug ||
+    "cricket";
   const sport = getSport(detectedSlug);
 
   return (
-    <div
-      className="min-h-screen relative isolate"
-      style={{ backgroundColor: sport.bg }}
-    >
+    <div className="min-h-screen relative isolate" style={{ backgroundColor: sport.bg }}>
       {/* Sport-themed backdrop — fixed so it stays put on scroll */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         <img
@@ -100,34 +212,62 @@ function AdminPanel() {
         />
       </div>
       <header className="relative z-10 container mx-auto flex items-center justify-between py-6 px-4">
-
-
         <div className="flex items-center gap-4">
           <Logo />
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
           <h1 className="font-display font-bold text-lg">{t.name}</h1>
-          <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/15 text-neon">{t.status}</span>
+          <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/15 text-neon">
+            {t.status}
+          </span>
         </div>
         <div className="flex gap-2">
-          <Button asChild variant="outline" size="sm"><Link to="/projector/$id" params={{ id: t.id }}><Monitor className="h-3 w-3 mr-1" />Projector</Link></Button>
-          <Button asChild variant="outline" size="sm"><Link to="/watch/$slug" params={{ slug: t.id }}><Eye className="h-3 w-3 mr-1" />Spectator</Link></Button>
-          <Button asChild variant="ghost" size="sm"><Link to="/dashboard">← Dashboard</Link></Button>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/projector/$id" params={{ id: t.id }}>
+              <Monitor className="h-3 w-3 mr-1" />
+              Projector
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/watch/$slug" params={{ slug: t.id }}>
+              <Eye className="h-3 w-3 mr-1" />
+              Spectator
+            </Link>
+          </Button>
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/dashboard">← Dashboard</Link>
+          </Button>
         </div>
       </header>
 
       <main className="relative z-10 container mx-auto px-4 pb-16">
         <Tabs defaultValue="auction">
           <TabsList className="flex-wrap h-auto">
-            <TabsTrigger value="auction"><Gavel className="h-3 w-3 mr-1" />Live auction</TabsTrigger>
-            <TabsTrigger value="lobby"><Users className="h-3 w-3 mr-1" />Lobby</TabsTrigger>
+            <TabsTrigger value="auction">
+              <Gavel className="h-3 w-3 mr-1" />
+              Live auction
+            </TabsTrigger>
+            <TabsTrigger value="lobby">
+              <Users className="h-3 w-3 mr-1" />
+              Lobby
+            </TabsTrigger>
             <TabsTrigger value="teams">Teams ({teams.length})</TabsTrigger>
             <TabsTrigger value="players">Players ({players.length})</TabsTrigger>
-            <TabsTrigger value="categories"><Tag className="h-3 w-3 mr-1" />Categories ({categories.length})</TabsTrigger>
+            <TabsTrigger value="categories">
+              <Tag className="h-3 w-3 mr-1" />
+              Categories ({categories.length})
+            </TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
           <TabsContent value="auction" className="mt-6">
-            <AuctionControl tournament={t} players={players} teams={teams} state={state} categories={categories} />
+            <AuctionControl
+              tournament={t}
+              players={players}
+              teams={teams}
+              state={state}
+              categories={categories}
+              onChange={load}
+            />
           </TabsContent>
           <TabsContent value="lobby" className="mt-6">
             <LobbyPanel tournamentId={t.id} />
@@ -136,10 +276,20 @@ function AdminPanel() {
             <TeamsTab tournament={t} teams={teams} players={players} onChange={load} />
           </TabsContent>
           <TabsContent value="players" className="mt-6">
-            <PlayersTab tournament={t} players={players} teams={teams} categories={categories} onChange={load} />
+            <PlayersTab
+              tournament={t}
+              players={players}
+              teams={teams}
+              categories={categories}
+              onChange={load}
+            />
           </TabsContent>
           <TabsContent value="categories" className="mt-6">
-            <CategoriesTab tournamentId={t.id} defaultBase={100000} defaultIncrement={t.min_bid_increment} />
+            <CategoriesTab
+              tournamentId={t.id}
+              defaultBase={100000}
+              defaultIncrement={t.min_bid_increment}
+            />
           </TabsContent>
           <TabsContent value="settings" className="mt-6">
             <SettingsTab tournament={t} onChange={load} />
@@ -151,12 +301,24 @@ function AdminPanel() {
 }
 
 // === AUCTION CONTROL ===
-function AuctionControl({ tournament, players, teams, state, categories }:{
-  tournament: Tournament; players: Player[]; teams: Team[]; state: AuctionState | null; categories: Category[];
+function AuctionControl({
+  tournament,
+  players,
+  teams,
+  state,
+  categories,
+  onChange,
+}: {
+  tournament: Tournament;
+  players: Player[];
+  teams: Team[];
+  state: AuctionState | null;
+  categories: Category[];
+  onChange: () => void;
 }) {
-  const pending = players.filter(p => p.status === "pending");
-  const currentPlayer = players.find(p => p.id === state?.current_player_id) || null;
-  const leadingTeam = teams.find(tm => tm.id === state?.current_highest_team_id) || null;
+  const pending = players.filter((p) => p.status === "pending" || p.status === "unsold");
+  const currentPlayer = players.find((p) => p.id === state?.current_player_id) || null;
+  const leadingTeam = teams.find((tm) => tm.id === state?.current_highest_team_id) || null;
   const [selectedId, setSelectedId] = useState<string>("");
 
   const startLot = async () => {
@@ -164,55 +326,67 @@ function AuctionControl({ tournament, players, teams, state, categories }:{
     if (tournament.status !== "live") {
       await supabase.from("tournaments").update({ status: "live" }).eq("id", tournament.id);
     }
-    const { data, error } = await supabase.rpc("start_lot", { p_tournament: tournament.id, p_player: selectedId });
+    const { data, error } = await supabase.rpc("start_lot", {
+      p_tournament: tournament.id,
+      p_player: selectedId,
+    });
     if (error) return toast.error(error.message);
-    const r = data as { ok:boolean; error?:string };
+    const r = data as { ok: boolean; error?: string };
     if (!r.ok) return toast.error(r.error || "Failed");
     toast.success("Lot started");
     setSelectedId("");
+    onChange();
   };
 
-  const callRpc = async (fn: string, payload: Record<string, unknown> = {}, successMsg = "Done") => {
-    const { data, error } = await supabase.rpc(fn as never, { p_tournament: tournament.id, ...payload } as never);
+  const callRpc = async (
+    fn: string,
+    payload: Record<string, unknown> = {},
+    successMsg = "Done",
+  ) => {
+    const { data, error } = await supabase.rpc(
+      fn as never,
+      { p_tournament: tournament.id, ...payload } as never,
+    );
     if (error) return toast.error(error.message);
-    const r = data as { ok:boolean; error?:string };
+    const r = data as { ok: boolean; error?: string };
     if (!r.ok) return toast.error(r.error || "Failed");
     toast.success(successMsg);
+    onChange();
   };
 
   const isPaused = currentPlayer && !state?.timer_ends_at;
 
   const downloadSummary = () => {
     const rows = [["Team Name", "Owner Name", "Player Name", "Role", "Sold Price (INR)"]];
-    teams.forEach(tm => {
-      const squad = players.filter(p => p.sold_to_team_id === tm.id);
+    teams.forEach((tm) => {
+      const squad = players.filter((p) => p.sold_to_team_id === tm.id);
       if (squad.length === 0) {
         rows.push([`"${tm.name}"`, `"${tm.owner_name || ""}"`, "No players", "", "0"]);
       } else {
-        squad.forEach(p => {
+        squad.forEach((p) => {
           rows.push([
             `"${tm.name}"`,
             `"${tm.owner_name || ""}"`,
             `"${p.name}"`,
             `"${p.role || ""}"`,
-            String(p.sold_price || 0)
+            String(p.sold_price || 0),
           ]);
         });
       }
     });
 
-    const unsold = players.filter(p => p.status === "unsold");
+    const unsold = players.filter((p) => p.status === "unsold");
     if (unsold.length > 0) {
-      unsold.forEach(p => {
+      unsold.forEach((p) => {
         rows.push(["Unsold", "", `"${p.name}"`, `"${p.role || ""}"`, "0"]);
       });
     }
 
-    const csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
+    const csvContent = "data:text/csv;charset=utf-8," + rows.map((e) => e.join(",")).join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Auction_Summary_${tournament.name.replace(/\s+/g, '_')}.csv`);
+    link.setAttribute("download", `Auction_Summary_${tournament.name.replace(/\s+/g, "_")}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -229,14 +403,20 @@ function AuctionControl({ tournament, players, teams, state, categories }:{
         {currentPlayer ? (
           <div className="space-y-4">
             <div className="rounded-xl gradient-neon p-6 text-primary-foreground">
-              <div className="text-xs uppercase tracking-widest opacity-80">Now on the block {isPaused && "• PAUSED"}</div>
+              <div className="text-xs uppercase tracking-widest opacity-80">
+                Now on the block {isPaused && "• PAUSED"}
+              </div>
               <div className="text-3xl font-bold mt-1">{currentPlayer.name}</div>
-              <div className="text-sm mt-1 opacity-80">{currentPlayer.role} • Base {formatINR(currentPlayer.base_price)}</div>
+              <div className="text-sm mt-1 opacity-80">
+                {currentPlayer.role} • Base {formatINR(currentPlayer.base_price)}
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-card/60 rounded-lg p-4 border border-border">
                 <div className="text-xs text-muted-foreground">Current bid</div>
-                <div className="text-2xl font-bold text-neon">{state?.current_highest_bid ? formatINR(state.current_highest_bid) : "—"}</div>
+                <div className="text-2xl font-bold text-neon">
+                  {state?.current_highest_bid ? formatINR(state.current_highest_bid) : "—"}
+                </div>
               </div>
               <div className="bg-card/60 rounded-lg p-4 border border-border">
                 <div className="text-xs text-muted-foreground">Leading team</div>
@@ -245,27 +425,79 @@ function AuctionControl({ tournament, players, teams, state, categories }:{
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-2">
               {isPaused ? (
-                <Button onClick={() => callRpc("resume_lot", {}, "Lot resumed")} className="gradient-neon text-primary-foreground"><Play className="h-3 w-3 mr-1" />Resume</Button>
+                <Button
+                  onClick={() => callRpc("resume_lot", {}, "Lot resumed")}
+                  className="gradient-neon text-primary-foreground"
+                >
+                  <Play className="h-3 w-3 mr-1" />
+                  Resume
+                </Button>
               ) : (
-                <Button onClick={() => callRpc("pause_lot", {}, "Lot paused")} variant="outline"><Pause className="h-3 w-3 mr-1" />Pause</Button>
+                <Button onClick={() => callRpc("pause_lot", {}, "Lot paused")} variant="outline">
+                  <Pause className="h-3 w-3 mr-1" />
+                  Pause
+                </Button>
               )}
-              <Button onClick={() => callRpc("skip_lot", {}, "Lot skipped")} variant="outline"><SkipForward className="h-3 w-3 mr-1" />Skip</Button>
-              <Button onClick={() => callRpc("mark_unsold", {}, "Marked unsold")} variant="outline"><XCircle className="h-3 w-3 mr-1" />Unsold</Button>
-              <Button onClick={() => { if (confirm("Undo last sale?")) callRpc("undo_last_sale", {}, "Sale undone"); }} variant="outline"><Undo2 className="h-3 w-3 mr-1" />Undo sale</Button>
+              <Button onClick={() => callRpc("skip_lot", {}, "Lot skipped")} variant="outline">
+                <SkipForward className="h-3 w-3 mr-1" />
+                Skip
+              </Button>
+              <Button onClick={() => callRpc("mark_unsold", {}, "Marked unsold")} variant="outline">
+                <XCircle className="h-3 w-3 mr-1" />
+                Unsold
+              </Button>
+              <Button
+                onClick={() => {
+                  if (confirm("Undo last sale?")) callRpc("undo_last_sale", {}, "Sale undone");
+                }}
+                variant="outline"
+              >
+                <Undo2 className="h-3 w-3 mr-1" />
+                Undo sale
+              </Button>
             </div>
             <div className="pt-2 border-t border-border flex flex-wrap gap-2">
-              <Button onClick={() => { if (confirm("End the auction and mark tournament as completed?")) callRpc("end_auction", {}, "Auction ended"); }} variant="outline" size="sm" className="border-destructive/40 text-destructive hover:bg-destructive/10">
-                <Flag className="h-3 w-3 mr-1" />End auction
+              <Button
+                onClick={() => {
+                  if (confirm("End the auction and mark tournament as completed?"))
+                    callRpc("end_auction", {}, "Auction ended");
+                }}
+                variant="outline"
+                size="sm"
+                className="border-destructive/40 text-destructive hover:bg-destructive/10"
+              >
+                <Flag className="h-3 w-3 mr-1" />
+                End auction
               </Button>
-              <Button onClick={() => { 
-                if (prompt("Type RESTART to completely reset the tournament and clear all bids. This CANNOT be undone.") === "RESTART") {
-                  callRpc("restart_tournament", {}, "Tournament restarted");
-                }
-              }} variant="outline" size="sm" className="border-destructive/40 text-destructive hover:bg-destructive/10">
-                <Undo2 className="h-3 w-3 mr-1" />Restart tournament
+              <Button
+                onClick={async () => {
+                  if (
+                    prompt(
+                      "Type RESTART to completely reset the tournament and clear all bids. This CANNOT be undone.",
+                    ) === "RESTART"
+                  ) {
+                    await callRpc("restart_tournament", {}, "Tournament restarted");
+                    await supabase
+                      .from("tournaments")
+                      .update({ status: "pending" })
+                      .eq("id", tournament.id);
+                  }
+                }}
+                variant="outline"
+                size="sm"
+                className="border-destructive/40 text-destructive hover:bg-destructive/10"
+              >
+                <Undo2 className="h-3 w-3 mr-1" />
+                Restart tournament
               </Button>
-              <Button onClick={downloadSummary} variant="outline" size="sm" className="border-neon/40 text-neon hover:bg-neon/10">
-                <Download className="h-3 w-3 mr-1" />Download Summary (CSV)
+              <Button
+                onClick={downloadSummary}
+                variant="outline"
+                size="sm"
+                className="border-neon/40 text-neon hover:bg-neon/10"
+              >
+                <Download className="h-3 w-3 mr-1" />
+                Download Summary (CSV)
               </Button>
             </div>
           </div>
@@ -274,67 +506,125 @@ function AuctionControl({ tournament, players, teams, state, categories }:{
             <p className="text-sm text-muted-foreground">Pick a player to put up for auction.</p>
             <div className="flex gap-2">
               <Select value={selectedId} onValueChange={setSelectedId}>
-                <SelectTrigger className="flex-1"><SelectValue placeholder={`${pending.length} players pending`} /></SelectTrigger>
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder={`${pending.length} players pending`} />
+                </SelectTrigger>
                 <SelectContent>
                   {categories.length > 0 ? (
                     <>
-                      {categories.map(c => {
-                        const catPlayers = pending.filter(p => p.category_id === c.id);
+                      {categories.map((c) => {
+                        const catPlayers = pending.filter((p) => p.category_id === c.id);
                         if (catPlayers.length === 0) return null;
                         return (
                           <SelectGroup key={c.id}>
                             <SelectLabel className="text-neon">{c.name}</SelectLabel>
-                            {catPlayers.map(p => (
-                              <SelectItem key={p.id} value={p.id}>{p.name} — {formatINR(p.base_price)}</SelectItem>
+                            {catPlayers.map((p) => (
+                              <SelectItem key={p.id} value={p.id}>
+                                {p.name} — {formatINR(p.base_price)}
+                              </SelectItem>
                             ))}
                           </SelectGroup>
                         );
                       })}
                       {(() => {
-                        const noCatPlayers = pending.filter(p => !p.category_id);
+                        const noCatPlayers = pending.filter((p) => !p.category_id);
                         if (noCatPlayers.length === 0) return null;
                         return (
                           <SelectGroup>
-                            <SelectLabel className="text-muted-foreground">Uncategorised</SelectLabel>
-                            {noCatPlayers.map(p => (
-                              <SelectItem key={p.id} value={p.id}>{p.name} — {formatINR(p.base_price)}</SelectItem>
+                            <SelectLabel className="text-muted-foreground">
+                              Uncategorised
+                            </SelectLabel>
+                            {noCatPlayers.map((p) => (
+                              <SelectItem key={p.id} value={p.id}>
+                                {p.name} — {formatINR(p.base_price)}
+                              </SelectItem>
                             ))}
                           </SelectGroup>
                         );
                       })()}
                     </>
                   ) : (
-                    pending.map(p => (
-                      <SelectItem key={p.id} value={p.id}>{p.name} — {formatINR(p.base_price)}</SelectItem>
+                    pending.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.name} — {formatINR(p.base_price)}
+                      </SelectItem>
                     ))
                   )}
                 </SelectContent>
               </Select>
-              <Button onClick={startLot} disabled={!selectedId || teams.length === 0} className="gradient-neon text-primary-foreground shadow-neon">
-                <Play className="h-4 w-4 mr-1" />Start
+              <Button
+                onClick={startLot}
+                disabled={!selectedId || teams.length === 0}
+                className="gradient-neon text-primary-foreground shadow-neon"
+              >
+                <Play className="h-4 w-4 mr-1" />
+                Start
               </Button>
             </div>
-            {teams.length === 0 && <p className="text-xs text-destructive">Add teams before starting an auction.</p>}
+            {teams.length === 0 && (
+              <p className="text-xs text-destructive">Add teams before starting an auction.</p>
+            )}
             {state?.last_sold_player_id && (
               <div className="pt-2">
-                <Button onClick={() => { if (confirm("Undo last sale? The player will be moved back to pending and the team will be refunded.")) callRpc("undo_last_sale", {}, "Sale undone"); }} variant="outline" size="sm">
-                  <Undo2 className="h-3 w-3 mr-1" />Undo Last Sale
+                <Button
+                  onClick={() => {
+                    if (
+                      confirm(
+                        "Undo last sale? The player will be moved back to pending and the team will be refunded.",
+                      )
+                    )
+                      callRpc("undo_last_sale", {}, "Sale undone");
+                  }}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Undo2 className="h-3 w-3 mr-1" />
+                  Undo Last Sale
                 </Button>
               </div>
             )}
             <div className="pt-2 border-t border-border flex flex-wrap gap-2">
-              <Button onClick={() => { if (confirm("End the auction and mark tournament as completed?")) callRpc("end_auction", {}, "Auction ended"); }} variant="outline" size="sm" className="border-destructive/40 text-destructive hover:bg-destructive/10">
-                <Flag className="h-3 w-3 mr-1" />End auction
+              <Button
+                onClick={() => {
+                  if (confirm("End the auction and mark tournament as completed?"))
+                    callRpc("end_auction", {}, "Auction ended");
+                }}
+                variant="outline"
+                size="sm"
+                className="border-destructive/40 text-destructive hover:bg-destructive/10"
+              >
+                <Flag className="h-3 w-3 mr-1" />
+                End auction
               </Button>
-              <Button onClick={() => { 
-                if (prompt("Type RESTART to completely reset the tournament and clear all bids. This CANNOT be undone.") === "RESTART") {
-                  callRpc("restart_tournament", {}, "Tournament restarted");
-                }
-              }} variant="outline" size="sm" className="border-destructive/40 text-destructive hover:bg-destructive/10">
-                <Undo2 className="h-3 w-3 mr-1" />Restart tournament
+              <Button
+                onClick={async () => {
+                  if (
+                    prompt(
+                      "Type RESTART to completely reset the tournament and clear all bids. This CANNOT be undone.",
+                    ) === "RESTART"
+                  ) {
+                    await callRpc("restart_tournament", {}, "Tournament restarted");
+                    await supabase
+                      .from("tournaments")
+                      .update({ status: "pending" })
+                      .eq("id", tournament.id);
+                  }
+                }}
+                variant="outline"
+                size="sm"
+                className="border-destructive/40 text-destructive hover:bg-destructive/10"
+              >
+                <Undo2 className="h-3 w-3 mr-1" />
+                Restart tournament
               </Button>
-              <Button onClick={downloadSummary} variant="outline" size="sm" className="border-neon/40 text-neon hover:bg-neon/10">
-                <Download className="h-3 w-3 mr-1" />Download Summary (CSV)
+              <Button
+                onClick={downloadSummary}
+                variant="outline"
+                size="sm"
+                className="border-neon/40 text-neon hover:bg-neon/10"
+              >
+                <Download className="h-3 w-3 mr-1" />
+                Download Summary (CSV)
               </Button>
             </div>
           </div>
@@ -344,11 +634,16 @@ function AuctionControl({ tournament, players, teams, state, categories }:{
       <div className="bg-glass border border-border rounded-xl p-5">
         <h3 className="font-bold mb-3">Teams &amp; purse</h3>
         <div className="space-y-2 max-h-[420px] overflow-auto">
-          {teams.map(tm => (
-            <div key={tm.id} className="flex justify-between items-center bg-card/40 rounded-md px-3 py-2 border border-border">
+          {teams.map((tm) => (
+            <div
+              key={tm.id}
+              className="flex justify-between items-center bg-card/40 rounded-md px-3 py-2 border border-border"
+            >
               <div>
                 <div className="font-semibold text-sm">{tm.name}</div>
-                <div className="text-[10px] text-muted-foreground">{tm.owner_email || "no owner"}</div>
+                <div className="text-[10px] text-muted-foreground">
+                  {tm.owner_email || "no owner"}
+                </div>
               </div>
               <div className="text-sm text-neon font-bold">{formatINR(tm.remaining_purse)}</div>
             </div>
@@ -361,18 +656,34 @@ function AuctionControl({ tournament, players, teams, state, categories }:{
 }
 
 // === TEAMS TAB ===
-function TeamsTab({ tournament, teams, players, onChange }: { tournament: Tournament; teams: Team[]; players: Player[]; onChange: () => void; }) {
+function TeamsTab({
+  tournament,
+  teams,
+  players,
+  onChange,
+}: {
+  tournament: Tournament;
+  teams: Team[];
+  players: Player[];
+  onChange: () => void;
+}) {
   const [name, setName] = useState("");
   const [ownerName, setOwnerName] = useState("");
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
-  const [invite, setInvite] = useState<{ teamId: string; teamName: string; url: string; email: string | null } | null>(null);
+  const [invite, setInvite] = useState<{
+    teamId: string;
+    teamName: string;
+    url: string;
+    email: string | null;
+  } | null>(null);
 
   const addTeam = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
     const { error } = await supabase.from("teams").insert({
-      tournament_id: tournament.id, name,
+      tournament_id: tournament.id,
+      name,
       owner_name: ownerName || null,
       owner_email: email || null,
       remaining_purse: tournament.purse_per_team,
@@ -380,7 +691,9 @@ function TeamsTab({ tournament, teams, players, onChange }: { tournament: Tourna
     setBusy(false);
     if (error) return toast.error(error.message);
     toast.success("Team added");
-    setName(""); setOwnerName(""); setEmail("");
+    setName("");
+    setOwnerName("");
+    setEmail("");
     onChange();
   };
 
@@ -406,37 +719,77 @@ function TeamsTab({ tournament, teams, players, onChange }: { tournament: Tourna
 
   return (
     <div className="grid md:grid-cols-3 gap-6">
-      <form onSubmit={addTeam} className="bg-glass border border-border rounded-xl p-5 space-y-3 h-fit">
+      <form
+        onSubmit={addTeam}
+        className="bg-glass border border-border rounded-xl p-5 space-y-3 h-fit"
+      >
         <h3 className="font-bold">Add team</h3>
-        <div><Label>Team name</Label><Input value={name} onChange={e=>setName(e.target.value)} required /></div>
-        <div><Label>Owner name</Label><Input value={ownerName} onChange={e=>setOwnerName(e.target.value)} placeholder="Jane Doe" /></div>
-        <div><Label>Owner email</Label><Input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="owner@team.com" /></div>
-        <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon">Add team</Button>
-        <p className="text-[10px] text-muted-foreground">After adding, click <strong>Copy invite link</strong> on the team card to send them a one-click join link.</p>
+        <div>
+          <Label>Team name</Label>
+          <Input value={name} onChange={(e) => setName(e.target.value)} required />
+        </div>
+        <div>
+          <Label>Owner name</Label>
+          <Input
+            value={ownerName}
+            onChange={(e) => setOwnerName(e.target.value)}
+            placeholder="Jane Doe"
+          />
+        </div>
+        <div>
+          <Label>Owner email</Label>
+          <Input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="owner@team.com"
+          />
+        </div>
+        <Button
+          disabled={busy}
+          className="w-full gradient-neon text-primary-foreground shadow-neon"
+        >
+          Add team
+        </Button>
+        <p className="text-[10px] text-muted-foreground">
+          After adding, click <strong>Copy invite link</strong> on the team card to send them a
+          one-click join link.
+        </p>
       </form>
       <div className="md:col-span-2 space-y-3">
-        {teams.map(tm => {
-          const squad = players.filter(p => p.sold_to_team_id === tm.id);
+        {teams.map((tm) => {
+          const squad = players.filter((p) => p.sold_to_team_id === tm.id);
           return (
             <div key={tm.id} className="bg-glass border border-border rounded-xl p-4 space-y-3">
               <div className="flex items-start justify-between">
                 <div>
                   <div className="font-bold">{tm.name}</div>
                   <div className="text-xs text-muted-foreground">
-                    {tm.owner_name || "—"} • {tm.owner_email || "no email"} {tm.owner_id && <span className="text-neon">• ✓ linked</span>}
+                    {tm.owner_name || "—"} • {tm.owner_email || "no email"}{" "}
+                    {tm.owner_id && <span className="text-neon">• ✓ linked</span>}
                   </div>
-                  <div className="text-xs text-neon mt-1">Purse {formatINR(tm.remaining_purse)} • {squad.length} player{squad.length === 1 ? "" : "s"}</div>
+                  <div className="text-xs text-neon mt-1">
+                    Purse {formatINR(tm.remaining_purse)} • {squad.length} player
+                    {squad.length === 1 ? "" : "s"}
+                  </div>
                 </div>
                 <div className="flex gap-2 shrink-0">
-                  <Button size="sm" variant="outline" onClick={() => generateInvite(tm)}><LinkIcon className="h-3 w-3 mr-1" />Copy invite link</Button>
-                  <Button size="sm" variant="ghost" onClick={() => remove(tm.id)}><Trash2 className="h-3 w-3" /></Button>
+                  <Button size="sm" variant="outline" onClick={() => generateInvite(tm)}>
+                    <LinkIcon className="h-3 w-3 mr-1" />
+                    Copy invite link
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => remove(tm.id)}>
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
                 </div>
               </div>
               {squad.length > 0 && (
                 <div className="border-t border-border pt-2 space-y-1">
-                  {squad.map(p => (
+                  {squad.map((p) => (
                     <div key={p.id} className="flex justify-between text-xs">
-                      <span>{p.name} <span className="text-muted-foreground">({p.role})</span></span>
+                      <span>
+                        {p.name} <span className="text-muted-foreground">({p.role})</span>
+                      </span>
                       <span className="text-neon font-semibold">{formatINR(p.sold_price)}</span>
                     </div>
                   ))}
@@ -450,23 +803,40 @@ function TeamsTab({ tournament, teams, players, onChange }: { tournament: Tourna
 
       <Dialog open={!!invite} onOpenChange={(o) => !o && setInvite(null)}>
         <DialogContent className="bg-card border-border">
-          <DialogHeader><DialogTitle>Invite link for {invite?.teamName}</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Invite link for {invite?.teamName}</DialogTitle>
+          </DialogHeader>
           {invite && (
             <div className="space-y-4">
               <div className="bg-glass border border-neon/40 rounded-lg p-4 space-y-2 text-sm">
-                <div className="text-xs text-muted-foreground">One-click invite link (valid 7 days)</div>
+                <div className="text-xs text-muted-foreground">
+                  One-click invite link (valid 7 days)
+                </div>
                 <div className="font-mono text-xs break-all text-neon">{invite.url}</div>
                 <p className="text-xs text-muted-foreground pt-2 border-t border-border">
-                  The owner signs up with their email — no password needs to be shared. After they confirm, they land directly in their team auction room.
+                  The owner signs up with their email — no password needs to be shared. After they
+                  confirm, they land directly in their team auction room.
                 </p>
               </div>
               <DialogFooter className="flex flex-col sm:flex-row gap-2">
-                <Button variant="outline" className="flex-1" onClick={() => { navigator.clipboard.writeText(invite.url); toast.success("Link copied"); }}>
-                  <Copy className="h-4 w-4 mr-1" />Copy link
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    navigator.clipboard.writeText(invite.url);
+                    toast.success("Link copied");
+                  }}
+                >
+                  <Copy className="h-4 w-4 mr-1" />
+                  Copy link
                 </Button>
-                <Button asChild className="flex-1 gradient-neon text-primary-foreground shadow-neon">
+                <Button
+                  asChild
+                  className="flex-1 gradient-neon text-primary-foreground shadow-neon"
+                >
                   <a href={waUrl} target="_blank" rel="noopener noreferrer">
-                    <Share2 className="h-4 w-4 mr-1" />Share via WhatsApp
+                    <Share2 className="h-4 w-4 mr-1" />
+                    Share via WhatsApp
                   </a>
                 </Button>
               </DialogFooter>
@@ -479,7 +849,19 @@ function TeamsTab({ tournament, teams, players, onChange }: { tournament: Tourna
 }
 
 // === PLAYERS TAB ===
-function PlayersTab({ tournament, players, teams, categories, onChange }:{ tournament: Tournament; players: Player[]; teams: Team[]; categories: Category[]; onChange: () => void; }) {
+function PlayersTab({
+  tournament,
+  players,
+  teams,
+  categories,
+  onChange,
+}: {
+  tournament: Tournament;
+  players: Player[];
+  teams: Team[];
+  categories: Category[];
+  onChange: () => void;
+}) {
   const [name, setName] = useState("");
   const [role, setRole] = useState<string>("Batter");
   const [base, setBase] = useState("1 L");
@@ -489,10 +871,17 @@ function PlayersTab({ tournament, players, teams, categories, onChange }:{ tourn
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkCat, setBulkCat] = useState<string>("__none__");
 
-  const callRpc = async (fn: string, payload: Record<string, unknown> = {}, successMsg = "Done") => {
-    const { data, error } = await supabase.rpc(fn as never, { p_tournament: tournament.id, ...payload } as never);
+  const callRpc = async (
+    fn: string,
+    payload: Record<string, unknown> = {},
+    successMsg = "Done",
+  ) => {
+    const { data, error } = await supabase.rpc(
+      fn as never,
+      { p_tournament: tournament.id, ...payload } as never,
+    );
     if (error) return toast.error(error.message);
-    const r = data as { ok:boolean; error?:string };
+    const r = data as { ok: boolean; error?: string };
     if (!r.ok) return toast.error(r.error || "Failed");
     toast.success(successMsg);
     onChange();
@@ -500,25 +889,32 @@ function PlayersTab({ tournament, players, teams, categories, onChange }:{ tourn
 
   const toggleSel = (id: string) => {
     const next = new Set(selected);
-    if (next.has(id)) next.delete(id); else next.add(id);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
     setSelected(next);
   };
-  const selectablePlayers = players.filter(p => p.status !== "sold");
-  const allSelected = selectablePlayers.length > 0 && selectablePlayers.every(p => selected.has(p.id));
-  const toggleAll = () => setSelected(allSelected ? new Set() : new Set(selectablePlayers.map(p => p.id)));
+  const selectablePlayers = players.filter((p) => p.status !== "sold");
+  const allSelected =
+    selectablePlayers.length > 0 && selectablePlayers.every((p) => selected.has(p.id));
+  const toggleAll = () =>
+    setSelected(allSelected ? new Set() : new Set(selectablePlayers.map((p) => p.id)));
 
   const applyBulkCategory = async () => {
     if (selected.size === 0) return toast.error("Select at least one player");
-    const { data, error } = await supabase.rpc("admin_bulk_assign_category" as never, {
-      p_tournament: tournament.id,
-      p_player_ids: Array.from(selected),
-      p_category_id: bulkCat === "__none__" ? null : bulkCat,
-    } as never);
+    const { data, error } = await supabase.rpc(
+      "admin_bulk_assign_category" as never,
+      {
+        p_tournament: tournament.id,
+        p_player_ids: Array.from(selected),
+        p_category_id: bulkCat === "__none__" ? null : bulkCat,
+      } as never,
+    );
     if (error) return toast.error(error.message);
     const r = data as { ok: boolean; error?: string; updated?: number };
     if (!r.ok) return toast.error(r.error || "Failed");
     toast.success(`Updated ${r.updated} player(s)`);
-    setSelected(new Set()); onChange();
+    setSelected(new Set());
+    onChange();
   };
 
   const add = async (e: React.FormEvent) => {
@@ -527,16 +923,21 @@ function PlayersTab({ tournament, players, teams, categories, onChange }:{ tourn
     try {
       let photo_url: string | null = null;
       if (photoFile) photo_url = await uploadImage("player-photos", photoFile, tournament.id);
-      const maxOrder = Math.max(0, ...players.map(p => p.auction_order ?? 0));
-      const cat = categories.find(c => c.id === categoryId);
+      const maxOrder = Math.max(0, ...players.map((p) => p.auction_order ?? 0));
+      const cat = categories.find((c) => c.id === categoryId);
       const { error } = await supabase.from("players").insert({
-        tournament_id: tournament.id, name, role,
+        tournament_id: tournament.id,
+        name,
+        role,
         base_price: cat ? cat.base_price : parseINR(base),
-        auction_order: maxOrder + 1, photo_url: photo_url ?? undefined,
+        auction_order: maxOrder + 1,
+        photo_url: photo_url ?? undefined,
         category_id: cat ? cat.id : null,
       });
       if (error) throw error;
-      setName(""); setBase("1 L"); setPhotoFile(null);
+      setName("");
+      setBase("1 L");
+      setPhotoFile(null);
       onChange();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed");
@@ -557,7 +958,7 @@ function PlayersTab({ tournament, players, teams, categories, onChange }:{ tourn
     else onChange();
   };
 
-  const startOrder = Math.max(0, ...players.map(p => p.auction_order ?? 0));
+  const startOrder = Math.max(0, ...players.map((p) => p.auction_order ?? 0));
 
   return (
     <div className="grid md:grid-cols-3 gap-6">
@@ -565,13 +966,22 @@ function PlayersTab({ tournament, players, teams, categories, onChange }:{ tourn
         <PlayerInviteCard tournamentId={tournament.id} tournamentName={tournament.name} />
         <form onSubmit={add} className="bg-glass border border-border rounded-xl p-5 space-y-3">
           <h3 className="font-bold">Add player</h3>
-          <div><Label>Name</Label><Input value={name} onChange={e=>setName(e.target.value)} required /></div>
+          <div>
+            <Label>Name</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} required />
+          </div>
           <div>
             <Label>Role</Label>
             <Select value={role} onValueChange={setRole}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
-                {["Batter","Bowler","All-rounder","Wicket-keeper"].map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                {["Batter", "Bowler", "All-rounder", "Wicket-keeper"].map((r) => (
+                  <SelectItem key={r} value={r}>
+                    {r}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -579,28 +989,48 @@ function PlayersTab({ tournament, players, teams, categories, onChange }:{ tourn
             <div>
               <Label>Category</Label>
               <Select value={categoryId} onValueChange={setCategoryId}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__">— None (use base price below) —</SelectItem>
-                  {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name} · base {formatINR(c.base_price)}</SelectItem>)}
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name} · base {formatINR(c.base_price)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
           )}
           {categoryId === "__none__" && (
-            <div><Label>Base price</Label><Input value={base} onChange={e=>setBase(e.target.value)} placeholder="1 L" /></div>
+            <div>
+              <Label>Base price</Label>
+              <Input value={base} onChange={(e) => setBase(e.target.value)} placeholder="1 L" />
+            </div>
           )}
           <div>
             <Label>Photo (optional, max 5MB)</Label>
-            <Input type="file" accept="image/jpeg,image/png,image/webp" onChange={e => setPhotoFile(e.target.files?.[0] || null)} />
-            {photoFile && <p className="text-[10px] text-muted-foreground mt-1">📷 {photoFile.name}</p>}
+            <Input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
+            />
+            {photoFile && (
+              <p className="text-[10px] text-muted-foreground mt-1">📷 {photoFile.name}</p>
+            )}
           </div>
-          <Button disabled={busy} className="w-full gradient-neon text-primary-foreground shadow-neon">{busy ? "Adding…" : "Add"}</Button>
+          <Button
+            disabled={busy}
+            className="w-full gradient-neon text-primary-foreground shadow-neon"
+          >
+            {busy ? "Adding…" : "Add"}
+          </Button>
         </form>
         <BulkImportPlayers
           tournamentId={tournament.id}
           startOrder={startOrder}
-          categories={categories.map(c => ({ id: c.id, name: c.name }))}
+          categories={categories.map((c) => ({ id: c.id, name: c.name }))}
           onDone={onChange}
         />
       </div>
@@ -609,85 +1039,178 @@ function PlayersTab({ tournament, players, teams, categories, onChange }:{ tourn
         {categories.length > 0 && selectablePlayers.length > 0 && (
           <div className="bg-glass border border-border rounded-xl p-3 flex flex-wrap items-center gap-2 sticky top-2 z-10 backdrop-blur">
             <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
-              <input type="checkbox" checked={allSelected} onChange={toggleAll} className="accent-primary h-4 w-4" />
+              <input
+                type="checkbox"
+                checked={allSelected}
+                onChange={toggleAll}
+                className="accent-primary h-4 w-4"
+              />
               Select all ({selected.size}/{selectablePlayers.length})
             </label>
             <div className="flex-1" />
             <Select value={bulkCat} onValueChange={setBulkCat}>
-              <SelectTrigger className="h-8 w-44 text-xs"><SelectValue placeholder="Move to…" /></SelectTrigger>
+              <SelectTrigger className="h-8 w-44 text-xs">
+                <SelectValue placeholder="Move to…" />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="__none__">— Uncategorised —</SelectItem>
-                {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                {categories.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
-            <Button size="sm" disabled={selected.size === 0} onClick={applyBulkCategory} className="gradient-neon text-primary-foreground">Apply to {selected.size}</Button>
+            <Button
+              size="sm"
+              disabled={selected.size === 0}
+              onClick={applyBulkCategory}
+              className="gradient-neon text-primary-foreground"
+            >
+              Apply to {selected.size}
+            </Button>
           </div>
         )}
-        {players.map(p => {
-          const team = teams.find(t => t.id === p.sold_to_team_id);
+        {players.map((p) => {
+          const team = teams.find((t) => t.id === p.sold_to_team_id);
           const isSold = p.status === "sold";
           const onPhoto = async (file: File) => {
             try {
               const url = await uploadImage("player-photos", file, tournament.id);
               await updateField(p.id, { photo_url: url });
               toast.success("Photo uploaded");
-            } catch (err) { toast.error(err instanceof Error ? err.message : "Upload failed"); }
+            } catch (err) {
+              toast.error(err instanceof Error ? err.message : "Upload failed");
+            }
           };
           return (
-            <div key={p.id} className={`bg-glass border rounded-xl p-3 flex items-center justify-between gap-3 ${isSold ? "border-neon/40" : selected.has(p.id) ? "border-neon" : "border-border"}`}>
+            <div
+              key={p.id}
+              className={`bg-glass border rounded-xl p-3 flex items-center justify-between gap-3 ${isSold ? "border-neon/40" : selected.has(p.id) ? "border-neon" : "border-border"}`}
+            >
               {!isSold && (
-                <input type="checkbox" checked={selected.has(p.id)} onChange={() => toggleSel(p.id)} className="accent-primary h-4 w-4 shrink-0" title="Select for bulk actions" />
+                <input
+                  type="checkbox"
+                  checked={selected.has(p.id)}
+                  onChange={() => toggleSel(p.id)}
+                  className="accent-primary h-4 w-4 shrink-0"
+                  title="Select for bulk actions"
+                />
               )}
-              <label className="cursor-pointer relative group shrink-0" title="Click to upload/replace photo">
+              <label
+                className="cursor-pointer relative group shrink-0"
+                title="Click to upload/replace photo"
+              >
                 <PlayerAvatar url={p.photo_url} name={p.name} size={44} />
-                <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) onPhoto(f); e.currentTarget.value = ""; }} />
-                <span className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-[10px] text-neon">edit</span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) onPhoto(f);
+                    e.currentTarget.value = "";
+                  }}
+                />
+                <span className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-[10px] text-neon">
+                  edit
+                </span>
               </label>
               <div className="flex-1 grid grid-cols-2 md:grid-cols-5 gap-2 items-center">
                 {isSold ? (
                   <div className="text-sm font-semibold truncate">{p.name}</div>
                 ) : (
-                  <Input value={p.name} onChange={e => updateField(p.id, { name: e.target.value })} className="h-8 text-xs" />
+                  <Input
+                    value={p.name}
+                    onChange={(e) => updateField(p.id, { name: e.target.value })}
+                    className="h-8 text-xs"
+                  />
                 )}
                 {isSold ? (
                   <div className="text-xs text-muted-foreground">{p.role}</div>
                 ) : (
-                  <Select value={p.role ?? "Batter"} onValueChange={(v) => updateField(p.id, { role: v })}>
-                    <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <Select
+                    value={p.role ?? "Batter"}
+                    onValueChange={(v) => updateField(p.id, { role: v })}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
-                      {["Batter","Bowler","All-rounder","Wicket-keeper"].map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                      {["Batter", "Bowler", "All-rounder", "Wicket-keeper"].map((r) => (
+                        <SelectItem key={r} value={r}>
+                          {r}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 )}
                 {isSold || p.category_id ? (
-                  <div className="text-xs font-mono" title={p.category_id ? "Locked by category" : ""}>{formatINR(p.base_price)}{p.category_id && <span className="text-[9px] text-muted-foreground ml-1">cat</span>}</div>
+                  <div
+                    className="text-xs font-mono"
+                    title={p.category_id ? "Locked by category" : ""}
+                  >
+                    {formatINR(p.base_price)}
+                    {p.category_id && (
+                      <span className="text-[9px] text-muted-foreground ml-1">cat</span>
+                    )}
+                  </div>
                 ) : (
                   <Input
                     defaultValue={String(p.base_price)}
-                    onBlur={e => { const v = parseINR(e.target.value); if (v && v !== p.base_price) updateField(p.id, { base_price: v }); }}
+                    onBlur={(e) => {
+                      const v = parseINR(e.target.value);
+                      if (v && v !== p.base_price) updateField(p.id, { base_price: v });
+                    }}
                     className="h-8 text-xs font-mono"
                   />
                 )}
                 {isSold ? (
-                  <div className="text-xs text-muted-foreground truncate">{categories.find(c => c.id === p.category_id)?.name || "—"}</div>
+                  <div className="text-xs text-muted-foreground truncate">
+                    {categories.find((c) => c.id === p.category_id)?.name || "—"}
+                  </div>
                 ) : categories.length > 0 ? (
-                  <Select value={p.category_id ?? "__none__"} onValueChange={(v) => updateField(p.id, { category_id: v === "__none__" ? null : v })}>
-                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Category" /></SelectTrigger>
+                  <Select
+                    value={p.category_id ?? "__none__"}
+                    onValueChange={(v) =>
+                      updateField(p.id, { category_id: v === "__none__" ? null : v })
+                    }
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue placeholder="Category" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="__none__">— None —</SelectItem>
-                      {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                      {categories.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 ) : (
-                  <div className="text-[10px] text-muted-foreground/50 truncate flex items-center h-8 px-3 border border-border/50 rounded-md bg-muted/10 cursor-not-allowed" title="Add categories in the Categories tab first">No categories</div>
+                  <div
+                    className="text-[10px] text-muted-foreground/50 truncate flex items-center h-8 px-3 border border-border/50 rounded-md bg-muted/10 cursor-not-allowed"
+                    title="Add categories in the Categories tab first"
+                  >
+                    No categories
+                  </div>
                 )}
                 <div className="text-xs text-muted-foreground">
-                  <span className={`uppercase tracking-wider font-bold ${p.status === "sold" ? "text-neon" : p.status === "unsold" ? "text-hot" : ""}`}>{p.status}</span>
-                  {team && <div className="truncate">{team.name} — {formatINR(p.sold_price)}</div>}
+                  <span
+                    className={`uppercase tracking-wider font-bold ${p.status === "sold" ? "text-neon" : p.status === "unsold" ? "text-hot" : ""}`}
+                  >
+                    {p.status}
+                  </span>
+                  {team && (
+                    <div className="truncate">
+                      {team.name} — {formatINR(p.sold_price)}
+                    </div>
+                  )}
                   {isSold && (
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
+                    <Button
+                      size="sm"
+                      variant="outline"
                       className="h-6 text-[10px] px-2 py-0 border-neon/50 text-neon hover:bg-neon/10"
                       onClick={() => {
                         if (confirm(`Refund ${p.name} and move back to pending?`)) {
@@ -695,12 +1218,21 @@ function PlayersTab({ tournament, players, teams, categories, onChange }:{ tourn
                         }
                       }}
                     >
-                      <Undo2 className="h-3 w-3 mr-1" />Refund & Restart
+                      <Undo2 className="h-3 w-3 mr-1" />
+                      Refund & Restart
                     </Button>
                   )}
                 </div>
               </div>
-              <Button size="sm" variant="ghost" onClick={() => remove(p.id)} disabled={isSold} title={isSold ? "Undo the sale first" : "Delete"}><Trash2 className="h-3 w-3" /></Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => remove(p.id)}
+                disabled={isSold}
+                title={isSold ? "Undo the sale first" : "Delete"}
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
             </div>
           );
         })}
@@ -711,7 +1243,7 @@ function PlayersTab({ tournament, players, teams, categories, onChange }:{ tourn
 }
 
 // === SETTINGS ===
-function SettingsTab({ tournament, onChange }: { tournament: Tournament; onChange: () => void; }) {
+function SettingsTab({ tournament, onChange }: { tournament: Tournament; onChange: () => void }) {
   const [form, setForm] = useState({
     name: tournament.name,
     status: tournament.status,
@@ -719,21 +1251,24 @@ function SettingsTab({ tournament, onChange }: { tournament: Tournament; onChang
     increment: formatINR(tournament.min_bid_increment),
     timer: String(tournament.bid_timer_seconds),
     maxPlayers: String(tournament.max_players_per_team),
-    startsAt: tournament.starts_at ? tournament.starts_at.slice(0,16) : "",
+    startsAt: tournament.starts_at ? tournament.starts_at.slice(0, 16) : "",
   });
   const [saving, setSaving] = useState(false);
 
   const save = async () => {
     setSaving(true);
-    const { error } = await supabase.from("tournaments").update({
-      name: form.name,
-      status: form.status,
-      purse_per_team: parseINR(form.purse),
-      min_bid_increment: parseINR(form.increment),
-      bid_timer_seconds: parseInt(form.timer) || 15,
-      max_players_per_team: parseInt(form.maxPlayers) || 15,
-      starts_at: form.startsAt ? new Date(form.startsAt).toISOString() : null,
-    }).eq("id", tournament.id);
+    const { error } = await supabase
+      .from("tournaments")
+      .update({
+        name: form.name,
+        status: form.status,
+        purse_per_team: parseINR(form.purse),
+        min_bid_increment: parseINR(form.increment),
+        bid_timer_seconds: parseInt(form.timer) || 15,
+        max_players_per_team: parseInt(form.maxPlayers) || 15,
+        starts_at: form.startsAt ? new Date(form.startsAt).toISOString() : null,
+      })
+      .eq("id", tournament.id);
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Settings saved");
@@ -753,28 +1288,77 @@ function SettingsTab({ tournament, onChange }: { tournament: Tournament; onChang
     <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
       <div className="bg-glass border border-border rounded-xl p-6 space-y-4">
         <h3 className="font-bold">Tournament settings</h3>
-        <div><Label>Name</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} /></div>
+        <div>
+          <Label>Name</Label>
+          <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label>Status</Label>
-            <Select value={form.status} onValueChange={v => setForm({...form, status: v})}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+            <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
-                {["draft","upcoming","live","completed"].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                {["draft", "upcoming", "live", "completed"].map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
-          <div><Label>Starts at</Label><Input type="datetime-local" value={form.startsAt} onChange={e => setForm({...form, startsAt: e.target.value})} /></div>
+          <div>
+            <Label>Starts at</Label>
+            <Input
+              type="datetime-local"
+              value={form.startsAt}
+              onChange={(e) => setForm({ ...form, startsAt: e.target.value })}
+            />
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <div><Label>Purse / team</Label><Input value={form.purse} onChange={e => setForm({...form, purse: e.target.value})} /></div>
-          <div><Label>Bid increment</Label><Input value={form.increment} onChange={e => setForm({...form, increment: e.target.value})} /></div>
+          <div>
+            <Label>Purse / team</Label>
+            <Input
+              value={form.purse}
+              onChange={(e) => setForm({ ...form, purse: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label>Bid increment</Label>
+            <Input
+              value={form.increment}
+              onChange={(e) => setForm({ ...form, increment: e.target.value })}
+            />
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <div><Label>Bid timer (sec)</Label><Input type="number" value={form.timer} onChange={e => setForm({...form, timer: e.target.value})} /></div>
-          <div><Label>Max players / team</Label><Input type="number" value={form.maxPlayers} onChange={e => setForm({...form, maxPlayers: e.target.value})} /></div>
+          <div>
+            <Label>Bid timer (sec)</Label>
+            <Input
+              type="number"
+              value={form.timer}
+              onChange={(e) => setForm({ ...form, timer: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label>Max players / team</Label>
+            <Input
+              type="number"
+              value={form.maxPlayers}
+              onChange={(e) => setForm({ ...form, maxPlayers: e.target.value })}
+            />
+          </div>
         </div>
-        <Button onClick={save} disabled={saving} className="w-full gradient-neon text-primary-foreground shadow-neon"><Save className="h-4 w-4 mr-1" />Save settings</Button>
+        <Button
+          onClick={save}
+          disabled={saving}
+          className="w-full gradient-neon text-primary-foreground shadow-neon"
+        >
+          <Save className="h-4 w-4 mr-1" />
+          Save settings
+        </Button>
       </div>
       <div className="space-y-4">
         <TournamentImages tournament={tournament} onChange={onChange} />
@@ -782,26 +1366,49 @@ function SettingsTab({ tournament, onChange }: { tournament: Tournament; onChang
           <h3 className="font-bold">Spectator link</h3>
           <div className="flex gap-2">
             <Input value={spectatorUrl} readOnly className="font-mono text-xs" />
-            <Button variant="outline" onClick={() => { navigator.clipboard.writeText(spectatorUrl); toast.success("Copied"); }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                navigator.clipboard.writeText(spectatorUrl);
+                toast.success("Copied");
+              }}
+            >
               <Copy className="h-4 w-4" />
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">Anyone with this link can watch your auction live.</p>
+          <p className="text-xs text-muted-foreground">
+            Anyone with this link can watch your auction live.
+          </p>
         </div>
         <div className="bg-glass border border-destructive/30 rounded-xl p-6 space-y-3">
           <h3 className="font-bold text-destructive">Danger zone</h3>
-          <p className="text-xs text-muted-foreground">Permanently delete this tournament and every team, player, and bid in it.</p>
-          <Button variant="outline" className="border-destructive/40 text-destructive hover:bg-destructive/10" onClick={deleteTournament}>
-            <Trash2 className="h-4 w-4 mr-1" />Delete tournament
+          <p className="text-xs text-muted-foreground">
+            Permanently delete this tournament and every team, player, and bid in it.
+          </p>
+          <Button
+            variant="outline"
+            className="border-destructive/40 text-destructive hover:bg-destructive/10"
+            onClick={deleteTournament}
+          >
+            <Trash2 className="h-4 w-4 mr-1" />
+            Delete tournament
           </Button>
         </div>
-        <p className="text-xs text-muted-foreground">Completed tournaments are automatically deleted after 20 days.</p>
+        <p className="text-xs text-muted-foreground">
+          Completed tournaments are automatically deleted after 20 days.
+        </p>
       </div>
     </div>
   );
 }
 
-function TournamentImages({ tournament, onChange }: { tournament: Tournament; onChange: () => void }) {
+function TournamentImages({
+  tournament,
+  onChange,
+}: {
+  tournament: Tournament;
+  onChange: () => void;
+}) {
   const [busy, setBusy] = useState<"banner" | "cover" | null>(null);
 
   const handleUpload = async (kind: "banner" | "cover", file: File) => {
@@ -829,17 +1436,42 @@ function TournamentImages({ tournament, onChange }: { tournament: Tournament; on
   return (
     <div className="bg-glass border border-border rounded-xl p-6 space-y-4">
       <h3 className="font-bold">Branding</h3>
-      {(["cover", "banner"] as const).map(kind => {
+      {(["cover", "banner"] as const).map((kind) => {
         const url = kind === "banner" ? tournament.banner_url : tournament.cover_photo_url;
         return (
           <div key={kind} className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label className="capitalize">{kind === "cover" ? "Cover photo (cards)" : "Banner (in-auction header)"}</Label>
-              {url && <button onClick={() => clear(kind)} className="text-[10px] text-destructive hover:underline">Remove</button>}
+              <Label className="capitalize">
+                {kind === "cover" ? "Cover photo (cards)" : "Banner (in-auction header)"}
+              </Label>
+              {url && (
+                <button
+                  onClick={() => clear(kind)}
+                  className="text-[10px] text-destructive hover:underline"
+                >
+                  Remove
+                </button>
+              )}
             </div>
-            {url && <img src={url} alt="" className="w-full h-24 object-cover rounded-md border border-border" />}
+            {url && (
+              <img
+                src={url}
+                alt=""
+                className="w-full h-24 object-cover rounded-md border border-border"
+              />
+            )}
             <label className="block">
-              <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={busy === kind} onChange={e => { const f = e.target.files?.[0]; if (f) handleUpload(kind, f); e.currentTarget.value = ""; }} />
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                disabled={busy === kind}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleUpload(kind, f);
+                  e.currentTarget.value = "";
+                }}
+              />
               <span className="cursor-pointer block w-full text-center text-xs py-2 rounded-md border border-dashed border-border hover:border-neon hover:text-neon">
                 {busy === kind ? "Uploading…" : url ? "Replace image" : "Upload image (max 5MB)"}
               </span>
@@ -851,13 +1483,21 @@ function TournamentImages({ tournament, onChange }: { tournament: Tournament; on
   );
 }
 
-function PlayerInviteCard({ tournamentId, tournamentName }: { tournamentId: string; tournamentName: string }) {
+function PlayerInviteCard({
+  tournamentId,
+  tournamentName,
+}: {
+  tournamentId: string;
+  tournamentName: string;
+}) {
   const [url, setUrl] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const generate = async () => {
     setBusy(true);
-    const { data, error } = await supabase.rpc("admin_generate_player_invite", { p_tournament: tournamentId });
+    const { data, error } = await supabase.rpc("admin_generate_player_invite", {
+      p_tournament: tournamentId,
+    });
     setBusy(false);
     if (error) return toast.error(error.message);
     const r = data as { ok: boolean; token?: string; error?: string };
@@ -871,23 +1511,53 @@ function PlayerInviteCard({ tournamentId, tournamentName }: { tournamentId: stri
 
   return (
     <div className="bg-glass border border-neon/40 rounded-xl p-5 space-y-3">
-      <h3 className="font-bold text-sm flex items-center gap-2"><LinkIcon className="h-4 w-4 text-neon" />Player self-registration</h3>
-      <p className="text-xs text-muted-foreground">Share one link with players so they can register themselves with name, role, base price and photo. Valid 30 days.</p>
+      <h3 className="font-bold text-sm flex items-center gap-2">
+        <LinkIcon className="h-4 w-4 text-neon" />
+        Player self-registration
+      </h3>
+      <p className="text-xs text-muted-foreground">
+        Share one link with players so they can register themselves with name, role, base price and
+        photo. Valid 30 days.
+      </p>
       {url ? (
         <div className="space-y-2">
-          <div className="font-mono text-[11px] break-all text-neon bg-card/60 rounded p-2 border border-border">{url}</div>
+          <div className="font-mono text-[11px] break-all text-neon bg-card/60 rounded p-2 border border-border">
+            {url}
+          </div>
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" className="flex-1" onClick={() => { navigator.clipboard.writeText(url); toast.success("Copied"); }}>
-              <Copy className="h-3 w-3 mr-1" />Copy
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-1"
+              onClick={() => {
+                navigator.clipboard.writeText(url);
+                toast.success("Copied");
+              }}
+            >
+              <Copy className="h-3 w-3 mr-1" />
+              Copy
             </Button>
             <Button asChild size="sm" className="flex-1 gradient-neon text-primary-foreground">
-              <a href={waUrl} target="_blank" rel="noopener noreferrer"><Share2 className="h-3 w-3 mr-1" />WhatsApp</a>
+              <a href={waUrl} target="_blank" rel="noopener noreferrer">
+                <Share2 className="h-3 w-3 mr-1" />
+                WhatsApp
+              </a>
             </Button>
           </div>
-          <button onClick={() => setUrl(null)} className="text-[10px] text-muted-foreground hover:text-neon">Generate another</button>
+          <button
+            onClick={() => setUrl(null)}
+            className="text-[10px] text-muted-foreground hover:text-neon"
+          >
+            Generate another
+          </button>
         </div>
       ) : (
-        <Button size="sm" disabled={busy} onClick={generate} className="w-full gradient-neon text-primary-foreground shadow-neon">
+        <Button
+          size="sm"
+          disabled={busy}
+          onClick={generate}
+          className="w-full gradient-neon text-primary-foreground shadow-neon"
+        >
           {busy ? "Generating…" : "Generate player invite link"}
         </Button>
       )}

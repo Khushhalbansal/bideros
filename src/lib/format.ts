@@ -8,7 +8,10 @@ export function formatINR(amount: number | bigint | null | undefined): string {
 
 export function parseINR(input: string): number {
   // accept "1.5cr", "50l", "500000"
-  const s = input.trim().toLowerCase().replace(/[₹,\s]/g, "");
+  const s = input
+    .trim()
+    .toLowerCase()
+    .replace(/[₹,\s]/g, "");
   if (s.endsWith("cr")) return Math.round(parseFloat(s) * 10000000);
   if (s.endsWith("l")) return Math.round(parseFloat(s) * 100000);
   return Math.round(parseFloat(s) || 0);

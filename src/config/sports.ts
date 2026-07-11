@@ -7,10 +7,10 @@ export interface SportConfig {
   cta: string;
   image: string;
   bgImage: string;
-  bg: string;          // solid fallback bg
+  bg: string; // solid fallback bg
   textLeft: string;
   textRight: string;
-  accent: string;      // hex, drives glows + auth reskin
+  accent: string; // hex, drives glows + auth reskin
   gradientFrom: string;
   gradientTo: string;
 }
@@ -35,7 +35,8 @@ export const SPORTS: SportConfig[] = [
     slug: "football",
     name: "GOAL",
     tag: "FOOTBALL FINISHER",
-    description: "One goal changes everything — Goal turns the final whistle into your victory lap.",
+    description:
+      "One goal changes everything — Goal turns the final whistle into your victory lap.",
     cta: "Score The Bid",
     image: "/assets/child_football.png",
     bgImage: "/assets/bg_football.jpg",
@@ -50,7 +51,8 @@ export const SPORTS: SportConfig[] = [
     slug: "pickleball",
     name: "DINK",
     tag: "KITCHEN CONTROLLER",
-    description: "One soft dink, one hard truth — Dink wins the point nobody sees coming and seals the bid quietly.",
+    description:
+      "One soft dink, one hard truth — Dink wins the point nobody sees coming and seals the bid quietly.",
     cta: "Dink The Bid",
     image: "/assets/child_pickleball.png",
     bgImage: "/assets/bg_pickleball.jpg",
@@ -65,7 +67,8 @@ export const SPORTS: SportConfig[] = [
     slug: "badminton",
     name: "SMASH",
     tag: "BADMINTON BIDDER",
-    description: "One smash and it's game over — Smash brings precision power that seals the bid in a blink.",
+    description:
+      "One smash and it's game over — Smash brings precision power that seals the bid in a blink.",
     cta: "Smash Your Bid",
     image: "/assets/child_badminton.png",
     bgImage: "/assets/bg_badminton.jpg",

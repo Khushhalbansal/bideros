@@ -19,8 +19,12 @@ export function Logo({ withWordmark = true }: { withWordmark?: boolean }) {
       </span>
       {withWordmark && (
         <span className="text-xl leading-none">
-          <span className="bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">bid</span>
-          <span className="bg-gradient-to-r from-[oklch(0.85_0.22_165)] to-[oklch(0.75_0.25_320)] bg-clip-text text-transparent">eros</span>
+          <span className="bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">
+            bid
+          </span>
+          <span className="bg-gradient-to-r from-[oklch(0.85_0.22_165)] to-[oklch(0.75_0.25_320)] bg-clip-text text-transparent">
+            eros
+          </span>
         </span>
       )}
     </Link>

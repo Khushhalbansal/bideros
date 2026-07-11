@@ -28,7 +28,7 @@ import { SPORTS, getSport, type SportConfig } from "@/config/sports";
 
 export const Route = createFileRoute("/dashboard")({
   component: Dashboard,
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (s: Record<string, unknown>): { sport?: string; template?: string } => ({
     sport: typeof s.sport === "string" ? s.sport : undefined,
     template: typeof s.template === "string" ? s.template : undefined,
   }),
@@ -189,7 +189,11 @@ function Dashboard() {
   const step: Step = templateParam && sportParam ? "finalize" : sportParam ? "template" : "sport";
   const sport: SportConfig = sportParam
     ? getSport(sportParam)
-    : getSport(localStorage.getItem("bideros_favorite_sport") ?? "cricket");
+    : getSport(
+        (typeof localStorage !== "undefined"
+          ? localStorage.getItem("bideros_favorite_sport")
+          : null) ?? "cricket",
+      );
 
   // Resolved template object from URL param
   const resolvedTemplate: Template | null = useMemo(() => {
@@ -217,7 +221,8 @@ function Dashboard() {
   }, [templateParam]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (!loading && !user) navigate({ to: "/auth", search: { next: undefined, sport: undefined, tab: undefined } });
+    if (!loading && !user)
+      navigate({ to: "/auth", search: { next: undefined, sport: undefined, tab: undefined } });
   }, [user, loading, navigate]);
 
   const load = async () => {
@@ -235,7 +240,9 @@ function Dashboard() {
     setIsSuperAdmin(!!roles?.some((r) => r.role === "super_admin"));
     setIsProfileIncomplete(!p?.age || !p?.bio);
   };
-  useEffect(() => { load(); }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    load();
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const displayedAdminTournaments = useMemo(() => {
     if (step === "sport") return adminTournaments;
@@ -503,7 +510,10 @@ function Dashboard() {
               <div className="text-center mb-10">
                 <button
                   onClick={() =>
-                    navigate({ to: "/dashboard", search: { sport: undefined, template: undefined } })
+                    navigate({
+                      to: "/dashboard",
+                      search: { sport: undefined, template: undefined },
+                    })
                   }
                   className="text-xs text-white/60 hover:text-white inline-flex items-center gap-1 mb-4"
                 >
@@ -568,7 +578,10 @@ function Dashboard() {
               <div className="text-center mb-8">
                 <button
                   onClick={() =>
-                    navigate({ to: "/dashboard", search: { sport: sport.slug, template: undefined } })
+                    navigate({
+                      to: "/dashboard",
+                      search: { sport: sport.slug, template: undefined },
+                    })
                   }
                   className="text-xs text-white/60 hover:text-white inline-flex items-center gap-1 mb-4"
                 >
@@ -787,8 +800,6 @@ function Dashboard() {
             </div>
           </section>
         ) : null}
-
-
       </main>
     </div>
   );
