@@ -13,26 +13,53 @@ import { ThemeProvider } from "@/hooks/use-theme";
 import { ClickRipple } from "@/components/ClickRipple";
 import { FeedbackWidget } from "@/components/FeedbackWidget";
 
+import { RefreshCw, Home } from "lucide-react";
 import appCss from "../styles.css?url";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
-        </p>
-        <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Go home
-          </Link>
+    <div className="flex min-h-screen items-center justify-center bg-[#070e0b] px-4 text-white relative overflow-hidden">
+      {/* Background neon glows */}
+      <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] bg-[#00ffcc]/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] bg-[#22c55e]/10 rounded-full blur-[120px] pointer-events-none" />
+
+      <div className="max-w-md w-full text-center relative z-10 space-y-6">
+        <div className="relative inline-block group">
+          <div className="absolute -inset-1.5 bg-gradient-to-r from-[#00ffcc] to-[#22c55e] rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-1000 group-hover:duration-200"></div>
+          <img
+            src="/404.webp"
+            alt="Page Not Found"
+            className="relative rounded-2xl border border-white/10 w-full max-w-[320px] mx-auto shadow-2xl"
+            style={{
+              animation: "floatY 6s ease-in-out infinite",
+            }}
+          />
+        </div>
+
+        <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 p-6 md:p-8 rounded-2xl space-y-4 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+          <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-[#00ffcc] to-white bg-clip-text text-transparent">
+            404 - Out of Bounds
+          </h1>
+          <p className="text-sm text-white/70 leading-relaxed">
+            The page you're trying to view has been retired back to the pavilion or doesn't exist.
+          </p>
+          <div className="pt-2">
+            <Link
+              to="/"
+              className="w-full inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-[#00ffcc] to-[#22c55e] px-5 py-3 text-sm font-bold text-black shadow-[0_0_20px_rgba(0,255,204,0.3)] hover:shadow-[0_0_35px_rgba(0,255,204,0.5)] hover:scale-[1.02] transition-all duration-300"
+            >
+              <Home className="h-4 w-4 mr-2" />
+              Back to Arena
+            </Link>
+          </div>
         </div>
       </div>
+      <style>{`
+        @keyframes floatY {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+      `}</style>
     </div>
   );
 }
@@ -42,32 +69,58 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
-        </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <button
-            onClick={() => {
-              router.invalidate();
-              reset();
+    <div className="flex min-h-screen items-center justify-center bg-[#070e0b] px-4 text-white relative overflow-hidden">
+      {/* Background neon glows */}
+      <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] bg-[#00ffcc]/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] bg-[#ef4444]/10 rounded-full blur-[120px] pointer-events-none" />
+
+      <div className="max-w-md w-full text-center relative z-10 space-y-6">
+        <div className="relative inline-block group">
+          <div className="absolute -inset-1.5 bg-gradient-to-r from-[#ef4444] to-[#00ffcc] rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-1000 group-hover:duration-200"></div>
+          <img
+            src="/404.webp"
+            alt="Something went wrong"
+            className="relative rounded-2xl border border-white/10 w-full max-w-[320px] mx-auto shadow-2xl"
+            style={{
+              animation: "floatY 6s ease-in-out infinite",
             }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Try again
-          </button>
-          <a
-            href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            Go home
-          </a>
+          />
+        </div>
+
+        <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 p-6 md:p-8 rounded-2xl space-y-4 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-[#ef4444] to-white bg-clip-text text-transparent">
+            Something Went Wrong
+          </h1>
+          <p className="text-sm text-white/70 leading-relaxed">
+            The scoreboard encountered an unexpected glitch. You can try reloading the pitch.
+          </p>
+          <div className="flex gap-3 pt-2">
+            <button
+              onClick={() => {
+                router.invalidate();
+                reset();
+              }}
+              className="flex-1 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-[#00ffcc] to-[#22c55e] px-4 py-3 text-sm font-bold text-black shadow-[0_0_20px_rgba(0,255,204,0.3)] hover:shadow-[0_0_35px_rgba(0,255,204,0.5)] hover:scale-[1.02] transition-all duration-300"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Try again
+            </button>
+            <a
+              href="/"
+              className="flex-1 inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-white hover:bg-white/10 hover:border-white/20 transition-all duration-300"
+            >
+              <Home className="h-4 w-4 mr-2" />
+              Go home
+            </a>
+          </div>
         </div>
       </div>
+      <style>{`
+        @keyframes floatY {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+      `}</style>
     </div>
   );
 }
