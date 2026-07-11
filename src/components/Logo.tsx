@@ -7,16 +7,16 @@ export function Logo({ withWordmark = true }: { withWordmark?: boolean }) {
       className="group inline-flex items-center gap-3 font-display font-black tracking-tight shrink-0 select-none"
       aria-label="Bideros home"
     >
-      <span className="relative h-11 w-11 grid place-items-center">
+      <span className="relative h-12 w-12 grid place-items-center">
         {/* Under-glow behind the logo */}
         <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#00ffcc] to-[#22c55e] opacity-40 blur-[8px] group-hover:opacity-85 group-hover:blur-[12px] transition-all duration-300" />
 
         {/* Logo Container */}
-        <span className="relative h-11 w-11 rounded-xl bg-black/45 border border-white/20 group-hover:border-[#00ffcc]/50 grid place-items-center overflow-hidden shadow-[0_0_20px_rgba(0,255,204,0.15)] group-hover:shadow-[0_0_30px_rgba(0,255,204,0.3)] transition-all duration-300">
+        <span className="relative h-12 w-12 rounded-xl bg-white border border-white/20 group-hover:border-[#00ffcc]/50 grid place-items-center overflow-hidden shadow-[0_0_20px_rgba(0,255,204,0.15)] group-hover:shadow-[0_0_30px_rgba(0,255,204,0.3)] transition-all duration-300">
           <img
-            src="/logo.png"
+            src="/logo-card.png"
             alt="Bideros Logo"
-            className="h-9 w-9 object-contain transform scale-100 group-hover:scale-110 transition duration-300"
+            className="h-full w-full object-contain transform scale-100 group-hover:scale-105 transition duration-300"
           />
         </span>
       </span>
