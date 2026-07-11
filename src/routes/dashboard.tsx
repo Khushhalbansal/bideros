@@ -183,6 +183,7 @@ function Dashboard() {
   const [adminTournaments, setAdminTournaments] = useState<Tournament[]>([]);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [isProfileIncomplete, setIsProfileIncomplete] = useState(false);
+  const [freeMode, setFreeMode] = useState(true);
 
   // -- URL is the single source of truth for wizard position --
   // step and sport are derived from URL - no useState so they can never desync
@@ -240,13 +241,17 @@ function Dashboard() {
     setIsSuperAdmin(!!roles?.some((r) => r.role === "super_admin"));
     setIsProfileIncomplete(!p?.age || !p?.bio);
 
-    // Bypassing subscriptions: automatically upgrade to premium to allow unlimited tournaments
-    if (p && p.subscription_tier !== "premium") {
-      await supabase
-        .from("profiles")
-        .update({ subscription_tier: "premium", auctions_quota: 9999 })
-        .eq("id", user.id);
-    }
+    // Fetch free mode status dynamically from app_settings
+    const { data: freeModeSetting } = await supabase
+      .from("app_settings")
+      .select("value")
+      .eq("key", "free_mode_enabled")
+      .maybeSingle();
+    const isFree =
+      freeModeSetting?.value === true ||
+      (freeModeSetting?.value as any)?.enabled === true ||
+      freeModeSetting?.value === "true";
+    setFreeMode(isFree);
   };
   useEffect(() => {
     load();
@@ -361,7 +366,7 @@ function Dashboard() {
             size="sm"
             className="border-neon/50 text-neon hover:bg-neon/10 animate-pulse animate-[pulse_2s_infinite]"
           >
-            <Link to="/pricing">Get Pro Free</Link>
+            <Link to="/pricing">{freeMode ? "Get Pro Free" : "Upgrade to Pro"}</Link>
           </Button>
           <Button
             asChild
