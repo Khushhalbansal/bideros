@@ -43,33 +43,45 @@ flowchart TD
         B["Bidding Room (Owners)"]
         C["Projector Screen"]
     end
+
     subgraph Supabase ["Supabase Backend Services"]
         direction TB
         Auth["Auth / Session Management"]
         Db[("Postgres Database")]
         Realtime["Realtime Subscriptions"]
     end
+
     A -->|1. Control Player Rotation| Db
     B -->|2. Invoke Bidding RPC / Row Lock| Db
     Db -->|3. Trigger Change Notification| Realtime
-    Realtime -.->|4. Push Updated State < 200ms| A
-    Realtime -.->|4. Push Updated State < 200ms| B
-    Realtime -.->|4. Push Updated State < 200ms| C
-🏆 Result
-Performance: Confirmed database synchronization latency of under 200ms globally.
-Reliability: Successfully handled hundreds of concurrent bid simulations with zero race-condition failures.
-Premium Design: Built a production-ready application deployed to Cloudflare Pages that has a high-fidelity visual UI designed for physical projector displays.
-🛠️ Tech Stack & Key Libraries
-Category	Technology	Purpose
-Core Framework	React 19, Vite, TypeScript	Modern, high-performance web foundation
-Routing	TanStack Router & Start	Type-safe router & SSR engine
-Styling	Tailwind CSS v4, Radix UI	Neo-brutalism, custom animations, accessible components
-Database & Realtime	Supabase (Postgres, Realtime, Auth)	Atomic database updates, WebSocket syncing, Auth
-Animations	Framer Motion, canvas-confetti	Seamless UI state changes and interactive visual effects
-Form/Validation	React Hook Form, Zod	Type-safe form parsing and runtime client validation
-Deployment	Cloudflare Pages, Wrangler	High-speed global edge hosting
-📂 Repository Structure
-directory
+    Realtime -.->|4. Push Updated State under 200ms| A
+    Realtime -.->|4. Push Updated State under 200ms| B
+    Realtime -.->|4. Push Updated State under 200ms| C
+```
+### 🏆 Result
+- **Performance**: Confirmed database synchronization latency of under **200ms** globally.
+- **Reliability**: Successfully handled hundreds of concurrent bid simulations with zero race-condition failures.
+- **Premium Design**: Built a production-ready application deployed to Cloudflare Pages that has a high-fidelity visual UI designed for physical projector displays.
+
+---
+
+## 🛠️ Tech Stack & Key Libraries
+
+| Category | Technology | Purpose |
+|---|---|---|
+| **Core Framework** | React 19, Vite, TypeScript | Modern, high-performance web foundation |
+| **Routing** | TanStack Router & Start | Type-safe router & SSR engine |
+| **Styling** | Tailwind CSS v4, Radix UI | Neo-brutalism, custom animations, accessible components |
+| **Database & Realtime**| Supabase (Postgres, Realtime, Auth) | Atomic database updates, WebSocket syncing, Auth |
+| **Animations** | Framer Motion, canvas-confetti | Seamless UI state changes and interactive visual effects |
+| **Form/Validation** | React Hook Form, Zod | Type-safe form parsing and runtime client validation |
+| **Deployment** | Cloudflare Pages, Wrangler | High-speed global edge hosting |
+
+---
+
+## 📂 Repository Structure
+
+```directory
 ├── src/
 │   ├── components/      # Reusable UI components (buttons, dialogs, charts)
 │   ├── routes/          # TanStack routing structure (Admin, Bidding, Projector)
@@ -81,40 +93,55 @@ directory
 │   └── config.toml      # Supabase local environment config
 ├── wrangler.jsonc       # Cloudflare Pages deployment configuration
 └── vite.config.ts       # Vite build setup with TanStack plugins
-🚀 Getting Started
-Prerequisites
-Node.js (v20+ recommended)
-Bun (Preferred) or npm
-A Supabase Project
-Setup Installation
-Clone the repo:
+```
 
-bash
-git clone https://github.com/Khushhalbansal/bideros.git
-cd bideros
-Install dependencies:
+---
 
-bash
-bun install
-# or npm install
-Configure Environment Variables: Create a .env.local file in the root directory:
+## 🚀 Getting Started
 
-env
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-Run the Development Server:
+### Prerequisites
+- **Node.js** (v20+ recommended)
+- **Bun** (Preferred) or **npm**
+- A **Supabase** Project
 
-bash
-bun run dev
-# or npm run dev
-Open http://localhost:3000 to view it in your browser.
+### Setup Installation
 
-Build and Preview for Deployment:
+1. **Clone the repo:**
+   ```bash
+   git clone https://github.com/Khushhalbansal/bideros.git
+   cd bideros
+   ```
 
-bash
-bun run build
-bun run preview
-📜 License & Copyright
+2. **Install dependencies:**
+   ```bash
+   bun install
+   # or npm install
+   ```
+
+3. **Configure Environment Variables:**
+   Create a `.env.local` file in the root directory:
+   ```env
+   VITE_SUPABASE_URL=your_supabase_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+
+4. **Run the Development Server:**
+   ```bash
+   bun run dev
+   # or npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+
+5. **Build and Preview for Deployment:**
+   ```bash
+   bun run build
+   bun run preview
+   ```
+
+---
+
+## 📜 License & Copyright
+
 This project is open-source. All rights reserved.
 
-Copyright © 2024-2026 Khushhal Bansal. Built for the love of the game 🏏.
+Copyright &copy; 2024-2026 **Khushhal Bansal**. Built for the love of the game 🏏.
