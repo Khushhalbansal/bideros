@@ -51,16 +51,16 @@ To solve these challenges, I built Bideros using a highly optimized, modern Reac
 ```mermaid
 flowchart TD
     subgraph Clients ["Client Applications"]
-        A[Admin Dashboard]
-        B[Bidding Room (Owners)]
-        C[Projector Screen]
+        A["Admin Dashboard"]
+        B["Bidding Room (Owners)"]
+        C["Projector Screen"]
     end
 
     subgraph Supabase ["Supabase Backend Services"]
         direction TB
-        Auth[Auth / Session Management]
-        Db[(Postgres Database)]
-        Realtime[Realtime Subscriptions]
+        Auth["Auth / Session Management"]
+        Db[("Postgres Database")]
+        Realtime["Realtime Subscriptions"]
     end
 
     A -->|1. Control Player Rotation| Db
