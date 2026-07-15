@@ -119,3 +119,10 @@ Executed console test snippets inside the authenticated dashboard window:
   ```
   *Output*: `{ error: "Unauthorized: session user ID does not match request user ID" }` (Security block triggered successfully)
 
+
+### 8. Mobile Portrait Hero Swipe Fix
+
+- **Issue**: Vertical swiping on the hero section hijacked native mobile vertical scrolling, creating a broken scroll experience on mobile devices.
+- **Fix**: Replaced the vertical swipe detection (clientY) with horizontal swipe detection (clientX) in SportSwipeHero.tsx exclusively for mobile portrait orientations. Native vertical scrolling now passes through unimpeded on mobile portrait. Desktop and landscape mobile behaviors were preserved.
+- **Verification**: 	sc --noEmit and eslint . passed with zero errors. Production build (
+pm run build) succeeded.

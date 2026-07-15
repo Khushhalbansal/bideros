@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "@tanstack/react-router";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { SPORTS } from "@/config/sports";
 import { ArrowUpRight } from "lucide-react";
 
@@ -11,10 +12,30 @@ import { ArrowUpRight } from "lucide-react";
  */
 export function SportSwipeHero() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  const [isPortrait, setIsPortrait] = useState(
+    typeof window !== "undefined" ? window.innerHeight > window.innerWidth : false
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsPortrait(window.innerHeight > window.innerWidth);
+    };
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("orientationchange", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleResize);
+    };
+  }, []);
+
+  const isMobilePortrait = isMobile && isPortrait;
+
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState(0);
   const isAnimating = useRef(false);
-  const touchStartRef = useRef<number | null>(null);
+  const touchStartXRef = useRef<number | null>(null);
+  const touchStartYRef = useRef<number | null>(null);
   const heroRef = useRef<HTMLDivElement>(null);
   // Only intercept wheel while the hero is centered in the viewport,
   // otherwise page scroll gets hijacked forever.
@@ -53,13 +74,30 @@ export function SportSwipeHero() {
       e.preventDefault();
       change(delta);
     };
-    const onTouchStart = (e: TouchEvent) => (touchStartRef.current = e.touches[0].clientY);
+    const onTouchStart = (e: TouchEvent) => {
+      touchStartXRef.current = e.touches[0].clientX;
+      touchStartYRef.current = e.touches[0].clientY;
+    };
     const onTouchMove = (e: TouchEvent) => {
-      if (!heroActive || touchStartRef.current === null) return;
-      const diff = touchStartRef.current - e.touches[0].clientY;
-      if (Math.abs(diff) > 50) {
-        change(diff > 0 ? 1 : -1);
-        touchStartRef.current = null;
+      if (!heroActive || touchStartXRef.current === null || touchStartYRef.current === null) return;
+      
+      const diffX = touchStartXRef.current - e.touches[0].clientX;
+      const diffY = touchStartYRef.current - e.touches[0].clientY;
+      
+      if (isMobilePortrait) {
+        // Horizontal swipe on mobile portrait
+        if (Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY)) {
+          change(diffX > 0 ? 1 : -1);
+          touchStartXRef.current = null;
+          touchStartYRef.current = null;
+        }
+      } else {
+        // Vertical swipe for all other devices
+        if (Math.abs(diffY) > 50) {
+          change(diffY > 0 ? 1 : -1);
+          touchStartXRef.current = null;
+          touchStartYRef.current = null;
+        }
       }
     };
     const onKey = (e: KeyboardEvent) => {
@@ -77,7 +115,7 @@ export function SportSwipeHero() {
       window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("keydown", onKey);
     };
-  }, [heroActive, index]);
+  }, [heroActive, index, isMobilePortrait]);
 
   const wordVariants = {
     enter: (dir: number) => ({ opacity: 0, x: dir > 0 ? 80 : -80 }),
